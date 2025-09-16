@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Real Estate Microsite Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Montserrat:wght@400;700&family=Roboto:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .step { display: none; }
+        .step.active { display: block; }
+        .drop-zone {
+            border: 3px dashed #cbd5e1;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .drop-zone.drag-over {
+            background-color: #e0f2fe;
+            border-color: #3b82f6;
+        }
+        .instruction-number {
+            background-color: #1d4ed8;
+            color: white;
+            border-radius: 9999px;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.25rem;
+        }
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .sortable-item {
+            cursor: grab;
+            user-select: none;
+        }
+        .sortable-item.dragging {
+            opacity: 0.5;
+            background: #e0f2fe;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">Ultimate Real Estate Microsite Builder</h1>
+            <p class="text-lg text-gray-600 mt-2">Generate a complete, gallery-first page for your property listing.</p>
+        </header>
+
+        <main class="bg-white p-6 rounded-xl shadow-lg">
+            <!-- Step 1: All Info -->
+            <section id="step-1" class="step active">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold mb-4 flex items-center gap-3"><span class="instruction-number">1</span> Enter Content &amp; Style</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Brand & Contact -->
+                    <div>
+                        <button class="collapsible-trigger w-full text-left font-semibold text-lg p-3 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex justify-between items-center">
+                            Brand & Contact Information <span class="transform transition-transform">-</span>
+                        </button>
+                        <div class="collapsible-content p-4 border rounded-b-md" style="max-height: 1000px;">
+                           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-medium">Brand GitHub User</label><input type="text" id="brand-github-user" class="w-full mt-1 p-2 border rounded" value="KenMorganRealEstate"></div>
+                                <div><label class="block text-sm font-medium">Brand Assets Repository</label><input type="text" id="brand-github-repo" class="w-full mt-1 p-2 border rounded" value="1750"></div>
+                                <div><label class="block text-sm font-medium">Logo Filename</label><input type="text" id="logo-filename" class="w-full mt-1 p-2 border rounded" value="Gemini_Generated_Image_b5tz4eb5tz4eb5tz.png"></div>
+                                <div><label class="block text-sm font-medium">Your Name / Brand</label><input type="text" id="realtor-name" class="w-full mt-1 p-2 border rounded" value="Ken Morgan"></div>
+                                <div><label class="block text-sm font-medium">Your Phone Number</label><input type="tel" id="realtor-phone" class="w-full mt-1 p-2 border rounded" value="9056301225"></div>
+                                <div><label class="block text-sm font-medium">Your Email Address</label><input type="email" id="realtor-email" class="w-full mt-1 p-2 border rounded" value="sales@kenmorgan.ca"></div>
+                                <div><label class="block text-sm font-medium">Brokerage Name</label><input type="text" id="brokerage-name" class="w-full mt-1 p-2 border rounded" value="Casora Realty Inc."></div>
+                                <div><label class="block text-sm font-medium">Brokerage Address</label><input type="text" id="brokerage-address" class="w-full mt-1 p-2 border rounded" value="2465 Walkers Line, Burlington, ON"></div>
+                                <div class="md:col-span-2"><label class="block text-sm font-medium">"Marketed Like This" CTA</label><input type="text" id="marketing-cta" class="w-full mt-1 p-2 border rounded" value="Want your home marketed like this? Reach out for a consultation."></div>
+                            </div>
+                        </div>
+                    </div>
+                                        
+                    <!-- Page Style & Fonts -->
+                    <div>
+                        <button class="collapsible-trigger w-full text-left font-semibold text-lg p-3 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex justify-between items-center">
+                            Page Style, Fonts & Colors <span class="transform transition-transform">+</span>
+                        </button>
+                        <div class="collapsible-content p-4 border rounded-b-md space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                               <div><label class="block text-sm font-medium">Heading Font</label><select id="heading-font" class="w-full mt-1 p-2 border rounded"><option value="'Playfair Display', serif">Playfair Display</option><option value="'Montserrat', sans-serif" selected>Montserrat</option><option value="'Roboto', sans-serif">Roboto</option><option value="'Lato', sans-serif">Lato</option></select></div>
+                               <div><label class="block text-sm font-medium">Heading Font Size (px)</label><input type="number" id="heading-font-size" class="w-full mt-1 p-2 border rounded" value="36"></div>
+                               <div><label class="block text-sm font-medium">Heading Font Color</label><input type="color" id="heading-font-color" class="w-full h-10 mt-1" value="#111827"></div>
+                               <div></div>
+                               <div><label class="block text-sm font-medium">Body Font</label><select id="body-font" class="w-full mt-1 p-2 border rounded"><option value="'Inter', sans-serif">Inter</option><option value="'Roboto', sans-serif" selected>Roboto</option><option value="'Lato', sans-serif">Lato</option><option value="'Montserrat', sans-serif">Montserrat</option></select></div>
+                               <div><label class="block text-sm font-medium">Body Font Size (px)</label><input type="number" id="body-font-size" class="w-full mt-1 p-2 border rounded" value="16"></div>
+                               <div><label class="block text-sm font-medium">Body Font Color</label><input type="color" id="body-font-color" class="w-full h-10 mt-1" value="#374151"></div>
+                            </div>
+                            <div class="border-t pt-4">
+                                 <label class="block text-sm font-medium">Style Address Title?</label>
+                                 <div class="flex items-center mt-1"><input type="checkbox" id="style-address-title" class="h-4 w-4"><label for="style-address-title" class="ml-2">Yes, add a background color</label></div>
+                                 <div id="address-title-color-wrapper" class="mt-2" style="display: none;"><label class="block text-sm font-medium">Address Title Background Color</label><input type="color" id="address-title-bg-color" class="w-24 h-10 mt-1" value="#f3f4f6"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Page Content & Header -->
+                    <div>
+                        <button class="collapsible-trigger w-full text-left font-semibold text-lg p-3 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex justify-between items-center">
+                            Page Content & Links <span class="transform transition-transform">+</span>
+                        </button>
+                        <div class="collapsible-content p-4 border rounded-b-md">
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-medium">Header BG Type</label><select id="header-type" class="w-full mt-1 p-2 border rounded"><option value="color">Color</option><option value="image">Image</option></select></div>
+                                <div id="header-color-field"><label class="block text-sm font-medium">Header BG Color</label><input type="color" id="header-bg-color" class="w-full h-10 mt-1" value="#ffffff"></div>
+                                <div id="header-image-field" style="display: none;"><label class="block text-sm font-medium">Header BG Image Filename</label><input type="text" id="header-bg-image" class="w-full mt-1 p-2 border rounded" placeholder="From Brand Assets"></div>
+                                <div><label class="block text-sm font-medium">Link to Full Data Sheet (Optional)</label><input type="url" id="datasheet-link" class="w-full mt-1 p-2 border rounded" value="http://www.kenmorgan.ca/featured-listings"></div>
+                                <div class="md:col-span-2"><label class="block text-sm font-medium">Property Address</label><input type="text" id="property-address" class="w-full mt-1 p-2 border rounded" value="1750-18 Creek Way Drive, Burlington"></div>
+                                <div class="md:col-span-2"><label class="block text-sm font-medium">Description Heading (Optional)</label><input type="text" id="description-heading" class="w-full mt-1 p-2 border rounded" value="Perfect for first time home buyers or short term rental!"></div>
+                                <div class="md:col-span-2"><label class="block text-sm font-medium">Property Description (Optional)</label><textarea id="property-description" rows="4" class="w-full mt-1 p-2 border rounded">This nearly fully furnished beautiful corner unit is ideally located in a quiet cul-de-sac of private townhomes. Close to restaurants, shopping, schools and parks. Open foyer with two piece Bath and convenient inside garage entry. Bright open concept, great room overlooks the huge Eat-in Kitchen</textarea></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Secondary Heading -->
+                    <div>
+                        <button class="collapsible-trigger w-full text-left font-semibold text-lg p-3 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex justify-between items-center">
+                            Secondary Heading (Virtual Tour) <span class="transform transition-transform">+</span>
+                        </button>
+                        <div class="collapsible-content p-4 border rounded-b-md space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-medium">Line 1</label><input type="text" id="secondary-heading-line1" class="w-full mt-1 p-2 border rounded" value="Interactive Virtual Tour & Gallery"></div>
+                                <div><label class="block text-sm font-medium">Line 2</label><input type="text" id="secondary-heading-line2" class="w-full mt-1 p-2 border rounded" value="Visualize the potential!"></div>
+                                <div><label class="block text-sm font-medium">Font Size (px)</label><input type="number" id="secondary-heading-font-size" class="w-full mt-1 p-2 border rounded" value="30"></div>
+                                <div><label class="block text-sm font-medium">Font Color</label><input type="color" id="secondary-heading-font-color" class="w-full h-10 mt-1" value="#FFFFFF"></div>
+                                <div><label class="block text-sm font-medium">Background Type</label><select id="secondary-heading-bg-type" class="w-full mt-1 p-2 border rounded"><option value="color">Color</option><option value="image">Image</option></select></div>
+                                <div id="secondary-heading-bg-color-field"><label class="block text-sm font-medium">Background Color</label><input type="color" id="secondary-heading-bg-color" class="w-full h-10 mt-1" value="#6b7280"></div>
+                                <div id="secondary-heading-bg-image-field" style="display: none;"><label class="block text-sm font-medium">Background Image Filename</label><input type="text" id="secondary-heading-bg-image" class="w-full mt-1 p-2 border rounded" placeholder="From Brand Assets"></div>
+                                <div class="md:col-span-2"><label class="block text-sm font-medium">Instructional Text Below</label><input type="text" id="instructional-text" class="w-full mt-1 p-2 border rounded" value="View the virtual space by pressing the buttons on the images below."></div>
+                            </div>
+                        </div>
+                    </div>
+                                        
+                    <!-- Video Showcase Section -->
+                    <div>
+                        <button class="collapsible-trigger w-full text-left font-semibold text-lg p-3 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex justify-between items-center">
+                            Video Showcase Section (Optional) <span class="transform transition-transform">+</span>
+                        </button>
+                        <div class="collapsible-content p-4 border rounded-b-md">
+                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-medium">Section Heading</label><input type="text" id="video-heading" class="w-full mt-1 p-2 border rounded" value="Video Walkthrough"></div>
+                                <div><label class="block text-sm font-medium">YouTube Video ID</label><input type="text" id="youtube-id" class="w-full mt-1 p-2 border rounded" value="eXaQXTJRZGA"></div>
+                                <div><label class="block text-sm font-medium">Button Text</label><input type="text" id="video-button-text" class="w-full mt-1 p-2 border rounded" value="Book a Private Viewing"></div>
+                                <div><label class="block text-sm font-medium">Button Link</label><input type="url" id="video-button-link" class="w-full mt-1 p-2 border rounded" value="http://www.kenmorgan.ca/contact"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Matterport Showcase Section -->
+                    <div>
+                        <button class="collapsible-trigger w-full text-left font-semibold text-lg p-3 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex justify-between items-center">
+                            Matterport Showcase (Optional) <span class="transform transition-transform">+</span>
+                        </button>
+                        <div class="collapsible-content p-4 border rounded-b-md">
+                            <div class="space-y-4">
+                                <div><label class="block text-sm font-medium">Section Heading</label><input type="text" id="matterport-heading" class="w-full mt-1 p-2 border rounded" value="3D Virtual Tour"></div>
+                                <div><label class="block text-sm font-medium">Matterport Embed Code</label><textarea id="matterport-embed-code" rows="4" class="w-full mt-1 p-2 border rounded" placeholder="Paste the full <iframe> code from Matterport here."></textarea></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div><label class="block text-sm font-medium">Button Text</label><input type="text" id="matterport-button-text" class="w-full mt-1 p-2 border rounded" value="Book a Private Viewing"></div>
+                                    <div><label class="block text-sm font-medium">Button Link</label><input type="url" id="matterport-button-link" class="w-full mt-1 p-2 border rounded" value="http://www.kenmorgan.ca/contact"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature Links -->
+                    <div>
+                        <button class="collapsible-trigger w-full text-left font-semibold text-lg p-3 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex justify-between items-center">
+                            Bottom Feature Links (Optional) <span class="transform transition-transform">+</span>
+                        </button>
+                        <div class="collapsible-content p-4 border rounded-b-md">
+                             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="space-y-2"><label class="font-medium">Link 1</label><input type="text" id="link-1-title" class="w-full p-2 border rounded" placeholder="Title" value="About Burlington"><input type="text" id="link-1-img" class="w-full p-2 border rounded" placeholder="Image Filename" value="DSC07421-HDR-Edit.jpg"><input type="url" id="link-1-url" class="w-full p-2 border rounded" placeholder="Link URL" value="https://www.burlington.ca"><label class="text-sm">Button BG Color</label><input type="color" id="link-1-bg" class="w-full h-8" value="#1d4ed8"><label class="text-sm">Button Text Color</label><input type="color" id="link-1-text" class="w-full h-8" value="#ffffff"></div>
+                                <div class="space-y-2"><label class="font-medium">Link 2</label><input type="text" id="link-2-title" class="w-full p-2 border rounded" placeholder="Title" value="Neighbourhood Stats"><input type="text" id="link-2-img" class="w-full p-2 border rounded" placeholder="Image Filename" value="DSC07421-HDR-Edit.jpg"><input type="url" id="link-2-url" class="w-full p-2 border rounded" placeholder="Link URL" value="https://www.google.com"><label class="text-sm">Button BG Color</label><input type="color" id="link-2-bg" class="w-full h-8" value="#1d4ed8"><label class="text-sm">Button Text Color</label><input type="color" id="link-2-text" class="w-full h-8" value="#ffffff"></div>
+                                <div class="space-y-2"><label class="font-medium">Link 3</label><input type="text" id="link-3-title" class="w-full p-2 border rounded" placeholder="Title" value="Feature Sheet PDF"><input type="text" id="link-3-img" class="w-full p-2 border rounded" placeholder="Image Filename" value="DSC07421-HDR-Edit.jpg"><input type="url" id="link-3-url" class="w-full p-2 border rounded" placeholder="Link URL" value="https://www.google.com"><label class="text-sm">Button BG Color</label><input type="color" id="link-3-bg" class="w-full h-8" value="#1d4ed8"><label class="text-sm">Button Text Color</label><input type="color" id="link-3-text" class="w-full h-8" value="#ffffff"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Style -->
+                    <div>
+                        <button class="collapsible-trigger w-full text-left font-semibold text-lg p-3 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex justify-between items-center">
+                            Footer Style <span class="transform transition-transform">+</span>
+                        </button>
+                        <div class="collapsible-content p-4 border rounded-b-md">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+                               <div><label class="block text-sm font-medium">Footer Font</label><select id="footer-font" class="w-full mt-1 p-2 border rounded"><option value="'Inter', sans-serif">Inter</option><option value="'Roboto', sans-serif" selected>Roboto</option></select></div>
+                               <div><label class="block text-sm font-medium">Footer Font Size (px)</label><input type="number" id="footer-font-size" class="w-full mt-1 p-2 border rounded" value="16"></div>
+                               <div><label class="block text-sm font-medium">Footer Font Color</label><input type="color" id="footer-font-color" class="w-full h-10 mt-1" value="#ffffff"></div>
+                               <div></div>
+                               <div><label class="block text-sm font-medium">Footer BG Type</label><select id="footer-bg-type" class="w-full mt-1 p-2 border rounded"><option value="color">Color</option><option value="image">Image</option></select></div>
+                               <div id="footer-color-field"><label class="block text-sm font-medium">Footer BG Color</label><input type="color" id="footer-bg-color" class="w-full h-10 mt-1" value="#1f2937"></div>
+                               <div id="footer-image-field" style="display: none;"><label class="block text-sm font-medium">Footer BG Image Filename</label><input type="text" id="footer-bg-image" class="w-full mt-1 p-2 border rounded" placeholder="From Brand Assets"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GitHub Details -->
+                    <div>
+                        <button class="collapsible-trigger w-full text-left font-semibold text-lg p-3 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex justify-between items-center">
+                            GitHub Publishing Details <span class="transform transition-transform">+</span>
+                        </button>
+                        <div class="collapsible-content p-4 border rounded-b-md">
+                           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div><label class="block text-sm font-medium">Listing GitHub User</label><input type="text" id="github-user" class="w-full mt-1 p-2 border rounded" value="KenMorganRealEstate"></div>
+                                <div><label class="block text-sm font-medium">Listing Repository Name</label><input type="text" id="github-repo" class="w-full mt-1 p-2 border rounded" value="1750"></div>
+                                <div><label class="block text-sm font-medium">Image Folder (Optional)</label><input type="text" id="github-folder" class="w-full mt-1 p-2 border rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-right">
+                    <button id="next-to-step-2" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition-colors">Next: Arrange Photos</button>
+                </div>
+            </section>
+
+            <!-- Step 2: Drag and Drop -->
+             <section id="step-2" class="step">
+                 <h2 class="text-2xl font-semibold mb-4 flex items-center gap-3"><span class="instruction-number">2</span> Upload & Arrange Gallery Photos</h2>
+                 <p class="text-gray-600 mb-6">Add your photos below. Then, drag and drop the items in the list to set their final order on the page.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-semibold mb-2">1. Add Interactive Sets (3 Images)</h3>
+                        <div id="interactive-drop-zone" class="drop-zone w-full h-32 rounded-lg flex items-center justify-center text-center text-gray-500 cursor-pointer">
+                            <p>Drag & drop <strong>Real, Staged & Empty</strong> images here</p>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold mb-2">2. Add Standard Images (1 Image)</h3>
+                        <div id="standard-drop-zone" class="drop-zone w-full h-32 rounded-lg flex items-center justify-center text-center text-gray-500 cursor-pointer">
+                            <p>Drag & drop <strong>single images</strong> (exteriors, floor plans, etc.)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="font-semibold mb-2 text-lg">3. Arrange Your Gallery</h3>
+                    <div id="sortable-list" class="space-y-2 bg-gray-50 p-4 rounded-md border min-h-[100px]">
+                       <p id="sortable-placeholder" class="text-gray-400">Your gallery items will appear here...</p>
+                    </div>
+                </div>
+
+                 <div class="mt-6 flex justify-between">
+                    <button id="back-to-step-1" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-md transition-colors">Previous Step</button>
+                    <button id="next-to-step-3" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-md transition-colors">Generate & Finish</button>
+                </div>
+            </section>
+
+            <!-- Step 3: Generated Code -->
+            <section id="step-3" class="step">
+                 <h2 class="text-2xl font-semibold mb-4 flex items-center gap-3"><span class="instruction-number">3</span> Download, Publish, & Share</h2>
+                 <p class="text-gray-600 mb-6">Your page is ready. Follow the steps below to publish it online using GitHub Pages.</p>
+
+                <div class="space-y-6">
+                    <div class="instruction-card"><h3 class="text-lg font-semibold text-gray-800 mb-2">1. Download Your Page File</h3><p class="text-sm text-gray-600 mb-3">This button will save the complete `index.html` file to your computer.</p><button id="download-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-md transition-colors w-full">Download index.html</button><textarea id="output" class="hidden"></textarea></div>
+                    <div class="instruction-card bg-gray-50 p-4 rounded-lg border"><h3 class="text-lg font-semibold text-gray-800 mb-2">2. Publish on GitHub</h3><ol class="list-decimal list-inside text-sm text-gray-700 space-y-2"><li>Go to your **Listing Repository** on GitHub.</li><li>Click **"Add file"** -> **"Upload files"**. Drag and drop the `index.html` file AND all the gallery photos from Step 2.</li><li>Go to the repository's **"Settings"** tab, then click **"Pages"** in the left menu.</li><li>Under "Build and deployment", set the Source to **"Deploy from a branch"**.</li><li>Under "Branch", select **"main"**, leave the folder as **"/ (root)"**, and click **"Save"**.</li><li>**Wait a few minutes** for GitHub to publish your site. Refresh the "Pages" screen and a green box with your live URL will appear.</li></ol></div>
+                     <div class="instruction-card"><h3 class="text-lg font-semibold text-gray-800 mb-2">3. Copy Your Live Page URL</h3><p class="text-sm text-gray-600 mb-3">Your live page URL will appear on the "Pages" settings screen. It is also generated here for your convenience.</p><div class="flex"><input id="final-url" type="text" class="flex-grow bg-gray-100 border border-gray-300 rounded-l-md px-3 py-2" readonly><button id="copy-url-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-r-md">Copy</button></div></div>
+                </div>
+
+                 <div class="mt-8"><button id="back-to-step-2" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-6 rounded-md transition-colors">Go Back</button></div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // --- BASE GALLERY TEMPLATE (MODIFIED FOR DUAL-TYPE GALLERY) ---
+        const galleryTemplate = `<!DOCTYPE html><html lang="en"><head>    <meta charset="UTF-8">    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <meta property="og:title" content="<!-- META_ADDRESS -->">    <meta property="og:image" content="<!-- META_IMAGE -->">    <title><!-- META_ADDRESS --></title>    <script src="https://cdn.tailwindcss.com"><\/script>    <link rel="preconnect" href="https://fonts.googleapis.com">    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&family=Montserrat:wght@400;700&family=Roboto:wght@400;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">    <style>        :root {            --heading-font-color: <!-- HEADING_FONT_COLOR -->;            --body-font-color: <!-- BODY_FONT_COLOR -->;            --heading-font: <!-- HEADING_FONT -->;            --body-font: <!-- BODY_FONT -->;            --heading-font-size: <!-- HEADING_FONT_SIZE -->px;            --body-font-size: <!-- BODY_FONT_SIZE -->px;            --footer-font-color: <!-- FOOTER_FONT_COLOR -->;            --footer-font: <!-- FOOTER_FONT -->;            --footer-font-size: <!-- FOOTER_FONT_SIZE -->px;        }        body { font-family: var(--body-font); font-size: var(--body-font-size); color: var(--body-font-color); }        h1, h2, h3, h4, h5, h6 { font-family: var(--heading-font); color: var(--heading-font-color); }        .page-title { font-size: var(--heading-font-size); }        footer { font-family: var(--footer-font); font-size: var(--footer-font-size); color: var(--footer-font-color); }        .gallery-image-container { overflow: hidden; }        .gallery-image-container img { transition: opacity 0.3s ease-in-out, transform 0.3s ease; }        .gallery-item:hover .gallery-image-container img { transform: scale(1.05); }        .modal { display: none; } .modal.is-open { display: flex; }        #modal-image-container .property-nav { opacity: 0; transition: opacity 0.2s ease-in-out; }        #modal-image-container:hover .property-nav { opacity: 1; }        #modal-image { transition: opacity 0.2s ease-in-out; }        .feature-link img { transition: transform 0.3s ease, filter 0.3s ease; }        .feature-link:hover img { transform: scale(1.05); filter: brightness(1.1); }        .embed-container { position: relative; width: 100%; padding-top: 56.25%; /* 16:9 Aspect Ratio */ }        .embed-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }    </style></head><body class="bg-white">
+    <header class="bg-white sticky top-0 z-40 shadow-sm border-b" style="<!-- HEADER_BG_STYLE -->">        <div class="container mx-auto px-4 sm:px-6 lg:px-8">             <div class="flex items-center justify-between h-16">                <a href="http://www.kenmorgan.ca" class="flex items-center gap-3 text-gray-800 hover:text-blue-600">                    <!-- LOGO_HTML -->                    <span class="text-lg font-bold"><!-- REALTOR_NAME --></span>                </a>                <!-- DATASHEET_BUTTON_HTML -->            </div>        </div>    </header>        <main>        <section class="w-full bg-gray-50 py-8">             <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 mb-6">                <h1 class="page-title font-bold inline-block p-4 rounded-lg shadow-sm" style="<!-- ADDRESS_TITLE_STYLE -->"><!-- PROPERTY_ADDRESS --></h1>                <!-- SECONDARY_HEADING_HTML -->             </div>            <div id="gallery-grid" class="grid grid-cols-1 md:grid-cols-3">                 <!-- Properties will be injected here by JavaScript -->            </div>        </section>
+        <!-- DESCRIPTION -->        <!-- DESCRIPTION_HTML -->                <!-- VIDEO SHOWCASE -->        <!-- VIDEO_SHOWCASE_HTML -->
+        <!-- MATTERPORT SHOWCASE -->        <!-- MATTERPORT_SHOWCASE_HTML -->
+        <!-- FEATURE LINKS -->        <!-- FEATURE_LINKS_HTML -->    </main>
+    <footer class="bg-gray-800 text-white" style="<!-- FOOTER_BG_STYLE -->">        <div class="container mx-auto px-6 py-12 text-center">            <h3 class="text-2xl font-bold mb-2"><!-- MARKETING_CTA --></h3>            <div class="flex flex-col md:flex-row justify-center items-center gap-x-6 gap-y-2 mt-4">                <p class="font-semibold"><!-- REALTOR_NAME --></p>                <!-- CONTACT_PHONE_LINKS -->                <!-- CONTACT_EMAIL_LINK -->            </div>            <div class="mt-8 border-t border-gray-700 pt-8 text-sm opacity-80">                <p class="font-bold"><!-- BROKERAGE_NAME --></p>                <p><!-- BROKERAGE_ADDRESS --></p>            </div>        </div>    </footer>
+    <!-- MODAL -->    <div id="modal" class="modal fixed inset-0 bg-black bg-opacity-80 items-center justify-center p-4 z-50"><div class="bg-white rounded-lg shadow-2xl w-full max-w-6xl max-h-full flex flex-col relative"><button id="modal-close" class="absolute -top-4 -right-4 bg-white text-black rounded-full h-10 w-10 flex items-center justify-center text-2xl font-bold z-20">&times;</button><div id="modal-image-container" class="relative w-full h-[70vh] flex items-center justify-center"><img id="modal-image" src="" alt="Property View" class="w-auto h-auto max-w-full max-h-full object-contain"><button id="modal-prev-prop" class="property-nav absolute left-4 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/80 rounded-full p-3 text-3xl font-bold z-10">&lt;</button><button id="modal-next-prop" class="property-nav absolute right-4 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/80 rounded-full p-3 text-3xl font-bold z-10">&gt;</button></div><div id="modal-buttons" class="flex justify-center p-4 border-t border-gray-200"></div></div></div>
+    <script>
+        <!-- PROPERTIES_JSON_BLOCK -->
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof properties === 'undefined' || !Array.isArray(properties)) {
+                console.error('Gallery data is missing or invalid.');
+                return;
+            }
+            const galleryContainer = document.getElementById('gallery-grid');
+            const modal = document.getElementById('modal');
+            const modalImage = document.getElementById('modal-image');
+            const modalButtonsContainer = document.getElementById('modal-buttons');
+            const closeModalBtn = document.getElementById('modal-close');
+            const modalPrevPropBtn = document.getElementById('modal-prev-prop');
+            const modalNextPropBtn = document.getElementById('modal-next-prop');
+            let currentProperty = null; let currentPropertyIndex = 0; let currentView = 'real';
+            function renderGallery() {
+                galleryContainer.innerHTML = '';
+                properties.forEach(prop => {
+                    const div = document.createElement('div');
+                    div.className = 'gallery-item relative group cursor-pointer';
+                    let buttonsHtml = '';
+                    if (prop.type === 'interactive') {
+                        buttonsHtml = \`<div class="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent"><div class="flex justify-center space-x-2" data-prop-id="\${prop.id}"><button class="view-btn bg-blue-500 text-white text-xs font-semibold py-1 px-4 rounded-md shadow transition-colors" data-view="real">Real</button><button class="view-btn bg-white/80 hover:bg-white text-black text-xs font-semibold py-1 px-4 rounded-md shadow transition-colors" data-view="staged">Virtually Staged</button><button class="view-btn bg-white/80 hover:bg-white text-black text-xs font-semibold py-1 px-4 rounded-md shadow transition-colors" data-view="empty">Virtually Empty</button></div></div>\`;
+                    }
+                    div.innerHTML = \`<div class="gallery-image-container w-full aspect-[4/3] bg-gray-200 overflow-hidden"><img id="img-\${prop.id}" src="\${prop.thumbnail}" alt="\${prop.name}" class="w-full h-full object-cover"></div>\${buttonsHtml}\`;
+                    galleryContainer.appendChild(div);
+                });
+            }
+            function openModal(prop) {
+                currentProperty = prop;
+                currentPropertyIndex = properties.findIndex(p => p.id === prop.id);
+                currentView = 'real';
+                updateModalContent();
+                modal.classList.add('is-open');
+            }
+            function updateModalContent() {
+                modalImage.style.opacity = '0';
+                let imageUrl = '';
+                if (currentProperty.type === 'interactive') {
+                    imageUrl = currentProperty.images[currentView][0];
+                    modalButtonsContainer.style.display = 'flex';
+                } else {
+                    imageUrl = currentProperty.images.real[0];
+                    modalButtonsContainer.style.display = 'none';
+                }
+                setTimeout(() => { modalImage.src = imageUrl; modalImage.style.opacity = '1'; }, 200);
+                modalButtonsContainer.innerHTML = '';
+                if (currentProperty.type === 'interactive') {
+                    const buttonLabels = {
+                        real: 'Real',
+                        staged: 'Virtually Staged',
+                        empty: 'Virtually Empty'
+                    };
+                    ['real', 'staged', 'empty'].forEach(view => {
+                        const button = document.createElement('button');
+                        button.textContent = buttonLabels[view];
+                        button.className = \`mx-2 py-2 px-6 rounded-md font-semibold transition-colors \${currentView === view ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}\`;
+                        button.onclick = () => { currentView = view; updateModalContent(); };
+                        modalButtonsContainer.appendChild(button);
+                    });
+                }
+            }
+            galleryContainer.addEventListener('click', (e) => {
+                const buttonGroup = e.target.closest('[data-prop-id]');
+                const view = e.target.dataset.view;
+                const galleryItem = e.target.closest('.gallery-item');
+                if (view && buttonGroup) {
+                    e.stopPropagation();
+                    const propId = buttonGroup.dataset.propId;
+                    const prop = properties.find(p => p.id === propId);
+                    const mainImage = document.getElementById(\`img-\${propId}\`);
+                    const allButtonsInGroup = buttonGroup.querySelectorAll('.view-btn');
+                    allButtonsInGroup.forEach(btn => {
+                        btn.classList.remove('bg-blue-500', 'text-white');
+                        btn.classList.add('bg-white/80', 'text-black');
+                    });
+                    e.target.classList.add('bg-blue-500', 'text-white');
+                    e.target.classList.remove('bg-white/80', 'text-black');
+                    mainImage.style.opacity = '0';
+                    setTimeout(() => { mainImage.src = prop.images[view][0]; mainImage.style.opacity = '1'; }, 300);
+                } else if (galleryItem) {
+                    const img = galleryItem.querySelector('img');
+                    if (!img) return;
+                    const id = img.id.replace('img-', '');
+                    const prop = properties.find(p => p.id === id);
+                    openModal(prop);
+                }
+            });
+            function navigateModal(direction) {
+                currentPropertyIndex = (currentPropertyIndex + direction + properties.length) % properties.length;
+                openModal(properties[currentPropertyIndex]);
+            }
+            closeModalBtn.addEventListener('click', () => modal.classList.remove('is-open'));
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('is-open'); });
+            modalNextPropBtn.addEventListener('click', () => navigateModal(1));
+            modalPrevPropBtn.addEventListener('click', () => navigateModal(-1));
+            if (properties.length > 0) { renderGallery(); }
+        });
+    <\/script></body></html>`;
+        // --- END OF TEMPLATE ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Element Selectors ---
+            const steps = document.querySelectorAll('.step');
+            const nextBtn1 = document.getElementById('next-to-step-2');
+            const nextBtn2 = document.getElementById('next-to-step-3');
+            const backBtn1 = document.getElementById('back-to-step-1');
+            const backBtn2 = document.getElementById('back-to-step-2');
+            const downloadBtn = document.getElementById('download-btn');
+            const copyUrlBtn = document.getElementById('copy-url-btn');
+            const outputTextArea = document.getElementById('output');
+            const finalUrlInput = document.getElementById('final-url');
+            const collapsibleTriggers = document.querySelectorAll('.collapsible-trigger');
+            const headerTypeSelect = document.getElementById('header-type');
+            const footerBgTypeSelect = document.getElementById('footer-bg-type');
+            const styleAddressCheckbox = document.getElementById('style-address-title');
+            const secondaryHeadingBgTypeSelect = document.getElementById('secondary-heading-bg-type');
+            const interactiveDropZone = document.getElementById('interactive-drop-zone');
+            const standardDropZone = document.getElementById('standard-drop-zone');
+            const sortableList = document.getElementById('sortable-list');
+            const sortablePlaceholder = document.getElementById('sortable-placeholder');
+            
+            let galleryItems = []; // Holds file objects and their order
+
+            // --- Core Functions ---
+            function showStep(stepIndex) {
+                steps.forEach((step, index) => {
+                    step.classList.toggle('active', index === stepIndex);
+                });
+            }
+
+            function setupDynamicFields(selectElement, fieldsConfig) {
+                const updateVisibility = () => {
+                    const selectedValue = selectElement.value;
+                    for (const value in fieldsConfig) {
+                        document.getElementById(fieldsConfig[value]).style.display = value === selectedValue ? 'block' : 'none';
+                    }
+                };
+                selectElement.addEventListener('change', updateVisibility);
+                updateVisibility();
+            }
+
+            // --- Event Listeners Setup ---
+            collapsibleTriggers.forEach(trigger => {
+                trigger.addEventListener('click', () => {
+                    const content = trigger.nextElementSibling;
+                    const icon = trigger.querySelector('span');
+                    const isOpening = !content.style.maxHeight || content.style.maxHeight === '0px';
+                    content.style.maxHeight = isOpening ? content.scrollHeight + 'px' : '0px';
+                    icon.textContent = isOpening ? '-' : '+';
+                });
+            });
+
+            setupDynamicFields(headerTypeSelect, { 'color': 'header-color-field', 'image': 'header-image-field' });
+            setupDynamicFields(footerBgTypeSelect, { 'color': 'footer-color-field', 'image': 'footer-image-field' });
+            setupDynamicFields(secondaryHeadingBgTypeSelect, { 'color': 'secondary-heading-bg-color-field', 'image': 'secondary-heading-bg-image-field' });
+
+            styleAddressCheckbox.addEventListener('change', (e) => {
+                document.getElementById('address-title-color-wrapper').style.display = e.target.checked ? 'block' : 'none';
+                const content = e.target.closest('.collapsible-content');
+                if (content && content.style.maxHeight && content.style.maxHeight !== '0px') {
+                   setTimeout(() => { content.style.maxHeight = content.scrollHeight + 'px'; }, 50);
+                }
+            });
+            
+            // --- Step Navigation ---
+            nextBtn1.addEventListener('click', () => {
+                const requiredIds = ['brand-github-user', 'brand-github-repo', 'realtor-name', 'property-address', 'github-user', 'github-repo'];
+                let isValid = true;
+                requiredIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (!el.value.trim()) {
+                            el.style.borderColor = 'red';
+                            isValid = false;
+                        } else {
+                            el.style.borderColor = '';
+                        }
+                    }
+                });
+                if (isValid) showStep(1);
+            });
+            backBtn1.addEventListener('click', () => showStep(0));
+            nextBtn2.addEventListener('click', () => {
+                if (galleryItems.length === 0) {
+                   alert('Please add at least one gallery item before proceeding.');
+                   return;
+                }
+                generateFinalCode();
+                showStep(2);
+            });
+            backBtn2.addEventListener('click', () => showStep(1));
+            
+            // --- Step 2: Drag, Drop & Sorting ---
+            function setupDropZone(element, handler) {
+                element.addEventListener('dragover', (e) => { e.preventDefault(); element.classList.add('drag-over'); });
+                element.addEventListener('dragleave', () => element.classList.remove('drag-over'));
+                element.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    element.classList.remove('drag-over');
+                    const files = [...e.dataTransfer.files].filter(file => file.type.startsWith('image/'));
+                    if (files.length > 0) handler(files);
+                });
+            }
+            function handleInteractiveDrop(files) {
+                if (files.length !== 3) { 
+                    alert('Please drop exactly 3 files (Real, Staged, Empty) for an interactive set.'); 
+                    return; 
+                }
+                galleryItems.push({ id: `item-${Date.now()}`, type: 'interactive', files: files });
+                renderSortableList();
+            }
+            function handleStandardDrop(files) {
+                files.forEach(file => galleryItems.push({ id: `item-${Date.now()}-${file.name}`, type: 'standard', files: [file] }));
+                renderSortableList();
+            }
+            function renderSortableList() {
+                sortableList.innerHTML = '';
+                sortablePlaceholder.style.display = galleryItems.length > 0 ? 'none' : 'block';
+                galleryItems.forEach(item => {
+                    const div = document.createElement('div');
+                    div.id = item.id;
+                    div.className = 'sortable-item p-3 bg-white border rounded-md shadow-sm flex items-center justify-between';
+                    div.draggable = true;
+                    const typeLabel = item.type === 'interactive' ? '<span class="font-bold text-blue-600">☰ Interactive Set:</span>' : '<span class="font-bold text-gray-600">☰ Standard Image:</span>';
+                    const fileName = item.type === 'interactive' ? item.files[0].name.split('.')[0] : item.files[0].name;
+                    div.innerHTML = `<div class="flex items-center gap-3">${typeLabel}<span>${fileName}</span></div><button data-id="${item.id}" class="delete-item-btn text-red-500 hover:text-red-700 font-bold text-lg">&times;</button>`;
+                    sortableList.appendChild(div);
+                });
+            }
+            sortableList.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-item-btn')) {
+                    galleryItems = galleryItems.filter(item => item.id !== e.target.dataset.id);
+                    renderSortableList();
+                }
+            });
+            let draggedItem = null;
+            sortableList.addEventListener('dragstart', (e) => { draggedItem = e.target; setTimeout(() => e.target.classList.add('dragging'), 0); });
+            sortableList.addEventListener('dragend', () => draggedItem.classList.remove('dragging'));
+            sortableList.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                const afterElement = getDragAfterElement(sortableList, e.clientY);
+                const currentDragged = document.querySelector('.dragging');
+                if (afterElement == null) { sortableList.appendChild(currentDragged); } 
+                else { sortableList.insertBefore(currentDragged, afterElement); }
+            });
+            sortableList.addEventListener('drop', () => {
+                const newOrderIds = [...sortableList.querySelectorAll('.sortable-item')].map(item => item.id);
+                galleryItems.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+            });
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.sortable-item:not(.dragging)')];
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) { return { offset: offset, element: child }; } 
+                    else { return closest; }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+            setupDropZone(interactiveDropZone, handleInteractiveDrop);
+            setupDropZone(standardDropZone, handleStandardDrop);
+
+            // --- Step 3: Generation & Download ---
+            function escapeHTML(str) { return str ? str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&quot;').replace(/'/g, '&#039;') : ''; }
+            function generateFinalCode() {
+                const getVal = (id) => document.getElementById(id).value.trim();
+                const listingUser = getVal('github-user'), listingRepo = getVal('github-repo'), folder = getVal('github-folder');
+                const brandUser = getVal('brand-github-user'), brandRepo = getVal('brand-github-repo');
+                const brandAssetBaseUrl = `https://raw.githubusercontent.com/${brandUser}/${brandRepo}/main/`;
+                let properties = [];
+                galleryItems.forEach(item => {
+                    const basePath = `https://raw.githubusercontent.com/${listingUser}/${listingRepo}/main`;
+                    const buildUrl = (file) => `${basePath}/${folder ? `${folder}/` : ''}${encodeURIComponent(file.name)}`;
+                    const prop = { id: item.id, type: item.type };
+                    if (item.type === 'interactive') {
+                        const [real, staged, empty] = item.files;
+                        const name = real.name.split('.')[0].replace(/[-_]/g, ' ').replace(/\d+$/, '').trim();
+                        prop.name = name.charAt(0).toUpperCase() + name.slice(1) || `Set`;
+                        prop.images = { real: [buildUrl(real)], staged: [buildUrl(staged)], empty: [buildUrl(empty)] };
+                        prop.thumbnail = buildUrl(real);
+                    } else {
+                        const file = item.files[0];
+                        const name = file.name.split('.')[0].replace(/[-_]/g, ' ');
+                        prop.name = name.charAt(0).toUpperCase() + name.slice(1) || `Image`;
+                        prop.images = { real: [buildUrl(file)] };
+                        prop.thumbnail = buildUrl(file);
+                    }
+                    properties.push(prop);
+                });
+                const propertiesCode = JSON.stringify(properties, null, 4);
+                const propertiesJsonBlock = `const properties = ${propertiesCode};`;
+
+                const logoHtml = getVal('logo-filename') ? `<img src="${brandAssetBaseUrl + encodeURIComponent(getVal('logo-filename'))}" alt="Logo" class="h-8 w-auto">` : '';
+                let secondaryHeadingHtml = '';
+                if (getVal('secondary-heading-line1')) {
+                    let shBgStyle = '';
+                    if (getVal('secondary-heading-bg-type') === 'color') shBgStyle = `background-color: ${document.getElementById('secondary-heading-bg-color').value};`;
+                    else if (getVal('secondary-heading-bg-image')) shBgStyle = `background-image: url('${brandAssetBaseUrl + encodeURIComponent(getVal('secondary-heading-bg-image'))}'); background-size: cover; background-position: center;`;
+                    secondaryHeadingHtml = `<div class="p-6 rounded-lg shadow-sm" style="${shBgStyle}"><h2 class="font-bold" style="font-size: ${getVal('secondary-heading-font-size')}px; color: ${document.getElementById('secondary-heading-font-color').value};">${escapeHTML(getVal('secondary-heading-line1'))}</h2><p style="color: ${document.getElementById('secondary-heading-font-color').value}; opacity: 0.9;">${escapeHTML(getVal('secondary-heading-line2'))}</p></div><p class="mt-4 text-gray-600">${escapeHTML(getVal('instructional-text'))}</p>`;
+                }
+                const phone = getVal('realtor-phone'), email = getVal('realtor-email');
+                const phoneLinks = phone ? `<a href="tel:${phone}" class="font-semibold hover:text-blue-300">Call</a><span class="mx-2">|</span><a href="sms:${phone}" class="font-semibold hover:text-blue-300">Text</a>` : '';
+                const emailLink = email ? `<a href="mailto:${email}" class="font-semibold hover:text-blue-300">${email}</a>` : '';
+                
+                let videoShowcaseHtml = '';
+                if (getVal('youtube-id') && getVal('video-heading')) {
+                    videoShowcaseHtml = `<section class="bg-white py-16 w-full"><div class="container mx-auto px-6 text-center"><h2 class="text-3xl font-bold text-gray-900 mb-8">${escapeHTML(getVal('video-heading'))}</h2><div class="embed-container rounded-lg shadow-xl overflow-hidden mx-auto" style="max-width: 1280px;"><iframe src="https://www.youtube.com/embed/${getVal('youtube-id')}?controls=0&showinfo=0&rel=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
+                    if (getVal('video-button-text') && getVal('video-button-link')) videoShowcaseHtml += `<div class="mt-8"><a href="${getVal('video-button-link')}" class="bg-blue-600 text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors">${escapeHTML(getVal('video-button-text'))}</a></div>`;
+                    videoShowcaseHtml += `</div></section>`;
+                }
+                
+                let matterportShowcaseHtml = '';
+                const matterportEmbedCode = getVal('matterport-embed-code');
+                if (matterportEmbedCode && getVal('matterport-heading')) {
+                    const srcRegex = /src="([^"]+)"/;
+                    const match = matterportEmbedCode.match(srcRegex);
+                    if (match && match[1]) {
+                        const matterportSrc = match[1];
+                        matterportShowcaseHtml = `<section class="bg-gray-50 py-16 w-full"><div class="container mx-auto px-6 text-center"><h2 class="text-3xl font-bold text-gray-900 mb-8">${escapeHTML(getVal('matterport-heading'))}</h2><div class="embed-container rounded-lg shadow-xl overflow-hidden mx-auto" style="max-width: 1280px;"><iframe src="${matterportSrc}" frameborder="0" allow="fullscreen; vr" allowfullscreen></iframe></div>`;
+                        if (getVal('matterport-button-text') && getVal('matterport-button-link')) {
+                            matterportShowcaseHtml += `<div class="mt-8"><a href="${getVal('matterport-button-link')}" class="bg-blue-600 text-white px-8 py-3 rounded-md text-lg font-medium hover:bg-blue-700 transition-colors">${escapeHTML(getVal('matterport-button-text'))}</a></div>`;
+                        }
+                        matterportShowcaseHtml += `</div></section>`;
+                    }
+                }
+
+                const descriptionHtml = getVal('property-description') ? `<section class="container mx-auto px-6 py-16 text-center max-w-4xl"><h2 class="text-3xl font-bold text-gray-900 mb-4">${escapeHTML(getVal('description-heading'))}</h2><div class="text-lg leading-relaxed space-y-4">${escapeHTML(getVal('property-description')).replace(/\n/g, '<br>')}</div></section>` : '';
+                const featureLinks = [1, 2, 3].map(i => ({ title: getVal(`link-${i}-title`), img: getVal(`link-${i}-img`), url: getVal(`link-${i}-url`), bg: document.getElementById(`link-${i}-bg`).value, text: document.getElementById(`link-${i}-text`).value })).filter(l => l.title && l.img && l.url);
+                let featureLinksHtml = '';
+                if (featureLinks.length > 0) {
+                    featureLinksHtml += `<section class="bg-gray-50 py-16"><div class="container mx-auto px-6"><div class="grid grid-cols-1 md:grid-cols-${featureLinks.length} gap-8">`;
+                    featureLinks.forEach(link => {
+                        const imgUrl = brandAssetBaseUrl + encodeURIComponent(link.img);
+                        featureLinksHtml += `<div class="block group text-center"><div class="overflow-hidden rounded-lg shadow-lg"><a href="${link.url}" target="_blank" rel="noopener noreferrer" class="feature-link"><img src="${imgUrl}" class="w-full h-48 object-cover"></a></div><div class="mt-4"><a href="${link.url}" target="_blank" rel="noopener noreferrer" class="inline-block px-6 py-2 rounded-md font-semibold transition-all duration-300 ease-in-out shadow-md hover:shadow-lg hover:-translate-y-1" style="background-color:${link.bg}; color:${link.text};">${escapeHTML(link.title)}</a></div></div>`;
+                    });
+                    featureLinksHtml += `</div></div></section>`;
+                }
+                let headerBgStyle = '', footerBgStyle = '', addressTitleStyle = '';
+                if (getVal('header-type') === 'color') headerBgStyle = `background-color: ${document.getElementById('header-bg-color').value};`;
+                else if (getVal('header-bg-image')) headerBgStyle = `background-image: url('${brandAssetBaseUrl + encodeURIComponent(getVal('header-bg-image'))}'); background-size: cover; background-position: center;`;
+                if (getVal('footer-bg-type') === 'color') footerBgStyle = `background-color: ${document.getElementById('footer-bg-color').value};`;
+                else if (getVal('footer-bg-image')) footerBgStyle = `background-image: url('${brandAssetBaseUrl + encodeURIComponent(getVal('footer-bg-image'))}'); background-size: cover; background-position: center;`;
+                if (document.getElementById('style-address-title').checked) addressTitleStyle = `background-color: ${document.getElementById('address-title-bg-color').value};`;
+
+                outputTextArea.value = galleryTemplate
+                    .replace('<!-- PROPERTIES_JSON_BLOCK -->', propertiesJsonBlock)
+                    .replace(/<!-- META_ADDRESS -->/g, escapeHTML(getVal('property-address')))
+                    .replace('<!-- META_IMAGE -->', properties.length > 0 ? properties[0].thumbnail : '')
+                    .replace('<!-- HEADING_FONT_COLOR -->', document.getElementById('heading-font-color').value)
+                    .replace('<!-- BODY_FONT_COLOR -->', document.getElementById('body-font-color').value)
+                    .replace('<!-- HEADING_FONT -->', document.getElementById('heading-font').value)
+                    .replace('<!-- BODY_FONT -->', document.getElementById('body-font').value)
+                    .replace('<!-- HEADING_FONT_SIZE -->', getVal('heading-font-size'))
+                    .replace('<!-- BODY_FONT_SIZE -->', getVal('body-font-size'))
+                    .replace('<!-- FOOTER_FONT_COLOR -->', document.getElementById('footer-font-color').value)
+                    .replace('<!-- FOOTER_FONT -->', document.getElementById('footer-font').value)
+                    .replace('<!-- FOOTER_FONT_SIZE -->', getVal('footer-font-size'))
+                    .replace('<!-- HEADER_BG_STYLE -->', headerBgStyle)
+                    .replace('<!-- FOOTER_BG_STYLE -->', footerBgStyle)
+                    .replace('<!-- ADDRESS_TITLE_STYLE -->', addressTitleStyle)
+                    .replace('<!-- LOGO_HTML -->', logoHtml)
+                    .replace(/<!-- REALTOR_NAME -->/g, escapeHTML(getVal('realtor-name')))
+                    .replace('<!-- DATASHEET_BUTTON_HTML -->', getVal('datasheet-link') ? `<a href="${getVal('datasheet-link')}" class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">View Full Listing Details</a>` : '')
+                    .replace('<!-- PROPERTY_ADDRESS -->', escapeHTML(getVal('property-address')))
+                    .replace('<!-- SECONDARY_HEADING_HTML -->', secondaryHeadingHtml)
+                    .replace('<!-- DESCRIPTION_HTML -->', descriptionHtml)
+                    .replace('<!-- VIDEO_SHOWCASE_HTML -->', videoShowcaseHtml)
+                    .replace('<!-- MATTERPORT_SHOWCASE_HTML -->', matterportShowcaseHtml)
+                    .replace('<!-- FEATURE_LINKS_HTML -->', featureLinksHtml)
+                    .replace('<!-- MARKETING_CTA -->', escapeHTML(getVal('marketing-cta')))
+                    .replace('<!-- CONTACT_PHONE_LINKS -->', phoneLinks)
+                    .replace('<!-- CONTACT_EMAIL_LINK -->', emailLink)
+                    .replace('<!-- BROKERAGE_NAME -->', escapeHTML(getVal('brokerage-name')))
+                    .replace('<!-- BROKERAGE_ADDRESS -->', escapeHTML(getVal('brokerage-address')));
+                finalUrlInput.value = `https://${listingUser.toLowerCase()}.github.io/${listingRepo}/`;
+            }
+            downloadBtn.addEventListener('click', () => {
+                const finalHtml = outputTextArea.value;
+                if (!finalHtml) { return; }
+                const blob = new Blob([finalHtml], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'index.html';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+            copyUrlBtn.addEventListener('click', () => {
+                finalUrlInput.select();
+                document.execCommand('copy');
+                copyUrlBtn.textContent = 'Copied!';
+                setTimeout(() => { copyUrlBtn.textContent = 'Copy'; }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>

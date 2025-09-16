@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ken Morgan's Travel Log for Business</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --brand-color: #2980b9; --accent-color: #1abc9c; --danger-color: #e74c3c; --light-gray: #ecf0f1; --dark-gray: #2c3e50; --white-color: #ffffff; --warning-bg: #f39c12; }
+        html { height: 100%; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; background-color: var(--light-gray); color: var(--dark-gray); margin: 0; height: 100vh; overflow: hidden; }
+
+        .app-layout { display: grid; grid-template-columns: 380px 1fr 380px; grid-template-rows: auto 1fr; grid-template-areas: "header header header" "form-col entries-col stats-col"; height: 100%; gap: 20px; padding: 0 20px 20px 20px; box-sizing: border-box; }
+        .app-header { grid-area: header; }
+        .form-column { grid-area: form-col; overflow-y: auto; }
+        .entries-column { grid-area: entries-col; overflow-y: auto; min-height: 0; }
+        .stats-column { grid-area: stats-col; overflow-y: auto; }
+
+        h1 { color: var(--brand-color); text-align: center; margin: 20px 0; }
+        h2 { color: var(--brand-color); }
+        .container { background-color: var(--white-color); padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); margin-bottom: 20px; }
+
+        .form-group { margin-bottom: 15px; }
+        label { font-size: 14px; display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #bdc3c7; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        button { background-color: var(--brand-color); color: var(--white-color); padding: 12px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px; transition: opacity 0.2s; }
+        button:hover { opacity: 0.9; }
+
+        .entry-list { padding: 10px; background-color: #f9f9f9; border-radius: 4px; min-height: 50px; }
+        .entry { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 15px; border-radius: 4px; background-color: var(--white-color); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); }
+        .entry p { margin: 0 0 5px 0; word-break: break-word; }
+        .entry button { background-color: var(--danger-color); padding: 6px 10px; font-size: 14px; width: auto; }
+
+        .usage-stats p { font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
+        #business-breakdown { border-left: 3px solid var(--brand-color); margin: 10px 0 15px 10px; padding-left: 10px; }
+        #business-breakdown p { font-size: 14px; margin: 5px 0; }
+        .usage-stats .percentage { font-size: 24px; font-weight: bold; color: var(--accent-color); text-align: center; margin-top: 15px; }
+        .chart-container { position: relative; width: 100%; max-width: 280px; margin: 20px auto; }
+        
+        .buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .buttons .full-width { grid-column: 1 / -1; }
+        .buttons .reset-button { background-color: var(--danger-color); }
+        .buttons .secondary-button { background-color: #27ae60; }
+        
+        .filter-controls { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .filter-group { display: flex; flex-direction: column; }
+        .filter-buttons { grid-column: 1 / -1; display: flex; gap: 10px; }
+        .filter-buttons button { font-size: 14px; padding: 10px; }
+        .filter-notice { background-color: var(--warning-bg); color: var(--white-color); padding: 10px; border-radius: 5px; text-align: center; font-weight: bold; margin-bottom: 15px; font-size: 14px; }
+
+        @media (max-width: 1024px) {
+            body { overflow: auto; }
+            .app-layout { display: block; }
+            .form-column, .entries-column, .stats-column { overflow-y: visible; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <header class="app-header"><h1>Ken Morgan's Travel Log for Business</h1></header>
+
+        <div class="form-column">
+            <div class="container">
+                <h2>Add a Trip</h2>
+                <form id="travelLogForm"></form>
+            </div>
+        </div>
+
+        <div class="entries-column">
+            <div class="container">
+                <h2>Entries</h2>
+                <div class="container" style="background-color: #f8f9f9;" id="filter-container"></div>
+                <div class="entry-list" id="entryList"></div>
+            </div>
+        </div>
+
+        <div class="stats-column">
+            <div class="container usage-stats">
+                <h2>Usage Statistics</h2>
+                <div id="filter-indicator" class="filter-notice" style="display: none;"></div>
+                <p><span>Total Business KMs:</span> <strong id="totalBusinessKms">0 km</strong></p>
+                <div id="business-breakdown"></div>
+                <p><span>Total Personal KMs:</span> <strong id="totalPersonalKms">0 km</strong></p>
+                <hr>
+                <p><span>Total Kilometers Driven:</span> <strong id="totalKms">0 km</strong></p>
+                <div class="percentage"><span id="businessUsePercentage">0</span>% Business Use</div>
+                <div class="chart-container"><canvas id="usagePieChart"></canvas></div>
+            </div>
+            <div class="container">
+                <h2>Actions</h2>
+                <div class="buttons" id="action-buttons"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let travelData = [];
+        let usagePieChart;
+        let currentSort = 'date-desc';
+        let currentFilters = { purpose: 'all', startDate: '', endDate: '', minDistance: '' };
+
+        const ALL_PURPOSES = [ "Showing Houses", "Listing Appointment", "Client Meeting", "Property Inspection", "Other", "Continuing Education or Training", "Marketing or Network Events", "Office Commute" ];
+        const PURPOSE_COLORS = { "Showing Houses": "#3498db", "Listing Appointment": "#e67e22", "Client Meeting": "#2ecc71", "Property Inspection": "#9b59b6", "Other": "#7f8c8d", "Continuing Education or Training": "#f1c40f", "Marketing or Network Events": "#1abc9c", "Office Commute": "#34495e", "Personal KMs": "#c0392b" };
+
+        // --- CORE LOGIC ---
+        function renderEntries() {
+            const dataToRender = getFilteredData();
+            const filterActive = isFilterActive();
+            dataToRender.sort((a, b) => {
+                const distA = a.endingOdometer - a.startingOdometer; const distB = b.endingOdometer - b.startingOdometer;
+                switch (currentSort) {
+                    case 'date-asc': return new Date(a.date) - new Date(b.date);
+                    case 'dist-desc': return distB - distA;
+                    case 'dist-asc': return distA - distB;
+                    case 'purpose-asc': return a.purpose.localeCompare(b.purpose);
+                    default: return new Date(b.date) - new Date(a.date);
+                }
+            });
+            const entryList = document.getElementById('entryList');
+            entryList.innerHTML = '';
+            if (dataToRender.length === 0) { entryList.innerHTML = `<p style="text-align: center; color: #7f8c8d;">${filterActive ? 'No entries match your criteria.' : 'Your travel log is empty.'}</p>`; }
+            else { dataToRender.forEach(entry => entryList.appendChild(createEntryElement(entry))); }
+            updateFilterIndicator(filterActive);
+            updateUsageStatsAndChart(filterActive ? dataToRender : travelData);
+        }
+        
+        function getFilteredData() {
+            let data = [...travelData];
+            if (currentFilters.purpose !== 'all') data = data.filter(e => e.purpose === currentFilters.purpose);
+            if (currentFilters.startDate) data = data.filter(e => e.date >= currentFilters.startDate);
+            if (currentFilters.endDate) data = data.filter(e => e.date <= currentFilters.endDate);
+            const minDistance = parseFloat(currentFilters.minDistance);
+            if (!isNaN(minDistance) && minDistance > 0) data = data.filter(e => (e.endingOdometer - e.startingOdometer) >= minDistance);
+            return data;
+        }
+
+        function createEntryElement(entry) {
+            const div = document.createElement('div'); div.className = 'entry';
+            const businessDist = entry.endingOdometer - entry.startingOdometer;
+            div.innerHTML = `<div><p><strong>Date:</strong> ${entry.date} | <strong>Purpose:</strong> ${entry.purpose}</p><p><strong>Description:</strong> ${entry.description}</p><p><strong>Odometer:</strong> ${entry.startingOdometer} km - ${entry.endingOdometer} km</p><p><strong>Business Distance:</strong> ${businessDist.toFixed(2)} km</p>${entry.notes ? `<p class="notes-display" style="font-style: italic; color: #34495e; background-color: #fdfefe; padding: 5px; border-left: 3px solid #bdc3c7; margin-top: 8px;"><strong>Notes:</strong> ${entry.notes}</p>` : ''}</div><button onclick="deleteEntry(${entry.id})">Delete</button>`;
+            return div;
+        }
+        
+        function updateUsageStatsAndChart(data) {
+            const stats = calculateStats(data);
+            const breakdownContainer = document.getElementById('business-breakdown'); breakdownContainer.innerHTML = '';
+            ALL_PURPOSES.forEach(purpose => {
+                if (stats.businessKmsByPurpose[purpose] > 0) {
+                    const p = document.createElement('p');
+                    p.innerHTML = `<span>${purpose}:</span> <strong>${stats.businessKmsByPurpose[purpose].toFixed(2)} km</strong>`;
+                    breakdownContainer.appendChild(p);
+                }
+            });
+            const totalBusinessKms = Object.values(stats.businessKmsByPurpose).reduce((sum, kms) => sum + kms, 0);
+            const totalKmsDriven = totalBusinessKms + stats.totalPersonalKms;
+            const businessUsePercentage = totalKmsDriven > 0 ? (totalBusinessKms / totalKmsDriven) * 100 : 0;
+            document.getElementById('totalBusinessKms').innerText = `${totalBusinessKms.toFixed(2)} km`;
+            document.getElementById('totalPersonalKms').innerText = `${stats.totalPersonalKms.toFixed(2)} km`;
+            document.getElementById('totalKms').innerText = `${totalKmsDriven.toFixed(2)} km`;
+            document.getElementById('businessUsePercentage').innerText = businessUsePercentage.toFixed(1);
+            const chartData = [], chartLabels = [], chartColors = [];
+            Object.entries(stats.businessKmsByPurpose).forEach(([purpose, kms]) => { if (kms > 0) { chartData.push(kms); chartLabels.push(purpose); chartColors.push(PURPOSE_COLORS[purpose] || '#bdc3c7'); } });
+            if (stats.totalPersonalKms > 0) { chartData.push(stats.totalPersonalKms); chartLabels.push('Personal KMs'); chartColors.push(PURPOSE_COLORS['Personal KMs']); }
+            const ctx = document.getElementById('usagePieChart').getContext('2d');
+            if (usagePieChart) usagePieChart.destroy();
+            usagePieChart = new Chart(ctx, { type: 'pie', data: { labels: chartLabels, datasets: [{ data: chartData, backgroundColor: chartColors, borderColor: '#ffffff', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 10 } } } } });
+        }
+        
+        function updateFilterIndicator(isActive) { document.getElementById('filter-indicator').style.display = isActive ? 'block' : 'none'; document.getElementById('filter-indicator').textContent = 'Statistics reflect filtered data only.'; }
+        function isFilterActive() { return currentFilters.purpose !== 'all' || currentFilters.startDate || currentFilters.endDate || (currentFilters.minDistance && parseFloat(currentFilters.minDistance) > 0); }
+        
+        function calculateStats(data) {
+            const businessKmsByPurpose = {}; ALL_PURPOSES.forEach(p => businessKmsByPurpose[p] = 0);
+            let totalPersonalKms = 0; const sortedData = [...data].sort((a, b) => a.startingOdometer - b.startingOdometer);
+            sortedData.forEach((entry, index) => { if(businessKmsByPurpose[entry.purpose] !== undefined) { businessKmsByPurpose[entry.purpose] += (entry.endingOdometer - entry.startingOdometer); } if (index > 0) { const personalGap = entry.startingOdometer - sortedData[index - 1].endingOdometer; if (personalGap > 0) totalPersonalKms += personalGap; } });
+            return { businessKmsByPurpose, totalPersonalKms };
+        }
+
+        function populateDropdowns() {
+            const purposeFormSelect = document.getElementById('purpose'); const purposeFilterSelect = document.getElementById('filter-purpose');
+            purposeFormSelect.innerHTML = '<option value="" disabled selected>Select a purpose...</option>'; purposeFilterSelect.innerHTML = '<option value="all">All Purposes</option>';
+            ALL_PURPOSES.forEach(purpose => { purposeFormSelect.add(new Option(purpose, purpose)); purposeFilterSelect.add(new Option(purpose, purpose)); });
+        }
+        
+        function deleteEntry(id) { if (confirm("Are you sure you want to delete this entry?")) { travelData = travelData.filter(entry => entry.id !== id); saveData(); renderEntries(); } }
+        
+        function setupEventListeners() {
+            document.getElementById('travelLogForm').addEventListener('submit', function(event) {
+                event.preventDefault();
+                const newEntry = { id: Date.now(), date: document.getElementById('date').value, description: document.getElementById('description').value, purpose: document.getElementById('purpose').value, startingOdometer: parseFloat(document.getElementById('startingOdometer').value), endingOdometer: parseFloat(document.getElementById('endingOdometer').value), notes: document.getElementById('notes').value };
+                if (newEntry.endingOdometer <= newEntry.startingOdometer) { alert("Ending odometer must be greater than starting odometer."); return; }
+                if (!newEntry.purpose) { alert("Please select a purpose for the trip."); return; }
+                travelData.push(newEntry); saveData(); renderEntries();
+                this.reset(); document.getElementById('date').valueAsDate = new Date();
+            });
+            document.getElementById('sort-select').addEventListener('change', (e) => { currentSort = e.target.value; renderEntries(); });
+            document.getElementById('apply-filters-btn').addEventListener('click', () => { currentFilters.purpose = document.getElementById('filter-purpose').value; currentFilters.startDate = document.getElementById('filter-start-date').value; currentFilters.endDate = document.getElementById('filter-end-date').value; currentFilters.minDistance = document.getElementById('filter-min-dist').value; renderEntries(); });
+            document.getElementById('clear-filters-btn').addEventListener('click', () => {
+                document.getElementById('filter-purpose').value = 'all'; document.getElementById('filter-start-date').value = ''; document.getElementById('filter-end-date').value = ''; document.getElementById('filter-min-dist').value = '';
+                currentFilters = { purpose: 'all', startDate: '', endDate: '', minDistance: '' }; renderEntries();
+            });
+        }
+        
+        window.onload = function() {
+            document.getElementById('travelLogForm').innerHTML = `<div class="form-group"><label for="date">Date:</label><input type="date" id="date" name="date" required></div><div class="form-group"><label for="description">Description:</label><input type="text" id="description" name="description" placeholder="e.g., Showing at 123 Main St" required></div><div class="form-group"><label for="purpose">Purpose:</label><select id="purpose" name="purpose" required></select></div><div class="form-group"><label for="startingOdometer">Starting Odometer:</label><input type="number" id="startingOdometer" name="startingOdometer" placeholder="Odometer at start of trip" required></div><div class="form-group"><label for="endingOdometer">Ending Odometer:</label><input type="number" id="endingOdometer" name="endingOdometer" placeholder="Odometer at end of trip" required></div><div class="form-group"><label for="notes">Notes:</label><textarea id="notes" name="notes" placeholder="Additional notes or details"></textarea></div><button type="submit">Add Entry</button>`;
+            document.getElementById('filter-container').innerHTML = `<h2>Sort & Filter</h2><div class="filter-group" style="margin-bottom: 15px;"><label for="sort-select">Sort By</label><select id="sort-select"><option value="date-desc">Date (Newest First)</option><option value="date-asc">Date (Oldest First)</option><option value="dist-desc">Distance (High to Low)</option><option value="dist-asc">Distance (Low to High)</option><option value="purpose-asc">Purpose (A-Z)</option></select></div><div class="filter-controls"><div class="filter-group"><label for="filter-purpose">Filter by Purpose</label><select id="filter-purpose"></select></div><div class="filter-group"><label for="filter-min-dist">Min Distance (km)</label><input type="number" id="filter-min-dist" placeholder="e.g., 10" min="0"></div><div class="filter-group"><label for="filter-start-date">Start Date</label><input type="date" id="filter-start-date"></div><div class="filter-group"><label for="filter-end-date">End Date</label><input type="date" id="filter-end-date"></div><div class="filter-buttons"><button id="apply-filters-btn" class="secondary-button" style="background-color: #27ae60;">Apply Filters</button><button id="clear-filters-btn">Clear Filters</button></div></div>`;
+            // --- MODIFIED: Added new Export to Calendar button ---
+            document.getElementById('action-buttons').innerHTML = `<button class="full-width" onclick="generateReport()">Generate Report (PDF/Print)</button><button class="secondary-button" onclick="exportCSV()">Export Log (CSV)</button><button class="secondary-button" onclick="exportToCalendar()">Export to Calendar</button><button onclick="importData()">Import Log (CSV)</button><button class="reset-button full-width" onclick="resetData()">New Year Reset</button>`;
+            
+            populateDropdowns();
+            setupEventListeners();
+            loadData();
+            document.getElementById('date').valueAsDate = new Date();
+            renderEntries();
+        };
+
+        // --- HELPER FUNCTIONS ---
+        function saveData() { localStorage.setItem('kenMorganTravelLogData', JSON.stringify(travelData)); }
+        function loadData() { const savedData = localStorage.getItem('kenMorganTravelLogData'); if (savedData) { travelData = JSON.parse(savedData); } }
+        function resetData() { if (confirm("Are you sure you want to permanently delete all log data?\n\nThis cannot be undone. Please make sure you have a CSV backup.")) { travelData = []; saveData(); renderEntries(); } }
+        
+        async function generateReport() {
+            const dataForReport = isFilterActive() ? getFilteredData() : travelData;
+            if (travelData.length === 0) { alert("Cannot generate a report with no entries."); return; }
+            if (isFilterActive() && dataForReport.length === 0) { alert("Cannot generate a report because no entries match the current filters."); return; }
+
+            const stats = calculateStats(dataForReport);
+            const chartData = [], chartLabels = [], chartColors = [];
+            Object.entries(stats.businessKmsByPurpose).forEach(([p, k]) => { if(k>0){ chartData.push(k); chartLabels.push(p); chartColors.push(PURPOSE_COLORS[p]); }});
+            if(stats.totalPersonalKms > 0) { chartData.push(stats.totalPersonalKms); chartLabels.push('Personal KMs'); chartColors.push(PURPOSE_COLORS['Personal KMs']); }
+            
+            const chartImage = await createChartImage(chartData, chartLabels, chartColors);
+            
+            const reportWindow = window.open('', '_blank');
+            const reportStatsHTML = document.querySelector('.usage-stats').innerHTML.replace(/<canvas.*?<\/canvas>/, `<img src="${chartImage}" style="width:100%; height:auto;">`);
+            const entryListHTML = document.getElementById('entryList').innerHTML;
+            
+            reportWindow.document.write(`<html><head><title>Ken Morgan - Vehicle Usage Report</title><style>body{font-family:Arial,sans-serif;margin:20px}h1,h2{color:#2980b9}.container{border:1px solid #ddd;padding:15px;border-radius:8px;page-break-inside:avoid;margin-bottom:20px}.usage-stats p{display:flex;justify-content:space-between}#business-breakdown{margin-left:15px;border-left:2px solid #eee;padding-left:15px}.percentage{font-size:20px;font-weight:bold;text-align:center}.chart-container{margin:20px auto;max-width:400px}.entry-list{margin-top:20px}.entry{border-bottom:1px solid #ddd;padding:8px 2px;page-break-inside:avoid}.entry:nth-child(odd){background-color:#f8f9f9}@media print{body{-webkit-print-color-adjust:exact}}</style></head><body><h1>Vehicle Usage Report</h1><p><strong>Report Generated On:</strong> ${new Date().toLocaleDateString()}</p><div class="container usage-stats">${reportStatsHTML}</div><h2>Detailed Log</h2><p>Showing ${dataForReport.length} of ${travelData.length} total entries.</p><div class="entry-list">${entryListHTML}</div></body></html>`);
+            reportWindow.document.close();
+            setTimeout(() => { reportWindow.print(); }, 500);
+        }
+
+        function createChartImage(data, labels, colors) {
+             return new Promise(resolve => {
+                const offscreenCanvas = document.createElement('canvas'); offscreenCanvas.width = 500; offscreenCanvas.height = 500;
+                new Chart(offscreenCanvas, { type: 'pie', data: { labels: labels, datasets: [{ data: data, backgroundColor: colors, borderColor: '#ffffff', borderWidth: 2 }] }, options: { responsive: false, animation: { onComplete: (e) => { resolve(e.chart.toBase64Image()); e.chart.destroy(); } }, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Vehicle Usage Breakdown' } } } });
+            });
+        }
+        
+        function exportCSV() {
+            if (travelData.length === 0) { alert("No data to export."); return; }
+            const sortedData = [...travelData].sort((a, b) => a.startingOdometer - b.startingOdometer);
+            let csvRows = ["Date,Purpose,Description,Starting Odometer,Ending Odometer,Business KMs,Notes"];
+            sortedData.forEach(entry => {
+                const businessKms = entry.endingOdometer - entry.startingOdometer;
+                const row = [entry.date, `"${entry.purpose}"`, `"${entry.description.replace(/"/g, '""')}"`, entry.startingOdometer, entry.endingOdometer, businessKms.toFixed(2), `"${entry.notes.replace(/"/g, '""')}"`].join(",");
+                csvRows.push(row);
+            });
+            const csvContent = "data:text/csv;charset=utf-8," + encodeURI(csvRows.join("\n"));
+            const link = document.createElement("a");
+            link.setAttribute("href", csvContent);
+            link.setAttribute("download", `travel_log_backup_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function importData() {
+            const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv';
+            input.onchange = e => {
+                const file = e.target.files[0]; if (!file) return;
+                const reader = new FileReader(); reader.readAsText(file, 'UTF-8');
+                reader.onload = readerEvent => {
+                    const content = readerEvent.target.result; const rows = content.split('\n').slice(1);
+                    const importedData = rows.map(row => { const columns = row.match(/(".*?"|[^",\n\r]+)(?=\s*,|\s*$)/g) || []; if (columns.length < 6) return null; return { id: Date.now() + Math.random(), date: columns[0]?columns[0].replace(/"/g, ''):'', purpose: columns[1]?columns[1].replace(/"/g, ''):'', description: columns[2]?columns[2].replace(/"/g, ''):'', startingOdometer: parseFloat(columns[3]), endingOdometer: parseFloat(columns[4]), notes: columns[6]?columns[6].replace(/"/g, ''):'' }; }).filter(entry => entry && entry.date && ALL_PURPOSES.includes(entry.purpose) && !isNaN(entry.startingOdometer) && !isNaN(entry.endingOdometer));
+                    if(importedData.length > 0) { if (confirm(`Found ${importedData.length} valid entries. Do you want to add them to your current log?`)) { travelData.push(...importedData); saveData(); renderEntries(); } }
+                    else { alert("No valid entries found in the selected file. Please check the file format."); }
+                }
+            }
+            input.click();
+        }
+
+        // --- NEW: Export to Google Calendar Functionality ---
+        function exportToCalendar() {
+            if (travelData.length === 0) { alert("No entries to export to calendar."); return; }
+
+            const csvHeader = "Subject,Start Date,Start Time,End Date,End Time,Description\n";
+            const csvRows = travelData.map(entry => {
+                const eventDate = new Date(entry.date + 'T00:00:00'); // Use T00:00:00 to avoid timezone issues
+                const formattedDate = (eventDate.getMonth() + 1) + '/' + eventDate.getDate() + '/' + eventDate.getFullYear();
+                
+                const times = getEventTime(entry.purpose, eventDate);
+
+                const subject = entry.purpose;
+                const description = `Trip Description: ${entry.description}\nNotes: ${entry.notes}`;
+
+                return [
+                    `"${subject}"`,
+                    formattedDate,
+                    times.startTime,
+                    formattedDate,
+                    times.endTime,
+                    `"${description.replace(/"/g, '""')}"`
+                ].join(',');
+            });
+
+            const csvContent = "data:text/csv;charset=utf-8," + encodeURI(csvHeader + csvRows.join("\n"));
+            const link = document.createElement("a");
+            link.setAttribute("href", csvContent);
+            link.setAttribute("download", "calendar_events.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function getEventTime(purpose, date) {
+            const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+
+            switch (purpose) {
+                case "Showing Houses":
+                    // Weekend showing = Open House style
+                    if (dayOfWeek === 0 || dayOfWeek === 6) {
+                        return { startTime: '01:00 PM', endTime: '03:00 PM' };
+                    }
+                    // Weekday showing
+                    return { startTime: '04:00 PM', endTime: '05:30 PM' };
+                case "Listing Appointment":
+                    return { startTime: '06:00 PM', endTime: '07:00 PM' };
+                case "Property Inspection":
+                    return { startTime: '10:00 AM', endTime: '12:00 PM' };
+                case "Client Meeting":
+                    return { startTime: '11:00 AM', endTime: '12:00 PM' };
+                case "Continuing Education or Training":
+                    return { startTime: '09:30 AM', endTime: '11:30 AM' };
+                case "Marketing or Network Events":
+                    return { startTime: '05:00 PM', endTime: '06:30 PM' };
+                case "Office Commute":
+                    return { startTime: '09:00 AM', endTime: '09:30 AM' };
+                default: // "Other"
+                    return { startTime: '02:00 PM', endTime: '03:00 PM' };
+            }
+        }
+    </script>
+</body>
+</html>

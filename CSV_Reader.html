@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CSV Header Reader</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        textarea { width: 100%; height: 200px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>CSV File Reader</h1>
+    <p>Please select your Mastercard CSV file to read its header and first few rows.</p>
+    <input type="file" id="csvFile" accept=".csv">
+    <hr>
+    <h3>File Content (First 5 Rows):</h3>
+    <textarea id="fileOutput" readonly></textarea>
+
+    <script>
+        document.getElementById('csvFile').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split(/\r?\n/).slice(0, 5); // Get the first 5 lines
+                document.getElementById('fileOutput').value = lines.join('\n');
+            };
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ken Morgan Real Estate - Project Directory</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for a modern typeface -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden; /* Prevents scrollbars from appearing due to the video */
+        }
+        /* Style for the background video */
+        #bg-video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -100;
+            object-fit: cover; /* Ensures the video covers the screen without distortion */
+            filter: brightness(0.6); /* Dims the video slightly to make text more readable */
+        }
+        /* Custom class for the translucent box with a backdrop blur effect */
+        .translucent-box {
+            background-color: rgba(17, 24, 39, 0.6); /* Semi-transparent dark background */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px); /* For Safari support */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        /* Style for the link items */
+        .link-item a {
+            transition: all 0.3s ease;
+            background: linear-gradient(90deg, #38bdf8, #818cf8); /* Gradient for the text */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-fill-color: transparent;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 2px;
+        }
+        /* Underline effect on hover */
+        .link-item a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            transition: width 0.3s ease;
+        }
+        .link-item a:hover::after {
+            width: 100%;
+        }
+        .link-item a:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+
+    <!-- Background video element -->
+    <video autoplay muted loop id="bg-video">
+        <source src="backgroundvideoforweb.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Main container to center the content -->
+    <main class="min-h-screen flex items-center justify-center p-4">
+        <!-- The translucent box containing the links -->
+        <div class="translucent-box w-full max-w-2xl rounded-2xl shadow-2xl p-8 md:p-12">
+            <header class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                    Project Directory
+                </h1>
+                <p class="text-gray-300 mt-2">Ken Morgan Real Estate</p>
+            </header>
+            
+            <!-- Unordered list of links -->
+            <ul class="space-y-4 text-lg text-center">
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/2PerfectedOpenHouseMortgagePrintoutToolBrandedTabbedCalculators.html">2PerfectedOpenHouseMortgagePrintoutTool...</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/CEOCommandCenterDashboardV2.2.html">CEOCommandCenterDashboardV2.2</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/CMA_GENERATOR3_WITH_SCRIPT7.html">CMA_GENERATOR3_WITH_SCRIPT7</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/CSV_Reader.html">CSV_Reader</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/ExpenseTrackerHSTIncludedAug2025.html">ExpenseTrackerHSTIncludedAug2025</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/FinalRevisedBusinessTravelLog2025.html">FinalRevisedBusinessTravelLog2025</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/FullTransactionChecklist2.html">FullTransactionChecklist2</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/KenMorganCRMFinalIntegrated2025.html">KenMorganCRMFinalIntegrated2025</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/KenMorganRealEstateGalleryWizard09162025.html">KenMorganRealEstateGalleryWizard09162025</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/links.html">links</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/propertydescriptiongenerator.html">propertydescriptiongenerator</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/stocks.html">stocks</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/UpdatedFullCompleteDashboardPerfected2025.html">UpdatedFullCompleteDashboardPerfected2025</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/V2.0-ExpenseTrackerHSTIncludedAug2025.html">V2.0-ExpenseTrackerHSTIncludedAug2025</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/videobackgroundwithoverlaywithDescriptionWizard.html">videobackgroundwithoverlaywithDescriptionWizard</a></li>
+                <li class="link-item"><a href="https://kenmorganrealestate.github.io/Home/VirtualGalleryWizard-9-17-2025.html">VirtualGalleryWizard-9-17-2025</a></li>
+            </ul>
+        </div>
+    </main>
+
+</body>
+</html>
+

@@ -1,0 +1,514 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Real Estate Agent Toolkit</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.7.1/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .custom-file-upload {
+            border: 2px dashed #cbd5e1;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .custom-file-upload:hover {
+            background-color: #f8fafc;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Styles for the generated report view */
+        #output-content h2, #output-content h3 {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 2rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 0.25rem;
+        }
+         #output-content h4 {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        #output-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        #output-content th, #output-content td {
+            border: 1px solid #e2e8f0;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        #output-content th {
+            background-color: #f8fafc;
+        }
+        .toolkit-btn {
+             width: 100%;
+             text-align: left;
+             padding: 0.75rem 1rem;
+             margin-bottom: 0.5rem;
+             border-radius: 0.5rem;
+             font-weight: bold;
+             transition: all 0.2s;
+             display: flex;
+             align-items: center;
+             justify-content: space-between;
+        }
+        .toolkit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="main-app" class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">AI Real Estate Agent Toolkit</h1>
+            <p class="text-gray-600 mt-2">Generate a CMA, scripts, marketing content, and more from a single input.</p>
+        </header>
+
+        <div class="bg-white p-6 rounded-2xl shadow-lg">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="lg:border-r lg:border-gray-200 lg:pr-8">
+                    <h2 class="text-2xl font-semibold mb-4">1. Input Property & Market Data</h2>
+
+                    <div class="mb-6">
+                        <label for="subjectAddress" class="block font-medium mb-2">Subject Property Address</label>
+                        <input type="text" id="subjectAddress" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g., 123 Beddoe Avenue, Hamilton, ON">
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="subjectDetails" class="block font-medium mb-2">Subject Property Details (Brain Dump)</label>
+                        <textarea id="subjectDetails" rows="5" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g., 3 beds, 2 baths, 1500 sq ft. Updated kitchen with granite countertops..."></textarea>
+                    </div>
+
+                    <div class="mb-6">
+                        <label class="block font-medium mb-2">Comparable Listings (PDF, DOCX)</label>
+                        <div id="comps-upload-area" class="custom-file-upload rounded-lg">
+                            <p>Click or drag to upload all comps (Sold, Active, etc.)</p>
+                            <input type="file" id="comps-files" class="hidden" multiple accept=".pdf,.docx">
+                            <p id="comps-file-list" class="text-sm text-gray-500 mt-2"></p>
+                        </div>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="marketNotes" class="block font-medium mb-2">Current Market Notes (Optional)</label>
+                        <textarea id="marketNotes" rows="3" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="e.g., 4000 homes for sale, 300 buyers, 8% selling, 5 months inventory..."></textarea>
+                    </div>
+
+                    <button id="generate-btn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors text-lg">
+                        Generate CMA Report
+                    </button>
+                </div>
+
+                <div>
+                    <h2 class="text-2xl font-semibold mb-4 flex justify-between items-center">
+                        2. Generated Report & Toolkit
+                    </h2>
+                    <div id="toolkit-container" class="hidden grid grid-cols-2 gap-2 mb-4">
+                        <button id="generate-pricing-script-btn" class="toolkit-btn bg-purple-100 text-purple-800 hover:bg-purple-200">Generate Pricing Script <span class="status"></span></button>
+                        <button id="generate-doorknocking-btn" class="toolkit-btn bg-teal-100 text-teal-800 hover:bg-teal-200">Generate Door Knocking Kit <span class="status"></span></button>
+                        <button id="generate-marketing-btn" class="toolkit-btn bg-indigo-100 text-indigo-800 hover:bg-indigo-200">Generate Marketing Package <span class="status"></span></button>
+                        <button id="generate-objections-btn" class="toolkit-btn bg-pink-100 text-pink-800 hover:bg-pink-200">Generate Objection Handlers <span class="status"></span></button>
+                        <button id="generate-followup-btn" class="toolkit-btn bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Generate Follow-up Emails <span class="status"></span></button>
+                    </div>
+
+                    <div id="action-buttons" class="text-right mb-2 space-x-2">
+                       <button id="print-report-btn" class="hidden bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 text-sm">Print / PDF</button>
+                       <button id="copy-btn" class="hidden bg-gray-200 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 text-sm">Copy All</button>
+                       <button id="download-btn" class="hidden bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 text-sm">Download (.md)</button>
+                    </div>
+                    
+                    <div id="output-container" class="border rounded-lg p-6 h-[600px] overflow-y-auto bg-gray-50">
+                        <div id="placeholder" class="text-center text-gray-500 flex flex-col items-center justify-center h-full">
+                            <svg class="w-12 h-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <p>Your generated report and toolkit components will appear here.</p>
+                        </div>
+                        <div id="loader" class="hidden items-center justify-center h-full flex-col">
+                            <div class="loader"></div>
+                            <p id="loader-text" class="mt-4 text-gray-600">Analyzing data and generating report...</p>
+                        </div>
+                        <div id="output-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const showdownConverter = new showdown.Converter({ tables: true, ghCompatibleHeaderId: true });
+        
+        // --- HARDCODE YOUR API KEY HERE ---
+        const apiKey = 'AIzaSyD_UWXt1n74XpsmjUWHYZJwIyBngsbijg4';
+
+        // --- DOM Element References ---
+        const compsUploadArea = document.getElementById('comps-upload-area');
+        const compsFilesInput = document.getElementById('comps-files');
+        const compsFileList = document.getElementById('comps-file-list');
+        const generateBtn = document.getElementById('generate-btn');
+        const toolkitContainer = document.getElementById('toolkit-container');
+        const copyBtn = document.getElementById('copy-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const printReportBtn = document.getElementById('print-report-btn');
+        const placeholder = document.getElementById('placeholder');
+        const loader = document.getElementById('loader');
+        const loaderText = document.getElementById('loader-text');
+        const outputContent = document.getElementById('output-content');
+        let rawMarkdownOutput = '';
+
+        // Toolkit Buttons
+        const toolkitButtons = {
+            pricingScript: document.getElementById('generate-pricing-script-btn'),
+            doorKnocking: document.getElementById('generate-doorknocking-btn'),
+            marketing: document.getElementById('generate-marketing-btn'),
+            objections: document.getElementById('generate-objections-btn'),
+            followUp: document.getElementById('generate-followup-btn'),
+        };
+
+        // --- File Upload Logic ---
+        compsUploadArea.addEventListener('click', () => compsFilesInput.click());
+        compsUploadArea.addEventListener('dragover', (e) => e.preventDefault());
+        compsUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            compsFilesInput.files = e.dataTransfer.files;
+            updateFileList(compsFilesInput);
+        });
+        compsFilesInput.addEventListener('change', () => updateFileList(compsFilesInput));
+
+        function updateFileList(input) {
+            compsFileList.innerHTML = Array.from(input.files).map(f => f.name).join('<br>');
+        }
+
+        // --- Main Application Logic ---
+        generateBtn.addEventListener('click', async () => {
+            const subjectAddress = document.getElementById('subjectAddress').value.trim();
+            const subjectDetails = document.getElementById('subjectDetails').value.trim();
+            
+            if (apiKey === 'YOUR_API_KEY_HERE') {
+                alert('Please hardcode your API key in the HTML file first.');
+                return;
+            }
+            if (!subjectAddress || !subjectDetails || compsFilesInput.files.length === 0) {
+                alert('Please provide a subject address, subject details, and at least one comparable listings file.');
+                return;
+            }
+
+            placeholder.style.display = 'none';
+            outputContent.innerHTML = '';
+            loaderText.textContent = 'Analyzing data and generating CMA...';
+            loader.style.display = 'flex';
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+            [copyBtn, downloadBtn, printReportBtn].forEach(btn => btn.classList.add('hidden'));
+            toolkitContainer.classList.add('hidden');
+
+            try {
+                const apiParts = await Promise.all(Array.from(compsFilesInput.files).map(fileToGenerativePart));
+                const marketNotes = document.getElementById('marketNotes').value.trim();
+                const cmaPrompt = buildCmaPrompt(subjectAddress, subjectDetails, marketNotes);
+                rawMarkdownOutput = await callGeminiAPIWithRetry(cmaPrompt, apiParts);
+                
+                const htmlOutput = showdownConverter.makeHtml(rawMarkdownOutput);
+                outputContent.innerHTML = htmlOutput;
+                
+                [copyBtn, downloadBtn, printReportBtn].forEach(btn => btn.classList.remove('hidden'));
+                toolkitContainer.classList.remove('hidden');
+
+            } catch (error) {
+                outputContent.innerHTML = `<p class="text-red-500"><strong>Error generating CMA:</strong> ${error.message}</p>`;
+            } finally {
+                loader.style.display = 'none';
+                generateBtn.textContent = 'CMA Generation Complete';
+            }
+        });
+
+        // --- Toolkit Button Event Handlers ---
+        async function handleGenerationProcess(button, promptBuilder) {
+            const statusSpan = button.querySelector('.status');
+            button.disabled = true;
+            statusSpan.textContent = '⚙️ Generating...';
+            try {
+                const prompt = promptBuilder();
+                const newMarkdown = await callGeminiAPIWithRetry(prompt);
+                
+                rawMarkdownOutput += "\n\n---\n\n" + newMarkdown; // Append to full report
+                const newHtml = showdownConverter.makeHtml(newMarkdown);
+                
+                const sectionWrapper = document.createElement('div');
+                sectionWrapper.innerHTML = newHtml;
+                // Add a page-break class to the first H2 for printing
+                const header = sectionWrapper.querySelector('h2, h3');
+                if(header) header.classList.add('page-break');
+
+                outputContent.appendChild(sectionWrapper);
+                outputContent.scrollTop = outputContent.scrollHeight; // Auto-scroll to bottom
+                statusSpan.textContent = '✅';
+            } catch (error) {
+                outputContent.innerHTML += `<p class="text-red-500"><strong>Error:</strong> ${error.message}</p>`;
+                statusSpan.textContent = '❌ Error';
+                button.disabled = false; // Re-enable on error
+            }
+        }
+        
+        toolkitButtons.pricingScript.addEventListener('click', () => handleGenerationProcess(toolkitButtons.pricingScript, buildPricingScriptPrompt));
+        toolkitButtons.doorKnocking.addEventListener('click', () => handleGenerationProcess(toolkitButtons.doorKnocking, buildDoorKnockingPrompt));
+        toolkitButtons.marketing.addEventListener('click', () => handleGenerationProcess(toolkitButtons.marketing, buildMarketingPrompt));
+        toolkitButtons.objections.addEventListener('click', () => handleGenerationProcess(toolkitButtons.objections, buildObjectionHandlerPrompt));
+        toolkitButtons.followUp.addEventListener('click', () => handleGenerationProcess(toolkitButtons.followUp, buildFollowUpPrompt));
+        
+
+        // --- API & Prompt Engineering ---
+        async function callGeminiAPIWithRetry(prompt, parts = [], retries = 4, delay = 2000) {
+            const model = "gemini-1.5-flash-latest";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            const requestPayload = {
+                contents: [{ parts: [{ text: prompt }, ...parts] }],
+                generationConfig: { temperature: 0.4, responseMimeType: "text/plain" }
+            };
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(requestPayload)
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.candidates && data.candidates.length > 0) {
+                            return data.candidates[0].content.parts[0].text;
+                        } else {
+                           throw new Error("Invalid response structure from API.");
+                        }
+                    }
+                    if (response.status === 429 || response.status >= 500) {
+                        console.warn(`API is overloaded. Retrying...`);
+                        loaderText.textContent = `Server is busy. Retrying... (Attempt ${i + 1})`;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(`API Error (${response.status}): ${errorData.error.message}`);
+                    }
+                } catch (error) {
+                   if (i === retries - 1) throw error;
+                   console.warn(`Network error. Retrying...`);
+                   loaderText.textContent = `Network error. Retrying...`;
+                   await new Promise(resolve => setTimeout(resolve, delay));
+                   delay *= 2;
+                }
+            }
+            throw new Error('API failed to respond after multiple retries.');
+        }
+
+        // -- PROMPT BUILDER FUNCTIONS --
+
+        function buildCmaPrompt(subjectAddress, subjectDetails, marketNotes) {
+    const adjustmentInstructions = marketNotes.trim() !== ''
+        ? `Critically, you MUST use the following logic for adjustments, using the subject property ("${subjectDetails}") as the baseline:
+            - For each comparable property, compare its features to the subject property's features.
+            - If the comparable property is SUPERIOR to the subject (e.g., it has a finished basement but the subject does not), you must apply a NEGATIVE adjustment to the comparable's sale price.
+            - If the comparable property is INFERIOR to the subject (e.g., the subject has a renovated kitchen but the comparable does not), you must apply a POSITIVE adjustment to the comparable's sale price.
+            - You MUST use the specific dollar values for adjustments provided in the Market Notes section below. If a specific feature adjustment is not listed, use a logical estimate.
+            - Market Notes & Adjustment Values: "${marketNotes}"`
+        : 'Make logical, dollar-value adjustments for feature differences based on your general real estate knowledge, using the subject property as the baseline (negative adjustment for superior comps, positive for inferior comps).';
+
+    return `**ROLE:** You are an expert real estate analyst in Hamilton, Ontario, preparing a Comparative Market Analysis (CMA).
+        **CONTEXT:** The subject property is **${subjectAddress}** with these details: "${subjectDetails}". I have provided comparable listings as files.
+        **TASK:** Follow these steps precisely:
+        1. Analyze all provided documents to extract key data for each property (status, price, beds, baths, sqft, etc.).
+            // ADD THIS INSTRUCTION
+            **IMPORTANT:** When analyzing properties, you MUST determine the basement's status using the \`Basement Fin:\` field. If this field says \`Unfinished\`, you must classify the basement as unfinished, regardless of what the \`Basement:\` field says.
+        2. Select the 4 best "Sold" and 4 best "Active" comparables.
+        3. Generate a "Neighborhood Profile & Market Insights" section for the area, incorporating any relevant data from the Market Notes.
+        4. Create a "CMA Adjustment Grid" in a Markdown table. The first column after the 'Feature' column should be the 'Subject Property', showing its features. Each subsequent column should represent a comparable property.
+        5. **ADJUSTMENT LOGIC:** ${adjustmentInstructions}
+        6. The final row in the table MUST be the 'Adjusted Price' for each comparable.
+        7. Provide a "Price Recommendation" with a tight price range and a concise justification based on the final adjusted prices of the sold comparables.
+        8. Format the ENTIRE output as a professional report using Markdown. DO NOT include any other scripts or components yet.`;
+}
+
+        function buildPricingScriptPrompt() {
+            const marketNotes = document.getElementById('marketNotes').value.trim();
+            return `**ROLE:** You are an expert real estate sales strategist.
+                **CONTEXT:** You have been provided with a completed CMA report. The full report is contained in the user's prior messages. The agent also provided these critical market stats: "${marketNotes || 'Crucial market stats were not provided.'}"
+                **TASK:** Generate a "Pricing Conversation Script". The script MUST be: Conversational, persuasive, use analogies (like the "fishing" analogy or "10 offers vs zero offers"), and directly weave in the numbers from the "CRITICAL MARKET NOTES" to create urgency and justify the pricing strategy. Format the output using Markdown with a clear heading.`;
+        }
+        
+        function buildDoorKnockingPrompt() {
+            const subjectAddress = document.getElementById('subjectAddress').value.trim();
+            return `**ROLE:** You are an elite real estate coach creating hyper-practical scripts for agents in Hamilton, Ontario.
+                **CONTEXT:** You are creating a door-knocking kit for an agent who has the CMA for **${subjectAddress}** and will hold an open house there. The full CMA is in the prior text; use it to extract data.
+                **TASK:** Generate a "Door Knocking Script: Open House Invitation" using the EXACT five-part structure and format below. You MUST populate the script with specific, relevant data extracted from the full CMA Report.
+                **OUTPUT FORMAT REQUIRED:**
+                ## Door Knocking Script: Open House Invitation
+                **Objective:** To personally invite neighbors to the open house for ${subjectAddress}, create local buzz, and identify potential future clients.
+                **What you'll need:**
+                - Professionally designed open house flyers...
+                - Your business cards.
+                - A clipboard or tablet to take notes.
+                **Part 1: The Introduction (The First 10 Seconds)**
+                (Provide script with placeholders like [Your Name] and stage directions.)
+                **Part 2: The Invitation & Value Proposition**
+                (Provide script. Instruct agent to hand over the flyer.)
+                **Part 3: The Market Insight (Leveraging Your CMA Data)**
+                **IMPORTANT:** Analyze the provided CMA Report and extract 2-3 specific stats. Find average days on market, list-to-sale price ratio, or market condition (e.g., "It's a balanced market..."). Reference street names from the comparable properties listed in the CMA. Use actual data.
+                **Part 4: The Pivot & Call to Action**
+                (Provide the script to transition to a qualifying question.)
+                **Part 5: The Graceful Exit**
+                (Provide a polite closing script.)
+                ---
+                ### Mock Dialogue: Realtor & Homeowner
+                Create three distinct mock dialogue scenarios:
+                - **Scenario 1: The Friendly & Curious Homeowner**
+                - **Scenario 2: The Busy & Dismissive Homeowner**
+                - **Scenario 3: The Potential Future Seller**`;
+        }
+
+        function buildMarketingPrompt() {
+            const subjectAddress = document.getElementById('subjectAddress').value.trim();
+            const subjectDetails = document.getElementById('subjectDetails').value.trim();
+            return `**ROLE:** You are a creative real estate marketing copywriter.
+                **CONTEXT:** You need to create a marketing package for a new listing at **${subjectAddress}**. The agent's raw notes are: "${subjectDetails}".
+                **TASK:** Generate a "Property Marketing Package" with the following components, formatted in Markdown.
+                ## Property Marketing Package
+                ### 1. Compelling MLS Listing Description
+                (Write a captivating, professional property description based on the agent's notes. Use evocative language.)
+                ### 2. Instagram Post
+                (Write a short, punchy Instagram caption. Use emojis and relevant local hashtags for the area mentioned in the address.)
+                ### 3. Facebook Post
+                (Write a slightly longer, more detailed post for Facebook, encouraging shares and comments.)
+                ### 4. Email Blast to Agent's Database
+                (Write the subject line and body for an email announcing this "Just Listed" property to potential buyers.)`;
+        }
+
+        function buildObjectionHandlerPrompt() {
+            const marketNotes = document.getElementById('marketNotes').value.trim();
+            return `**ROLE:** You are a seasoned real estate sales coach and negotiation expert.
+                **CONTEXT:** An agent needs scripts to handle common seller objections during a listing presentation. The current market context is: "${marketNotes || 'No specific market notes provided.'}" The full CMA is also available in the history for context.
+                **TASK:** Generate a "Seller Objection Handling Guide" in Markdown. Provide empathetic, logical, and persuasive responses to the following common objections. The responses should incorporate data from the market notes and CMA when possible.
+                ## Seller Objection Handling Guide
+                ### 1. "We want to list for a higher price and test the market."
+                (Provide a response using an analogy about the "golden window" of a new listing's first few weeks.)
+                ### 2. "Another agent said they could get us a higher price."
+                (Provide a script that differentiates based on strategy rather than just price, questioning if the other agent provided a detailed data analysis.)
+                ### 3. "Why is your commission so high? / Can you do it for less?"
+                (Provide a value-based response that frames the commission as an investment in a superior marketing and negotiation strategy that leads to a higher net price.)`;
+        }
+
+        function buildFollowUpPrompt() {
+            const subjectAddress = document.getElementById('subjectAddress').value.trim();
+            return `**ROLE:** You are an organized and personable real estate assistant.
+                **CONTEXT:** An agent has just finished a listing presentation for **${subjectAddress}** and also went door-knocking in the neighborhood.
+                **TASK:** Write two distinct email templates in Markdown format.
+                ## Follow-Up Email Templates
+                ### 1. Post-Presentation "Thank You" Email
+                **Audience:** The potential sellers at ${subjectAddress}.
+                **Goal:** To thank them for their time, briefly recap the recommended list price, and reinforce the agent's value proposition.
+                **Subject Line:**
+                **Body:**
+                ### 2. "Nice to Meet You" Nurture Email
+                **Audience:** A neighbor met while door-knocking who expressed mild curiosity.
+                **Goal:** To be a friendly, no-pressure follow-up that provides value and keeps the agent top-of-mind.
+                **Subject Line:**
+                **Body:**`;
+        }
+
+        // --- Utility & Action Buttons ---
+        printReportBtn.addEventListener('click', () => {
+            const printableHtml = generatePrintableHtml(rawMarkdownOutput);
+            const newWindow = window.open();
+            newWindow.document.write(printableHtml);
+            newWindow.document.close();
+        });
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(rawMarkdownOutput).then(() => {
+                alert('Report copied to clipboard!');
+            }, () => {
+                alert('Failed to copy report.');
+            });
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const subjectAddress = document.getElementById('subjectAddress').value.trim().replace(/[^a-zA-Z0-9]/g, '-') || 'CMA-Report';
+            const filename = `AI-Toolkit-Report-${subjectAddress}.md`;
+            const blob = new Blob([rawMarkdownOutput], { type: 'text/markdown' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        });
+
+        function fileToGenerativePart(file) {
+            return new Promise((resolve, reject) => {
+                if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        mammoth.extractRawText({ arrayBuffer: event.target.result })
+                            .then(result => resolve({ text: `\n--- DOC: ${file.name} ---\n${result.value}\n--- END DOC ---\n` }))
+                            .catch(reject);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsArrayBuffer(file);
+                } else if (file.type === 'application/pdf') {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve({ inlineData: { mimeType: 'application/pdf', data: reader.result.split(',')[1] } });
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                } else {
+                    reject(new Error('Unsupported file type: ' + file.name));
+                }
+            });
+        }
+
+        function generatePrintableHtml(markdownContent) {
+            const subjectAddress = document.getElementById('subjectAddress').value.trim();
+            const htmlContent = showdownConverter.makeHtml(markdownContent);
+            return `<html><head><title>CMA Report for ${subjectAddress}</title><style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; line-height: 1.6; color: #333; }
+                        .page { padding: 40px; }
+                        h1, h2, h3, h4 { color: #111; }
+                        h1 { font-size: 28px; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                        h2, .page-break { font-size: 22px; border-bottom: 1px solid #ccc; padding-bottom: 8px; margin-top: 40px; }
+                        .page-break { page-break-before: always; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 12px; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        @media print { #print-controls { display: none; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                    </style></head><body>
+                    <div id="print-controls" style="position: fixed; top: 15px; right: 20px; z-index: 100;">
+                        <button onclick="window.print()" style="padding: 8px 16px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Print / Save PDF</button>
+                    </div>
+                    <div class="page"><h1>Real Estate Analysis for ${subjectAddress}</h1>${htmlContent}</div>
+                </body></html>`;
+        }
+    </script>
+</body>
+</html>

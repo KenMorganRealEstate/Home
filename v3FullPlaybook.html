@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ken Morgan's Real Estate Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-dark: #1f2937;
+            --bg-light: #374151;
+            --bg-lighter: #4b5563;
+            --text-light: #f3f4f6;
+            --text-dim: #9ca3af;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+            --border-color: #4b5563;
+        }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: var(--text-light); }
+        .playbook-container { display: grid; grid-template-columns: 300px 1fr; height: 100vh; }
+        nav { background-color: var(--bg-light); padding: 1.5rem; overflow-y: auto; border-right: 1px solid var(--border-color); position: fixed; width: 300px; height: 100vh; }
+        .nav-button { display: block; width: 100%; text-align: left; padding: 0.75rem 1rem; border-radius: 0.5rem; font-weight: 500; color: var(--text-dim); transition: all 0.2s ease-in-out; }
+        .nav-button:hover { background-color: var(--bg-lighter); color: var(--text-light); }
+        .nav-button.active { background-color: var(--accent-blue); color: var(--text-light); font-weight: 600; }
+        main { grid-column: 2 / -1; overflow-y: auto; padding: 2rem; }
+        .phase-content { padding-top: 2rem; border-bottom: 2px solid var(--border-color); margin-bottom: 2rem; }
+        .phase-content:first-child { padding-top: 0; }
+        .phase-content:last-child { border-bottom: none; }
+        .section { background-color: var(--bg-light); border-radius: 0.75rem; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--border-color); }
+        .section h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; color: white; }
+        .tool-link, .resource-link { display: block; background-color: var(--bg-lighter); padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-light); transition: all 0.2s; word-break: break-all; }
+        .tool-link:hover { background-color: var(--accent-blue); transform: translateY(-2px); }
+        .resource-link { background-color: #1e40af; }
+        .resource-link:hover { background-color: #1d4ed8; transform: translateY(-2px); }
+        .checklist li { list-style: none; margin-bottom: 0.75rem; }
+        .checklist label { display: flex; align-items: center; font-size: 1rem; cursor: pointer; }
+        .checklist input[type="checkbox"] { width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; accent-color: var(--accent-green); flex-shrink: 0; }
+        .checklist li.completed label { text-decoration: line-through; color: var(--text-dim); }
+        .progress-bar { background-color: var(--bg-lighter); border-radius: 99px; height: 10px; margin-bottom: 1rem; overflow: hidden; }
+        .progress-bar-inner { background-color: var(--accent-green); height: 100%; width: 0%; transition: width 0.5s ease; }
+        .data-buttons button, .data-buttons label { background-color: var(--bg-lighter); color: var(--text-light); padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; }
+        .data-buttons button:hover, .data-buttons label:hover { background-color: var(--accent-blue); }
+        .data-buttons .danger:hover { background-color: #ef4444; }
+        details { background: #2b3646; border-radius: 0.5rem; margin-bottom: 0.75rem; border: 1px solid var(--border-color); }
+        summary { cursor: pointer; padding: 0.75rem 1rem; font-weight: 600; color: var(--text-light); }
+        .sop-content { padding: 0 1rem 1rem 1rem; border-top: 1px solid var(--border-color); }
+        .sop-content p, .sop-content li { margin-bottom: 0.75rem; color: var(--text-dim); }
+        .sop-content h4, .sop-content h5 { font-weight: 600; color: var(--text-light); margin-top: 1rem; margin-bottom: 0.5rem; }
+        .sop-content blockquote { border-left: 4px solid var(--accent-blue); padding-left: 1rem; margin-left: 0.5rem; font-style: italic; color: #d1d5db; }
+        .sop-content .jump-link { color: var(--accent-blue); text-decoration: underline; font-weight: 500; cursor: pointer; }
+        .sop-content .jump-link:hover { color: #60a5fa; }                
+        /* --- Cosmetic Fix for Client Hub Inputs --- */
+        .client-hub-input {
+            background-color: var(--bg-lighter);
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            width: 100%; /* Ensure full width */
+        }
+        .client-hub-input:focus {
+            border-color: var(--accent-blue);
+            outline: none;
+            box-shadow: none; /* Tailwind forms plugin override */
+            ring: 0;
+        }
+        textarea.client-hub-input {
+             min-height: 120px;
+        }
+        .client-hub-label { font-weight: 500; color: var(--text-dim); }
+        .link-wrapper { display: flex; align-items: flex-end; gap: 0.5rem; }
+        .link-wrapper .client-hub-input { flex-grow: 1; }
+        .go-button {
+            padding: 0.5rem 0.75rem;
+            background-color: var(--accent-blue);
+            color: var(--text-light);
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            height: 38px; /* Match input height */
+            flex-shrink: 0;
+        }
+        .go-button:hover { background-color: #2563eb; }
+    </style>
+    <!-- Load Tailwind *after* custom styles to allow plugin overrides -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="playbook-container">
+        <nav>
+            <h2 class="text-2xl font-bold text-white mb-4">Ken's Command Center</h2>
+                        
+            <div class="p-4 mb-4 rounded-lg bg-gray-800 border border-accent-blue">
+                <h4 class="text-sm font-semibold text-accent-blue mb-1 uppercase tracking-wider">Success Coach: What's Next?</h4>
+                <div id="next-step-content">
+                    <p id="next-step-task" class="text-white font-medium">Loading next task...</p>
+                    <a id="next-step-link" href="#main-content" class="text-sm text-gray-400 hover:underline">Go to task &rarr;</a>
+                    <p id="next-step-quote" class="text-sm text-gray-300 italic mt-3 pt-3 border-t border-gray-600">"The only limit to your achievement is the extent of your belief in yourself."</p>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <a href="#client-hub" class="nav-button active" data-phase="client-hub">Client Hub</a>
+                <a href="#phase0" class="nav-button" data-phase="phase0">Phase 0: CEO Operations</a>
+                <a href="#phase1" class="nav-button" data-phase="phase1">Phase 1: Lead Generation</a>
+                <a href="#phase2" class="nav-button" data-phase="phase2">Phase 2: Listing Prep</a>
+                <a href="#phase3" class="nav-button" data-phase="phase3">Phase 3: The Listing Appointment</a>
+                <a href="#phase4" class="nav-button" data-phase="phase4">Phase 4: Marketing a Listing</a>
+                <a href="#phase5" class="nav-button" data-phase="phase5">Phase 5: Working with Buyers</a>
+                <a href="#phase6" class="nav-button" data-phase="phase6">Phase 6: The Offer</a>
+                <a href="#phase7" class="nav-button" data-phase="phase7">Phase 7: Transaction Mgt.</a>
+                <a href="#phase8" class="nav-button" data-phase="phase8">Phase 8: Post-Closing</a>
+                <a href="#phase9" class="nav-button" data-phase="phase9">Phase 9: Script Library</a>
+            </div>
+                                    
+            <div class="mt-10 pt-6 border-t border-gray-700 data-buttons space-y-3">
+                <button id="exportJson" class="w-full">Export Client File (JSON)</button>
+                <label for="importJson" class="w-full block text-center">Import Client File (JSON)</label>
+                <input type="file" id="importJson" class="hidden" accept=".json">
+                <button id="resetApp" class="w-full danger">Reset Checklists & Client</button>
+            </div>
+        </nav>
+
+        <main id="main-content">
+            <section id="client-hub" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Client Hub</h1>
+                <p class="text-lg text-gray-400 mb-6">Manage all client-specific data here. This data is saved with your checklists when you export.</p>
+                                
+                <div class="section">
+                    <h3>Client & Property Information</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="clientName" class="client-hub-label">Client Name</label>
+                            <input type="text" id="clientName" class="client-hub-input" placeholder="e.g., John & Jane Doe">
+                        </div>
+                        <div>
+                            <label for="clientProperty" class="client-hub-label">Property Address</label>
+                            <input type="text" id="clientProperty" class="client-hub-input" placeholder="e.g., 123 Main St, Hamilton, ON">
+                        </div>
+                        <div>
+                            <label for="clientEmail" class="client-hub-label">Client Email</label>
+                            <input type="email" id="clientEmail" class="client-hub-input" placeholder="e.g., john.doe@example.com">
+                        </div>
+                        <div>
+                            <label for="clientPhone" class="client-hub-label">Client Phone</label>
+                            <input type="tel" id="clientPhone" class="client-hub-input" placeholder="e.g., 905-555-1234">
+                        </div>
+                    </div>
+                </div>
+                                
+                <div class="section">
+                    <h3>Client Resource Links</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="gDriveLink" class="client-hub-label">Google Drive Folder Link</label>
+                            <div class="link-wrapper">
+                                <input type="url" id="gDriveLink" class="client-hub-input" placeholder="Paste link to client's GDrive folder">
+                                <button class="go-button" data-target="gDriveLink">Go</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="gmailLink" class="client-hub-label">Gmail Thread Link</label>
+                            <div class="link-wrapper">
+                                <input type="url" id="gmailLink" class="client-hub-input" placeholder="Paste link to primary Gmail thread">
+                                <button class="go-button" data-target="gmailLink">Go</button>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="micrositeLink" class="client-hub-label">Property Microsite Link</label>
+                            <div class="link-wrapper">
+                                <input type="url" id="micrositeLink" class="client-hub-input" placeholder="Paste link to generated GitHub page">
+                                <button class="go-button" data-target="micrositeLink">Go</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>Client Notes & Custom Links</h3>
+                    <textarea id="clientNotes" class="w-full client-hub-input" placeholder="Enter all notes, next steps, and custom links for this client here..."></textarea>
+                </div>
+            </section>
+
+            <section id="phase0" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 0: CEO Operations</h1>
+                <p class="text-lg text-gray-400 mb-6">Run your business, manage your finances, and track your personal goals.</p>
+                                
+                <div class="section">
+                    <h3>Checklist</h3>
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase0"></div></div>
+                    <ul class="checklist" id="checklist-phase0">
+                        <li><label><input type="checkbox" data-task-id="p0-1">Complete daily habits in CEO Scorecard</label></li>
+                        <li><label><input type="checkbox" data-task-id="p0-2">Log business mileage in Travel Log</label></li>
+                        <li><label><input type="checkbox" data-task-id="p0-3">Log/Import expenses into Expense Tracker</label></li>
+                        <li><label><input type="checkbox" data-task-id="p0-4">Review KPIs in Performance Dashboard</label></li>
+                        <li><label><input type="checkbox" data-task-id="p0-5">Review 12-Month Plan in CEO Scorecard</label></li>
+                    </ul>
+                </div>
+                                
+                <div class="section">
+                    <h3>Key Tools (Apps)</h3>
+                    <a href="https://kenmorganrealestate.github.io/Home/CEOCommandCenterDashboardV2.2.html" target="_blank" class="tool-link">CEO Scorecard (Daily Habits & Plan)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/UpdatedFullCompleteDashboardPerfected2025.html" target="_blank" class="tool-link">Real Estate Performance Dashboard (Financials & KPIs)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/FinalRevisedBusinessTravelLog2025.html" target="_blank" class="tool-link">Business Travel Log</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/V2.0-ExpenseTrackerHSTincludedAug2025.html" target="_blank" class="tool-link">Vacation/Personal Expense Tracker</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/CSV_Reader.html" target="_blank" class="tool-link">CSV File Reader (Utility for Expense Tracker)</a>
+                </div>
+
+                <div class="section">
+                    <h3>Standard Operating Procedures (SOPs)</h3>
+                    <details>
+                        <summary>SOP: Daily CEO Routine</summary>
+                        <div class="sop-content">
+                            <p>This is the daily non-negotiable routine for running your business.</p>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li><strong>Morning:</strong> Open the **CEO Scorecard**. Review the "12-Month Plan" to orient on long-term goals.</li>
+                                <li><strong>Throughout Day:</strong> As you complete them, check off the 5 "Daily CEO Scorecard" habits: `#1 Business Priority`, `Weight Training`, `5km Walk`, `On-Plan Nutrition`, `No Alcohol`.</li>
+                                <li><strong>After Travel:</strong> After *any* business-related trip (showings, appointments), immediately open the **Business Travel Log** and log the `Date`, `Description`, `Purpose`, `Starting Odometer`, and `Ending Odometer`.</li>
+                                <li><strong>End of Day:</strong>
+                                    <ul>
+                                        <li>- Log your `Current Weight` and any `Daily Notes` in the **CEO Scorecard**.</li>
+                                        <li>- Open the **Real Estate Performance Dashboard** to log any new events (e.g., `Daily Contacts`) or expenses (`General Expense`).</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Weekly Financial Review</summary>
+                        <div class="sop-content">
+                            <p>Once a week (e.g., Friday afternoon), perform a full financial sync.</p>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Download the latest CSV statements from your bank and credit card.</li>
+                                <li>Use the **CSV File Reader** to quickly check the format and headers.</li>
+                                <li>Open the **Real Estate Performance Dashboard**. Click "Import CSV" and import your business expense CSV. The tool will parse the file, use your saved `categorizationRules` to auto-categorize, and flag any new descriptions for review.</li>
+                                <li>Open the **Vacation/Personal Expense Tracker** and import your personal CSVs to keep finances separate.</li>
+                                <li>In the **Performance Dashboard**, review the "Key Performance Indicators" (KPIs) and charts. Pay close attention to:
+                                    <ul>
+                                        <li>- Net Income</li>
+                                        <li>- Gross Income vs. Total Expenses</li>
+                                        <li>- Income / Contact (to see if your lead gen is efficient)</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <section id="phase1" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 1: Lead Generation & Prospecting</h1>
+                <p class="text-lg text-gray-400 mb-6">Find, capture, and begin nurturing new potential clients.</p>
+                                
+                <div class="section">
+                    <h3>Checklist</h3>
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase1"></div></div>
+                    <ul class="checklist" id="checklist-phase1">
+                        <li><label><input type="checkbox" data-task-id="p1-1">Add new lead to Real Estate Business Hub (CRM)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p1-2">Assign new lead to an "Action Plan" in the CRM</label></li>
+                        <li><label><input type="checkbox" data-task-id="p1-3">Use "Market Pulse" to find an item of value (e.g., local stats)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p1-4">Make prospecting calls/send texts (use CRM scripts)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p1-5">Log all call/email activity in the CRM</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Key Tools (Apps)</h3>
+                    <a href="https://kenmorganrealestate.github.io/Home/KenMorganCRMFinalintegratedl2025.html" target="_blank" class="tool-link">Real Estate Business Hub (CRM)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1hopgQ3NUDACB6MWpPdH6xYENLDXcrDOo?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Real Estate Intelligence Assistant (for Market Pulse)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/7PerfectedOpenHouseMortgagePrintoutToolBrandedTabbedCalculators.html" target="_blank" class="tool-link">Home Financing Toolkit (for Open Houses)</a>
+                </div>
+                                
+                <div class="section">
+                    <h3>Resource Links</h3>
+                     <a href="https://drive.google.com/drive/folders/1_LNKd4iyANasVqgjKRwYX478quUeT69w?usp=drive_link" target="_blank" class="resource-link">Active Buyers Folder (Google Drive)</a>
+                </div>
+
+                <div class="section">
+                    <h3>Standard Operating Procedures (SOPs)</h3>
+                    <details>
+                        <summary>SOP: New Lead Entry</summary>
+                        <div class="sop-content">
+                            <p>This is the first and most critical step for any new contact.</p>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open the **Real Estate Business Hub (CRM)**.</li>
+                                <li>Click **"New Contact"**.</li>
+                                <li>Fill in all known details: `Full Name`, `Contact Status` (set to "New Lead"), `Email`, `Phone`, `Source` (e.g., "Open House", "Door Knocking", "Referral").</li>
+                                <li>**CRITICAL STEP:** In the **"Apply Action Plan"** dropdown, select the nurture sequence that matches the source.
+                                    <ul>
+                                        <li>- **Open House:** "Open House Lead (High Intent)"</li>
+                                        <li>- **Door Knock:** "Door Knocking (Cold to Warm)"</li>
+                                        <li>- **Friend/Past Client:** "Sphere of Influence"</li>
+                                        <li>- **Other:** "Generic Encounter"</li>
+                                    </ul>
+                                </li>
+                                <li>Set the `Plan Start Date` to today and click **"Save Contact"**.</li>
+                                <li>The system will now automatically schedule all follow-up tasks for you.</li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Daily CRM Task Execution</summary>
+                        <div class="sop-content">
+                            <p>Your "Daily Contacts" are now automated. Simply follow the "To-Do" list.</p>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open the **Real Estate Business Hub (CRM)**. The "CRM Dashboard" tab shows your tasks for today.</li>
+                                <li>Find a task (e.g., "Day 1: Crucial Follow-up Call" for <span class="sop-clientName text-white">[Client]</span>).</li>
+                                <li>Click the **"Do Task"** button.</li>
+                                <li>The **Script Viewer** will pop up with the exact, pre-written script for that task.</li>
+                                <li>Use the "Send Email" or "Send Text" buttons to execute the follow-up.</li>
+                                <li>Click **"Mark as Complete"**. This logs the activity to the client's file and removes it from your to-do list.</li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Open House Lead Capture</summary>
+                        <div class="sop-content">
+                            <p>Use the Financing Toolkit as your primary lead capture mechanism instead of a simple sign-in sheet.</p>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Have the **Home Financing Toolkit** open on your laptop or tablet.</li>
+                                <li>Greet visitors and offer them immediate value: "Welcome! While you look around, feel free to use my financing toolkit to see what the payments would look like."</li>
+                                <li>Walk them through the **"Affordability Calculator"** to pre-qualify them on the spot.</li>
+                                <li>Use the **"Closing Cost Estimator"** (toggle "First-Time Home Buyer") to educate them.</li>
+                                <li>This process naturally builds authority and gives you their real name, email, and financial details to enter directly into the **CRM**.</li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <section id="phase2" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 2: Listing Presentation (Preparation)</h1>
+                <p class="text-lg text-gray-400 mb-6">Prepare all materials to win the listing appointment.</p>
+                                
+                <div class="section">
+                    <h3>Checklist</h3>
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase2"></div></div>
+                    <ul class="checklist" id="checklist-phase2">
+                        <li><label><input type="checkbox" data-task-id="p2-1">Pre-research area, sales, and actives (Brain Dump)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-2">Call seller to confirm: Key, Survey, All decision-makers present (Brain Dump)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-3">Gather comparables (PDFs/DOCX)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-4">Use "Improvement Analyzer" to get Market & ROI data</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-5">Use "Deep Data CMA" to generate full report (Seller Report & Buyer Strategy)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-6">Prepare listing paperwork (use "CASORA Guide" as checklist)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-7">Print/Load CMA report and all required OREA forms</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-8">Drop off pre-listing package one day prior (Brain Dump)</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Key Tools (Apps)</h3>
+                    <a href="https://aistudio.google.com/app/apps/drive/1jvfta3v85lj5HKepXQlikvslq-IDsf-g?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Deep Data CMA & Marketer (Primary Tool)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1HykQcFIqQ3-TUbDvma584FDIiNATYHl0?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Real Estate Improvement Analyzer (Data Source)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/V8CMAGENERATOR9222025.html" target="_blank" class="tool-link">AI Real Estate Agent Toolkit (Offline CMA Backup)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true" target="_blank" class="tool-link">CASORA Transaction Guide (Paperwork Checklist)</a>
+                </div>
+                                
+                <div class="section">
+                    <h3>Resource Links</h3>
+                     <a href="https://drive.google.com/drive/folders/1OcUJK6yU-dmQX3enx3O8SkZGmeFN6_gK?usp=sharing" target="_blank" class="resource-link">Active Listings Folder (Google Drive)</a>
+                     <a href="https://drive.google.com/drive/folders/1X4BP9aiYg_xWHwmXHuJWcdklMADurbsE?usp=drive_link" target="_blank" class="resource-link">Blank Brokerage Forms (Google Drive)</a>
+                </div>
+
+                <div class="section">
+                    <h3>Standard Operating Procedures (SOPs)</h3>
+                    <details>
+                        <summary>SOP: Pre-Appointment Checklist (from Brain Dump)</summary>
+                        <div class="sop-content">
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Pre-research the area for <strong class="sop-property text-white">[Property]</strong> and have an idea of sales and actives.</li>
+                                <li>Call <strong class="sop-clientName text-white">[Client]</strong> to confirm the appointment.</li>
+                                <li>Ensure all decision-makers will be present.</li>
+                                <li>Confirm they have a copy of the **Key** and **Survey**.</li>
+                                <li>Ask motivation questions: "When do you want to be sold by?" and "Where are they moving?"</li>
+                                <li>Drop off the pre-listing package one day prior to the appointment.</li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Generating the AI-Powered CMA (The "Deep Data" Workflow)</summary>
+                        <div class="sop-content">
+                            <p>This is the "recipe" for creating your core presentation asset. It uses two AI tools in combination.</p>
+                            <h5>Step 1: Get Market & ROI Data</h5>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open the **Real Estate Improvement Analyzer** (`https://aistudio.google.com/app/apps/drive/1HykQcFIqQ3-TUbDvma584FDIiNATYHl0?showPreview=true&showAssistant=true`).</li>
+                                <li>Enter the `LOCATION` (e.g., "Burlington, ON") and `PROPERTY_TYPE` (e.g., "Detached Bungalow").</li>
+                                <li>Run the analysis. The AI will search the web for real-time data.</li>
+                                <li>**Copy the entire output** (the "Market Trends" summary and the "Improvements" list).</li>
+                            </ol>
+                            <h5>Step 2: Get Comparables Data</h5>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Log in to the MLS (ITSO: `HBMORGAKE` / `ilovemoney11`).</li>
+                                <li>Pull all relevant "Sold" and "Active" comparable properties.</li>
+                                <li>Export this data as a single **PDF** file.</li>
+                                <li>Open the PDF, select all text (Ctrl+A), and **copy** it (Ctrl+C).</li>
+                            </ol>
+                            <h5>Step 3: Generate the Unified Valuation</h5>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open the **Deep Data CMA & Marketer** (`https://aistudio.google.com/app/apps/drive/1jvfta3v85lj5HKepXQlikvslq-IDsf-g?showPreview=true&showAssistant=true`).</li>
+                                <li>In the `Subject Property Address` field, enter the client's address: <strong class="sop-property text-white">[Property]</strong>.</li>
+                                <li>In the `Subject Property Details` field, enter your "brain dump" of notes (e.g., "3 bed, 2 bath, approx 1500 sq ft, original kitchen, new roof 2020, unfinished basement").</li>
+                                <li>In the `Comparables Text` field, **paste** the text from the comparables PDF.</li>
+                                <li>In the `Market Conditions` field, **paste** the full market/ROI analysis you copied from the *Improvement Analyzer*.</li>
+                                <li>In the `Listing Blueprint` field, paste your master listing presentation script (from <a href="#script-listing-presentation" class="jump-link">Phase 9</a>).</li>
+                                <li>Click **"Generate Unified Valuation."** The AI will generate your two key reports:
+                                    <ul>
+                                        <li>**Seller Report:** The full CMA, ROI analysis, and Marketing Toolkit. This is what you will present.</li>
+                                        <li>**Buyer Report:** The "Anticipated Offer Strategy." This is your private negotiating guide.</li>
+                                    </ul>
+                                </li>
+                                <li>Click **"Save to Library"** in the app to save this full report.</li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Preparing Paperwork</summary>
+                        <div class="sop-content">
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open the **CASORA Transaction Guide** (`https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true`).</li>
+                                <li>Select "Lead Prep" -> "Seller." The tool will display the list of all required forms.</li>
+                                <li>Go to your forms provider (e.g., WebForms) and prepare these documents for digital signature.</li>
+                                <li>**Key Forms:** Listing Agreement (Form 200), FINTRAC Individual ID Record, Working with a Realtor (Form 810), MLS Data Input Sheet.</li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <section id="phase3" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 3: The Listing Appointment (Execution)</h1>
+                <p class="text-lg text-gray-400 mb-6">Present your value, handle objections, and sign the listing agreement.</p>
+                                
+                <div class="section">
+                    <h3>Checklist</h3>
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase3"></div></div>
+                    <ul class="checklist" id="checklist-phase3">
+                        <li><label><input type="checkbox" data-task-id="p3-1">Tour the house, build rapport (Run SOP)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p3-2">Deliver the Full Listing Presentation (Run SOP)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p3-3">Handle objections (Use Script Library)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p3-4">Use "CASORA Guide" to sign all paperwork (Run SOP)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p3-5">Discuss showing instructions, lockbox, and get a key</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Key Tools (Apps)</h3>
+                    <a href="https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true" target="_blank" class="tool-link">CASORA Transaction Guide (Primary Paperwork Tool)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1jvfta3v85lj5HKepXQlikvslq-IDsf-g?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Deep Data CMA & Marketer (To present the report)</a>
+                </div>
+                                
+                <div class="section">
+                    <h3>Standard Operating Procedures (SOPs) & Dialogue</h3>
+                    <details>
+                        <summary>SOP: Building Rapport & The Tour</summary>
+                        <div class="sop-content">
+                            <p>Follow the "Brain Dump" script precisely.</p>
+                            <h5>What to Say:</h5>
+                            <p><strong>On Arrival:</strong></p>
+                            <blockquote>"As I drove up, I couldn’t help but notice that your house sticks out from all the rest. The work you’ve done on the [landscaping/front door] is really great and will be really attractive to the next potential buyer."</blockquote>
+                            <p><strong>Start the Tour:</strong></p>
+                            <blockquote>"Mind if I set my things down at the table? Why don't you give me the grand tour, and I’ll ask some questions as we go so I can get to know the home a little bit better."</blockquote>
+                            <p><strong>During the Tour:</strong></p>
+                            <blockquote>"How long have you lived here? Where did you move from?"</blockquote>
+                            <blockquote>"How did you find this home?"</blockquote>
+                            <blockquote>"What's their favourite part of the home (why they chose)?" (Make a note of this)</blockquote>
+                        </div>
+                    </details>
+                    
+                    <!-- ========== NEW SCRIPT SECTION START ========== -->
+                    <details open>
+                        <summary>SOP: Delivering the Full Listing Presentation</summary>
+                        <div class="sop-content">
+                            <p>Follow this script slide-by-slide to deliver a perfect, compelling presentation. Use the <a href="#client-hub" class="jump-link">Client Hub</a> to populate placeholders like <strong class="text-white">[Client Name]</strong>.</p>
+                            
+                            <details class="mt-2">
+                                <summary>Slide 1: Title Slide</summary>
+                                <div class="sop-content">
+                                    <blockquote>"Good morning/afternoon [Client Name]. Thank you for inviting me into your beautiful home. I’m truly excited to be here. This isn't just a house; it's a significant asset, a vessel of memories, and a gateway to your next chapter. My purpose today is to show you exactly how I plan to professionally market [Client Address] to achieve the best possible outcome for you. Think of me as your home's dedicated navigator, charting the clearest, most profitable course through the market. This presentation is specifically crafted for you, and it's all about how we're going to put your home in the spotlight it deserves."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 2: Our Legacy of Excellence</summary>
+                                <div class="sop-content">
+                                    <blockquote>"Before we look forward, let's take a brief moment to look back at the strong foundation we're built upon. Our journey isn't a flash in the pan; it's a legacy. We started decades ago as Sutton Group Realty, then matured and strengthened as Apex Results Realty Inc. in [Verify Year]. Think of it like a majestic oak tree – each evolution has only deepened our roots, making us stronger and more resilient. Through every market shift, every change, our core commitment to our clients has been the unwavering North Star. We haven't just adapted; we've thrived, consistently delivering top results and building a reputation for integrity right here in [Your Community Name]. This isn't just a new name; it's a testament to enduring strength and continuous improvement."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 3: Casora Realty: Reimagined for Today</summary>
+                                <div class="sop-content">
+                                    <blockquote>"So, with that solid foundation, we embarked on an exciting evolution. In 2025, Apex didn't just get a new coat of paint; we built a brand new, high-performance engine and called it Casora Realty. Imagine a classic luxury car that’s been completely re-engineered with the latest AI and autonomous driving technology. That's Casora. We've integrated intelligent, high-tech systems into every single aspect of the selling process. This means you're not just getting the wisdom and experience of our long history, but also the cutting-edge speed, data-driven precision, and unparalleled reach of tomorrow's real estate. It’s the best of both worlds, truly a new generation. And at the forefront, personally leading the charge to bring this new vision to your sale, is me, Ken Morgan."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 4: Your Goals Are My Priority</summary>
+                                <div class="sop-content">
+                                    <blockquote>"Before I even begin to talk about market values or marketing strategies, I need to truly understand your story. Think of me as your personal architect for this sale. I can't design the perfect plan without knowing your blueprint. So, let’s make this a conversation.<br>
+                                    First, why are you considering selling your home now? What's the catalyst?<br>
+                                    Second, what is your desired timeline for this move? Are we sprinting, jogging, or taking a leisurely stroll?<br>
+                                    Third, what does an ideal outcome look like for you? Is it purely about price, or are other factors, like convenience or a smooth transition, equally important?<br>
+                                    And finally, what is most important to you in choosing a real estate agent? What does success look like through your eyes when it comes to who you partner with? Your answers to these questions are the foundation of our entire strategy. This isn't just my presentation; it's our journey."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 5: Understanding Your Unique Home</summary>
+                                <div class="sop-content">
+                                    <blockquote>"Just as every person is unique, so is every home. Your home isn’t just bricks and mortar; it’s a canvas of your life, filled with unique details and upgrades that truly set it apart. Before we talk about how I'll market it, I need to walk in your shoes and truly understand what makes [Client Address] special. Think of me as a diamond appraiser – I need to examine every facet to truly understand its value. So, let's talk about:<br>
+                                    - Any recent upgrades or renovations you’ve made...<br>
+                                    - Any unique architectural features or design elements...<br>
+                                    - The community and lifestyle benefits of living here...<br>
+                                    - And those personal touches you’ve added... These details aren't just details; they're the brushstrokes that paint the full picture of your home’s value to a potential buyer."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 6: We Don't Hope, We Hunt</summary>
+                                <div class="sop-content">
+                                    <blockquote>"Now, let's get to the 'how.' This slide encapsulates the fundamental difference in my approach. Many agents, frankly, put a sign in the yard, upload to MLS, and then... they wait. They hope a buyer stumbles upon your home. But in today's dynamic market, hope is not a strategy. I believe, and my results prove, that We Don't Hope, We Hunt. Think of it like fishing versus spearfishing. Other agents might cast a wide net and hope a fish swims in. I, however, am out there with a spear, actively targeting and pursuing the most qualified buyers for your property. This isn't passive; it's aggressive, intelligent, and proactive action."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 7: The Ken Morgan Active Marketing System</summary>
+                                <div class="sop-content">
+                                    <blockquote>"So, how do we hunt effectively? It’s through what I call The Ken Morgan Active Marketing System. This isn't just a grab-bag of ideas; it's a precisely engineered, cohesive process. Imagine a master chess player – every move isn't just a random act; it’s part of a grand strategy, all interconnected to achieve the ultimate checkmate. My system is like that. Every component works in harmony to penetrate the market, find those elusive qualified buyers, and bring them directly to your home. It ensures your property isn't just a static listing; it's an active, magnetic force in the marketplace."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 8: Direct-to-Agent Prospecting: The Top 5%</summary>
+                                <div class="sop-content">
+                                    <blockquote>"One of my most potent tools is what I call Direct-to-Agent Prospecting. Imagine a secret society of the most influential real estate agents in our market – the top 5%. These aren't just agents; they are the gatekeepers to the most serious, pre-qualified buyers right now. While other agents wait... I'm personally reaching out to these elite agents. I’m giving them a heads-up, almost like a whisper in their ear: 'I have a unique property coming to market that perfectly fits what your high-value clients are looking for.' This personalized, behind-the-scenes networking is like opening a VIP door directly to buyers."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 9: Reverse Prospecting: The MLS Back Door</summary>
+                                <div class="sop-content">
+                                    <blockquote>"Now, let's talk about unlocking what I call The MLS Back Door. The Multiple Listing Service isn't just a place to upload your home; it's a powerful data hub. Think of it like a digital footprint tracker... I actively monitor which agents have shown interest... Then, I 'reverse prospect' – I call them. It's like seeing someone peek through your window, and instead of waiting for them to knock, you politely open the door and ask, 'Can I help you?' This proactive follow-up allows me to gather immediate feedback... It's about being two steps ahead."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 10: Advanced Digital Showcasing</summary>
+                                <div class="sop-content">
+                                    <blockquote>"In our digital age, your home's first showing is almost always online. And that first impression is everything. We go far Beyond Just Photos... Think of it like a blockbuster movie trailer for your home. We're not just showing static pictures; we're crafting an experience.<br>
+                                    - Our Professional Photography isn't just about snapping pictures; it's about storytelling...<br>
+                                    - Our Cinematic Video Tours are like guided journeys...<br>
+                                    - And our Interactive Floor Plans are the blueprints that bring clarity...<br>
+                                    This level of digital artistry ensures your home doesn’t just get seen; it gets felt, creating an emotional connection."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 11: Proactive Open House Strategy</summary>
+                                <div class="sop-content">
+                                    <blockquote>"Many agents view an open house as simply unlocking the door and waiting. For me, it's an opportunity to Create Buzz, Not Just Open Doors. Think of it like launching a new product...<br>
+                                    - We don't just put out a sign; I do Neighborhood Door-Knocking beforehand...<br>
+                                    - At the event, we use QR Code Registration for a seamless, professional entry...<br>
+                                    - We amplify reach with Targeted Social Media Promotion...<br>
+                                    - And most importantly, there's Immediate Follow-Up with every single person... No leads fall through the cracks."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 12: Aggressive Daily Outreach</summary>
+                                <div class="sop-content">
+                                    <blockquote>"This next point is perhaps the most critical differentiator. While the digital tools are powerful, the human element remains irreplaceable. I believe in Aggressive Daily Outreach. Every single day, I dedicate 4 to 6 hours—not minutes, but hours—to proactive prospecting and follow-up. Think of me as a dedicated headhunter for your home. I'm on the phone... This isn't waiting for a bell to ring; it's ringing the bell myself, tirelessly and consistently... This personal commitment is my promise to you: I will work relentlessly to find your buyer."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 13: Full Exposure: Websites & Social Media</summary>
+                                <div class="sop-content">
+                                    <blockquote>"While my personal outreach is paramount, we also harness the immense power of the digital landscape. This slide is all about Full Exposure... Imagine your home's digital footprint expanding like ripples in a pond... We strategically place your listing not just on the main MLS, but across the most critical platforms... This creates MASSIVE ONLINE REACH, ensuring your property receives the unparalleled visibility it deserves."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 14: The Importance of Strategic Pricing</summary>
+                                <div class="sop-content">
+                                    <blockquote>"Now, let's talk about the absolute cornerstone of any successful sale: The Importance of Strategic Pricing. Think of your home’s price as a powerful magnet. If it’s priced too high, it becomes invisible to the very buyers who would otherwise be drawn to it... Price it too low, and you leave money on the table... Our mission is to find that 'sweet spot' that draws in a flood of attention, generates excitement, and creates competition... It's about making sure we Price it Right, From the Start."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 15: Comparative Market Analysis (CMA) Summary</summary>
+                                <div class="sop-content">
+                                    <blockquote>"To find that 'sweet spot,' we conduct a meticulous Comparative Market Analysis. Think of it as forensic accounting for real estate. I’ve thoroughly analyzed the recent pulse of the market in your immediate area. Here is the summary of our findings: [Comparable Sales Summary] This data-driven approach, combining market science with local neighborhood expertise, isn’t guesswork; it’s how we accurately reflect your home’s true value. This brings us to a recommended value range of [Recommended Price Range], positioning your home to win."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 16: Our Partnership for Success</summary>
+                                <div class="sop-content">
+                                    <blockquote>"Choosing a real estate agent is like choosing a captain for your ship. It's a critical decision... When you choose to partner with me, you're not just hiring an agent; you’re gaining a dedicated co-pilot, an advocate who is entirely committed to your success. My proactive system... creates an undeniable advantage.<br>
+                                    - You’ll benefit from Aggressive & Proactive Marketing...<br>
+                                    - You’ll have Expert Negotiation Skills in your corner...<br>
+                                    - You’ll experience Transparent Communication...<br>
+                                    - And we'll ensure Seamless Transaction Management... This is truly a partnership, and your goals become my mission."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 17: Your Next Steps</summary>
+                                <div class="sop-content">
+                                    <blockquote>"If you feel confident, as I do, that this is the right strategy for your home, then here are Your Next Steps... Think of these as the key milestones on our roadmap to a successful sale:<br>
+                                    - First, we’ll Review & Sign the Listing Agreement...<br>
+                                    - Then, we’ll dive into Home Preparation & Staging...<br>
+                                    - Next, we'll schedule our amazing media team...<br>
+                                    - Once everything is perfect, we'll Launch the Marketing Campaign...<br>
+                                    - And throughout it all, expect Ongoing Communication from me."</blockquote>
+                                </div>
+                            </details>
+                    
+                            <details class="mt-2">
+                                <summary>Slide 18: Ready to Make Your Move?</summary>
+                                <div class="sop-content">
+                                    <blockquote>"So, [Client Name], the blueprint is laid out. I am genuinely confident that with my aggressive, proactive marketing system... we can not only meet but exceed your expectations... The journey to your next chapter begins here. I’ve shared a lot of information, and I want to ensure you feel completely comfortable and informed. Now, the floor is yours. Are you Ready to Make Your Move? Let's discuss any remaining questions you have, and if you’re ready, let’s begin this exciting journey together."</blockquote>
+                                </div>
+                            </details>
+                    
+                        </div>
+                    </details>
+                    <!-- ========== NEW SCRIPT SECTION END ========== -->
+
+                    <details>
+                        <summary>SOP: Handling Objections</summary>
+                        <div class="sop-content">
+                            <p>Do not panic. Use the scripts you have practiced. Find the full list in <a href="#phase9" class="jump-link">Phase 9: Script Library</a>.</p>
+                            <h5>What to Say:</h5>
+                            <p><strong>If they say: "We want to list high and test the market."</strong>
+                                <a href="#script-list-high" class="jump-link ml-2">[Click for Script]</a>
+                            </p>
+                            <p><strong>If they say: "Another agent said they could get me more money."</strong>
+                                <a href="#script-another-agent" class="jump-link ml-2">[Click for Script]</a>
+                            </p>
+                            <p><strong>If they say: "Will you cut your commission?"</strong>
+                                <a href="#script-commission-1" class="jump-link ml-2">[Click for Script 1]</a> or <a href="#script-commission-2" class="jump-link ml-2">[Click for Script 2]</a>
+                            </p>
+                             <p><strong>If they say: "I have a friend in the business."</strong>
+                                <a href="#script-friend-in-biz" class="jump-link ml-2">[Click for Script]</a>
+                            </p>
+                             <p><strong>If they say: "We want to think it over."</strong>
+                                <a href="#script-think-it-over" class="jump-link ml-2">[Click for Script]</a>
+                            </p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Signing Paperwork (Digital Workflow)</summary>
+                        <div class="sop-content">
+                            <h5>What to Say:</h5>
+                            <p><strong>1. The Close (Mike Ferry Script):</strong></p>
+                            <blockquote>"All we need to do now is simply sign the contract... so I can help you get what you want... in the time you want... won’t that be great?"</blockquote>
+                            <p><strong>2. The Transition:</strong></p>
+                            <blockquote>"Great. I have a tool that makes this next part simple and ensures 100% compliance for both of us."</blockquote>
+                            <h5>What to Do:</h5>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open the **CASORA Transaction Guide** (`https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true`).</li>
+                                <li>Select **"Guided Appointment"**.</li>
+                                <li>The tool will walk you through every required field for the **Listing Agreement**, **FINTRAC ID**, **MLS Data Sheet**, and **Showing Instructions**. Fill in the data as you discuss it with <strong class="sop-clientName text-white">[Client]</strong>.</li>
+                                <li>This process ensures you never miss a field, initial, or signature.</li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <section id="phase4" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 4: Marketing the Listing</h1>
+                <p class="text-lg text-gray-400 mb-6">Create and launch all digital and physical marketing assets for the new listing.</p>
+                                
+                <div class="section">
+                    <h3>Checklist</h3>
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase4"></div></div>
+                    <ul class="checklist" id="checklist-phase4">
+                        <li><label><input type="checkbox" data-task-id="p4-1">Order professional photography</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-2">Use "Photo Styler" to empty, enhance, or virtually stage key photos</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-3">Use "Realty Visualizer" to create virtual renovation/video assets</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-4">Use "Microsite Builder" to create the single-property website</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-5">Generate MLS description (use "Deep Data" toolkit)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-6">Generate all social media posts (use "Deep Data" toolkit)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-7">Upload to MLS, attach microsite link, post to all social channels</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-8">Enter new listing into "Master Listing Checklist" tool</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Key Tools (Apps)</h3>
+                    <a href="https://aistudio.google.com/app/apps/drive/1wkT5SZnKa2BuwNXaxFv7matjCxLRTvLd?showPreview=true&showAssistant=true" target="_blank" class="tool-link">AI-Powered Photo Styler</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1QSJDiovbix1g-PM6l9B8Hz-yTDb9WD_r?showAssistant=true&showPreview=true&resourceKey=" target="_blank" class="tool-link">Realty Visualizer AI (Advanced Images/Video)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/VirtualGalleryWizard-9-27-2025.html" target="_blank" class="tool-link">Ultimate Real Estate Microsite Builder</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1jvfta3v85lj5HKepXQlikvslq-IDsf-g?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Deep Data CMA & Marketer (for Marketing Toolkit)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1hopgQ3NUDACB6MWpPdH6xYENLDXcrDOo?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Real Estate Intelligence Assistant (Social Media)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/propertydescriptiongenerator.html" target="_blank" class="tool-link">Property Description Generator (Quick)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/FullTransactionChecklist2.html" target="_blank" class="tool-link">Master Listing Checklist (Transaction Tracking)</a>
+                </div>
+
+                <div class="section">
+                    <h3>Standard Operating Procedures (SOPs)</h3>
+                    <details>
+                        <summary>SOP: Create AI-Enhanced Visuals</summary>
+                        <div class="sop-content">
+                            <p>Use this workflow *after* you receive professional photos.</p>
+                            <h5>To Create Virtual Staging:</h5>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open **AI-Powered Photo Styler** (`https://aistudio.google.com/app/apps/drive/1wkT5SZnKa2BuwNXaxFv7matjCxLRTvLd?showPreview=true&showAssistant=true`).</li>
+                                <li>Upload the photo of the empty room.</li>
+                                <li>**Run Workflow 1 (Empty & Enhance):** The AI will clean and enhance the photo.</li>
+                                <li>**Run Workflow 2 (Stage):** Using the enhanced empty photo, select a style (e.g., "Modern") and the AI will virtually stage it.</li>
+                            </ol>
+                            <h5>To Create "Renovision" & Video:</h5>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open **Realty Visualizer AI** (`https://aistudio.google.com/apps/drive/1QSJDiovbix1g-PM6l9B8Hz-yTDb9WD_r?showAssistant=true&showPreview=true&resourceKey=`).</li>
+                                <li>Upload a "before" photo (e.g., an old kitchen).</li>
+                                <li>**For Image:** Enter a prompt like: `Transform this outdated kitchen into a "Modern Farmhouse" style kitchen...`</li>
+                                <li>**For Video:** Enter a prompt like: `Animate a video starting with the provided image... The transformation is: "Renovate this kitchen into a modern luxury kitchen."`</li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Create Single-Property Microsite</summary>
+                        <div class="sop-content">
+                            <p>This is the central hub for all your marketing for this one property.</p>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open the **Ultimate Real Estate Microsite Builder** (`https://kenmorganrealestate.github.io/Home/VirtualGalleryWizard-9-27-2025.html`).</li>
+                                <li>Fill in all fields in **Step 1**: Brand info, Property Address (<strong class="sop-property text-white">[Property]</strong>), Descriptions, YouTube Video ID, Matterport embed code, etc.</li>
+                                <li>Go to **Step 2: Upload & Arrange Photos**. Drag and drop all your photos (real, staged, and "renovision" images) to create the interactive gallery.</li>
+                                <li>Go to **Step 3: Generate & Finish**. Click "Download index.html".</li>
+                                <li>Upload the downloaded `index.html` file AND all the gallery photos to a new GitHub repository for that listing (e.g., `123-Main-St`).</li>
+                                <li>Paste the final GitHub Pages URL into your **Client Hub** (in this app).</li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Generate & Post All Content</summary>
+                        <div class="sop-content">
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open the **Deep Data CMA** tool (`https://aistudio.google.com/app/apps/drive/1jvfta3v85lj5HKepXQlikvslq-IDsf-g?showPreview=true&showAssistant=true`).</li>
+                                <li>Load the saved valuation for <strong class="sop-property text-white">[Property]</strong>.</li>
+                                <li>Go to the **Marketing Toolkit** section.</li>
+                                <li>**MLS:** Copy the generated "MLS Description" and paste it into the MLS.</li>
+                                <li>**Social Media:** Copy the pre-written posts for Facebook, Instagram, and LinkedIn and post them with your photos/videos.</li>
+                                <li>**Open House:** Review the "Open House Strategy" and "Door Knocking Scripts" from the toolkit.</li>
+                                <li>**Track:** Open the **Master Listing Checklist** (`https://kenmorganrealestate.github.io/Home/FullTransactionChecklist2.html`) and create the new transaction to track the *deal* side.</li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <section id="phase5" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 5: Working with Buyers</h1>
+                <p class="text-lg text-gray-400 mb-6">Find, qualify, and sign a new buyer client.</p>
+                                
+                <div class="section">
+                    <h3>Checklist</h3>
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase5"></div></div>
+                    <ul class="checklist" id="checklist-phase5">
+                        <li><label><input type="checkbox" data-task-id="p5-1">Add buyer to "Real Estate Business Hub" (CRM)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p5-2">Meet for initial consultation (Needs, Wants, Motivation)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p5-3">Use "Home Financing Toolkit" to pre-qualify and explain costs</label></li>
+                        <li><label><input type="checkbox" data-task-id="p5-4">Refer to mortgage broker for pre-approval</label></li>
+                        <li><label><input type="checkbox" data-task-id="p5-5">Use "CASORA Transaction Guide" to fill out and sign BRA, WWaR, and FINTRAC</label></li>
+                        <li><label><input type="checkbox" data-task-id="p5-6">Set up property search in CRM</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Key Tools (Apps)</h3>
+                    <a href="https://kenmorganrealestate.github.io/Home/7PerfectedOpenHouseMortgagePrintoutToolBrandedTabbedCalculators.html" target="_blank" class="tool-link">Home Financing Toolkit (Crucial for Qualification)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true" target="_blank" class="tool-link">CASORA Transaction Guide (for BRA/FINTRAC)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/KenMorganCRMFinalintegratedl2025.html" target="_blank" class="tool-link">Real Estate Business Hub (CRM)</a>
+                </div>
+                                
+                <div class="section">
+                    <h3>Resource Links</h3>
+                    <a href="https://drive.google.com/drive/folders/1_LNKd4iyANasVqgjKRwYX478quUeT69w?usp=drive_link" target="_blank" class="resource-link">Active Buyers Folder (Google Drive)</a>
+                    <a href="https://drive.google.com/drive/folders/1V4LeZQdLHxsYG6KTdY6f8AGcjaHyAA8q?usp=drive_link" target="_blank" class="resource-link">Buyer Kit for New Offers (Google Drive)</a>
+                    <a href="https://drive.google.com/drive/folders/1X4BP9aiYg_xWHwmXHuJWcdklMADurbsE?usp=drive_link" target="_blank" class="resource-link">Blank Brokerage Forms (Google Drive)</a>
+                </div>
+                                
+                <div class="section">
+                    <h3>Standard Operating Procedures (SOPs)</h3>
+                    <details>
+                        <summary>SOP: Initial Buyer Consultation</summary>
+                        <div class="sop-content">
+                            <p>This is the "Buyer's Presentation" and qualification process.</p>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Meet with the buyer (<strong class="sop-clientName text-white">[Client]</strong>). Open the **Home Financing Toolkit** (`https://kenmorganrealestate.github.io/Home/7PerfectedOpenHouseMortgagePrintoutToolBrandedTabbedCalculators.html`) on your laptop.</li>
+                                <li>**Step 1 (Budget):** Use the **"Affordability Calculator"** tab to determine their maximum purchase price based on their stated income and debts.</li>
+                                <li>**Step 2 (Costs):** Use the **"Closing Cost Estimator"** tab. Be sure to toggle "First-Time Home Buyer" and "Municipality (e.g., Toronto)" to show them the full cash requirement.</li>
+                                <li>**Step 3 (Payments):** Use the **"Payment Calculator"** tab to run scenarios on different purchase prices, showing them the breakdown of P&I, Taxes, and Fees.</li>
+                                <li>**Step 4 (Investment):** Use the **"Long-Term Investment Projection"** (at the bottom of the Payment Calculator) to demonstrate the wealth-building advantages.</li>
+                                <li>After this, refer them to your mortgage broker for an official pre-approval.</li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Signing a New Buyer (Paperwork)</summary>
+                        <div class="sop-content">
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Once the buyer is pre-approved and ready, open the **CASORA Transaction Guide** (`https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true`).</li>
+                                <li>Select "Lead Prep" -> "Buyer" to confirm the list of required forms (BRA, WWaR, FINTRAC).</li>
+                                <li>Select **"Guided Appointment"** -> **"Buyer Agreement (BRA)"**.</li>
+                                <li>Follow the on-screen prompts to fill in all required fields: `Start Date`, `Period`, `Geographic Location`, `Commission`, etc.</li>
+                                <li>Switch to the **"FINTRAC"** step and fill in all fields with the client.</li>
+                                <li>This ensures you gather all compliant data before you start showing homes.</li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <section id="phase6" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 6: The Offer (Drafting & Negotiating)</h1>
+                <p class="text-lg text-gray-400 mb-6">Prepare, present, and negotiate an Agreement of Purchase and Sale.</p>
+                                
+                <div class="section">
+                    <h3>Checklist</h3>
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase6"></div></div>
+                    <ul class="checklist" id="checklist-phase6">
+                        <li><label><input type="checkbox" data-task-id="p6-1">Request MLS sheet and any disclosures from listing agent</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-2">Pull comparables for the subject property</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-3">Use "REALegal Assist - Architect Offer" to generate a complete offer strategy (price, comps, clauses)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-4">Use "CASORA Transaction Guide" to guide filling out the APS (Form 100), 801, and other forms</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-5">Use "REALegal Assist - Find Clauses" for any unusual conditions</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-6">Review and sign all documents with clients</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-7">Register and submit offer (Run SOP)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-8">Negotiate as needed (Use Script Library)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-9">Once accepted, circulate documents and update CRM/Master Checklist</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Key Tools (Apps)</h3>
+                    <a href="https://aistudio.google.com/app/apps/drive/1mHgLRHS0MYgln8JCPde64y_f_o_JXkRp?showPreview=true&showAssistant=true" target="_blank" class="tool-link">REALegal Assist (Primary Offer Drafting Tool)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true" target="_blank" class="tool-link">CASORA Transaction Guide (Paperwork Flow)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1jvfta3v85lj5HKepXQlikvslq-IDsf-g?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Deep Data CMA (for *Listing Side* "Anticipated Offer Strategy")</a>
+                </div>
+                                
+                <div class="section">
+                    <h3>Resource Links</h3>
+                    <a href="https://drive.google.com/drive/folders/1V4LeZQdLHxsYG6KTdY6f8AGcjaHyAA8q?usp=drive_link" target="_blank" class="resource-link">Buyer Kit for New Offers (Google Drive)</a>
+                    <a href="https://drive.google.com/drive/folders/105tUExzq0vrL_WuBFmDzJDmZuNT5_u-J?usp=drive_link" target="_blank" class="resource-link">Examples of Filled Forms (Google Drive)</a>
+                    <a href="https://drive.google.com/drive/folders/1X4BP9aiYg_xWHwmXHuJWcdklMADurbsE?usp=drive_link" target="_blank" class="resource-link">Blank Brokerage Forms (Google Drive)</a>
+                </div>
+
+                <div class="section">
+                    <h3>Standard Operating Procedures (SOPs)</h3>
+                    <details>
+                        <summary>SOP: Create Offer Strategy (AI Task)</summary>
+                        <div class="sop-content">
+                            <p>Use this AI workflow to build a data-driven offer *before* you open your forms software.</p>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Gather documents: The Subject Property MLS Sheet, and 3-5 MLS Sheets for Comparable Properties.</li>
+                                <li>Open **REALegal Assist** (`https://aistudio.google.com/app/apps/drive/1mHgLRHS0MYgln8JCPde64y_f_o_JXkRp?showPreview=true&showAssistant=true`).</li>
+                                <li>Select the **"Architect Offer"** module.</li>
+                                <li>**Upload:** Upload the *Subject Property MLS Sheet* and all *Comparable Property MLS Sheets*.</li>
+                                <li>**Instructions:** Enter your buyer's goals (e.g., "We need a 60-day closing. Clients are pre-approved. They like the house but feel the kitchen is old. Be safe with conditions.").</li>
+                                <li>**Run the tool.** It will generate a full strategy, including:
+                                    <ul>
+                                        <li>- A justified price recommendation based on the comps.</li>
+                                        <li>- A list of all essential clauses (Financing, Inspection, Survey, etc.).</li>
+                                        <li>- Creative suggestions (e.g., "Consider asking for patio furniture").</li>
+                                    </ul>
+                                </li>
+                                <li>**Copy** the recommended clauses to your clipboard.</li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Draft & Verify Offer Paperwork (AI Task)</summary>
+                        <div class="sop-content">
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open the **CASORA Transaction Guide** (`https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true`).</li>
+                                <li>Select **"Guided Appointment"** -> **"Offer Execution"** phase.</li>
+                                <li>Use the on-screen prompts for **"Agreement of Purchase & Sale"** as a checklist to fill in your OREA Form 100.</li>
+                                <li>When you get to Schedule A, **paste** the clauses you copied from **REALegal Assist**.</li>
+                                <li>If you need more clauses, use the **"Find Clauses"** module in **REALegal Assist** (e.g., "clause for septic").</li>
+                                <li>Use the `CASORA Guide` to complete Form 801 (Offer Summary) and any other disclosure forms.</li>
+                                <li>**Final Check:** Before sending, use the **"Analyze Documents"** module in **REALegal Assist**. Upload all your completed forms (APS, 801, etc.). The AI will cross-reference them and flag errors (e.g., "Warning: Buyer's name is spelled 'John Smith' on Form 100 but 'Jon Smith' on Form 801.").</li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Offer Presentation & Negotiation (from Brain Dump)</summary>
+                        <div class="sop-content">
+                            <h5>Offer Submission:</h5>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Let one day go by after the showing to ask for feedback.</li>
+                                <li>Register the offer with the listing brokerage. Get a presentation time.</li>
+                                <li>Call your clients and advise them of the time.</li>
+                                <li>Advise all other agents who have shown the property of the offer. "Let me know if you can get your clients 'on paper'."</li>
+                                <li>Call the first agent back and tell them if there is competition. "You’re in competition – tell your purchasers."</li>
+                            </ol>
+                            <h5>Presenting the Offer (as Listing Agent):</h5>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Mentally prepare the vendor.</li>
+                                <li>Have the agent present their Offer (and Form 801). Distribute copies to all at the table.</li>
+                                <li>"Let’s all read over this (silently) first. Once everybody’s read it we can open it up for discussion."</li>
+                                <li>Read the offer aloud, every word. Check spelling, legal description, conditions, and closing date (ensure not on a weekend/holiday).</li>
+                                <li>Thank the agent and dismiss them.</li>
+                                <li>**If you are the Listing Agent**, this is when you open your pre-generated **"Anticipated Offer Strategy"** from the **Deep Data CMA** tool to advise your sellers.</li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <section id="phase7" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 7: Transaction Management (Firm to Close)</h1>
+                <p class="text-lg text-gray-400 mb-6">Manage all tasks, deadlines, and compliance from accepted offer to closing day.</p>
+                                
+                <div class="section">
+                    <h3>Checklist</h3>
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase7"></div></div>
+                    <ul class="checklist" id="checklist-phase7">
+                        <li><label><input type="checkbox" data-task-id="p7-1">Create new transaction in "Master Listing Checklist" and "Business Hub" (CRM)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p7-2">Send all paperwork to brokerage admin, lawyers, and mortgage broker</label></li>
+                        <li><label><input type="checkbox" data-task-id="p7-3">Track all conditional deadlines (financing, inspection) in "Master Checklist"</label></li>
+                        <li><label><input type="checkbox" data-task-id="p7-4">Use "REALegal Assist" to compliance-check waivers and amendments</label></li>
+                        <li><label><input type="checkbox" data-task-id="p7-5">Coordinate final walk-through</label></li>
+                        <li><label><input type="checkbox" data-task-id="p7-6">Confirm closing, key transfer, and update "Master Checklist" to "Closed"</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Key Tools (Apps)</h3>
+                    <a href="https://kenmorganrealestate.github.io/Home/FullTransactionChecklist2.html" target="_blank" class="tool-link">Ken's Master Listing and Selling Checklist (Primary Tool)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/KenMorganCRMFinalintegratedl2025.html" target="_blank" class="tool-link">Real Estate Business Hub (CRM)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1mHgLRHS0MYgln8JCPde64y_f_o_JXkRp?showPreview=true&showAssistant=true" target="_blank" class="tool-link">REALegal Assist (for compliance checks)</a>
+                </div>
+                                
+                <div class="section">
+                    <h3>Resource Links</h3>
+                    <a href="https://drive.google.com/drive/folders/1X4BP9aiYg_xWHwmXHuJWcdklMADurbsE?usp=drive_link" target="_blank" class="resource-link">Blank Brokerage Forms (Google Drive)</a>
+                    <a href="https://drive.google.com/drive/folders/105tUExzq0vrL_WuBFmDzJDmZuNT5_u-J?usp=drive_link" target="_blank" class="resource-link">Examples of Filled Forms (Google Drive)</a>
+                </div>
+
+                <div class="section">
+                    <h3>Standard Operating Procedures (SOPs)</h3>
+                    <details>
+                        <summary>SOP: Managing the Conditional Period</summary>
+                        <div class="sop-content">
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open the **Master Listing Checklist** (`https://kenmorganrealestate.github.io/Home/FullTransactionChecklist2.html`), click "Start New Transaction," and enter the client/property details.</li>
+                                <li>Open the **Real Estate Business Hub (CRM)** (`https://kenmorganrealestate.github.io/Home/KenMorganCRMFinalintegratedl2025.html`), find <strong class="sop-clientName text-white">[Client]</strong>, and click "+ Transaction." Fill in the details to link the deal to the person.</li>
+                                <li>Upload all deal paperwork to the client's **Google Drive Folder** (link in the Client Hub).</li>
+                                <li>Send the package to brokerage admin, both lawyers, and the mortgage broker.</li>
+                                <li>Use the **Master Listing Checklist** daily to track all conditional deadlines (Financing, Inspection, etc.).</li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>SOP: Verifying Waivers & Amendments (AI Task)</summary>
+                        <div class="sop-content">
+                            <p>Never accept a waiver without verifying it.</p>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>When a "Notice of Fulfillment" or "Waiver" is received, open **REALegal Assist** (`https://aistudio.google.com/app/apps/drive/1mHgLRHS0MYgln8JCPde64y_f_o_JXkRp?showPreview=true&showAssistant=true`).</li>
+                                <li>Select the **"Analyze Documents"** module.</li>
+                                <li>Upload the new document (e.g., `Waiver.pdf`) AND the original `Agreement of Purchase and Sale.pdf`.</li>
+                                <li>The AI will check for errors, such as:
+                                    <ul>
+                                        <li>- Mismatched dates or addresses.</li>
+                                        <li>- Confirming the condition being waived matches a condition in the original APS.</li>
+                                        <li>- Ensuring all required signatures and initials are present.</li>
+                                    </ul>
+                                </li>
+                                <li>Once verified, circulate the firm deal to all parties.</li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+            </section>
+
+            <section id="phase8" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 8: Post-Closing & Nurture</h1>
+                <p class="text-lg text-gray-400 mb-6">Convert the client into a long-term relationship and source for referrals.</p>
+                                
+                <div class="section">
+                    <h3>Checklist</h3>
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase8"></div></div>
+                    <ul class="checklist" id="checklist-phase8">
+                        <li><label><input type="checkbox" data-task-id="p8-1">Log "Sale" in "Real Estate Performance Dashboard"</label></li>
+                        <li><label><input type="checkbox" data-task-id="p8-2">Send "Congratulations" gift/card</label></li>
+                        <li><label><input type="checkbox" data-task-id="p8-3">Update contact status in "Business Hub" (CRM) to "Past Client"</label></li>
+                        <li><label><input type="checkbox" data-task-id="p8-4">Apply "Past Client" Action Plan (e.g., 5-Year Circle of Life) in CRM</label></li>
+                        <li><label><input type="checkbox" data-task-id="p8-5">Request a review/testimonial</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Key Tools (Apps)</h3>
+                    <a href="https://kenmorganrealestate.github.io/Home/KenMorganCRMFinalintegratedl2025.html" target="_blank" class="tool-link">Real Estate Business Hub (CRM)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/UpdatedFullCompleteDashboardPerfected2025.html" target="_blank" class="tool-link">Real Estate Performance Dashboard (Log Sale)</a>
+                </div>
+
+                <div class="section">
+                    <h3>Standard Operating Procedures (SOPs)</h3>
+                    <details>
+                        <summary>SOP: Closing Out a Client File</summary>
+                        <div class="sop-content">
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Open the **Real Estate Performance Dashboard** (`https://kenmorganrealestate.github.io/Home/UpdatedFullCompleteDashboardPerfected2025.html`).</li>
+                                <li>Click "Log an Event" -> `EventType: Sale`.</li>
+                                <li>Fill in all financial details: `Final Sale Price`, `Commission Rate`, `Broker Split`, `Broker Fee`, `Expenses`. This updates your YTD income and KPIs.</li>
+                                <li>Send a "Congratulations" gift or card.</li>
+                                <li>Open the **Real Estate Business Hub (CRM)** (`https://kenmorganrealestate.github.io/Home/KenMorganCRMFinalintegratedl2025.html`).</li>
+                                <li>Find <strong class="sop-clientName text-white">[Client]</strong> and change their `Contact Status` from "Active" to **"Past Client"**.</li>
+                                <li>Go to "Apply Action Plan" and apply the **"Past Client - Buyer (5-Year Circle of Life)"** or **"Past Client - Seller (5-Year Circle of Life)"** Action Plan. This will automatically schedule your follow-ups for the next 5+ years.</li>
+                                <li>Send an email asking for a testimonial or online review.</li>
+                            </ol>
+                        </div>
+                    </details>
+                </div>
+            </section>
+                                    
+            <section id="phase9" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 9: Script & Mindset Library</h1>
+                <p class="text-lg text-gray-400 mb-6">Your complete collection of scripts, objection handlers, and affirmations from your "Brain Dump" document.</p>
+                                
+                <div class="section">
+                    <h3>Listing Appointment: Pricing & Objections</h3>
+                    <details id="script-list-high">
+                        <summary>Script: "Let’s list high, we can always come down later."</summary>
+                        <div class="sop-content">
+                            <blockquote>"I understand you want to list high… to leave room for negotiating… have you considered the problem that creates for you? Most people won’t even bother looking at properties that are priced too high… would you rather have me negotiate ten offers to get our price… or not have an opportunity to get any offers at all?"</blockquote>
+                            <blockquote>"All we need to do now is simply… sign the contract… so I can help you get what you want… in the time you want… won’t that be great?"</blockquote>
+                            <a href="#phase3" class="jump-link mt-4 block">&uarr; Return to Phase 3 (Appointment)</a>
+                        </div>
+                    </details>
+                    <details id="script-another-agent">
+                        <summary>Script: "Another agent said they could get me more money."</summary>
+                        <div class="sop-content">
+                            <blockquote>"I can appreciate that… and what you probably don’t understand is this… An agent that will… list your property… overpriced… assumes they can take the listing now… and then start beating you up on the price… week after week after week after week… is that what you want… who would!"</blockquote>
+                            <blockquote>"They’re afraid to tell you the truth… up front… do you want the truth? Of course you do!"</blockquote>
+                            <blockquote>"Let’s do the right thing… and simply… sign the contract… so I can help you get what you want… in the time you want… won’t that be great?"</blockquote>
+                            <a href="#phase3" class="jump-link mt-4 block">&uarr; Return to Phase 3 (Appointment)</a>
+                        </div>
+                    </details>
+                    <details id="script-commission-1">
+                        <summary>Script: "We want you to cut your commission." (Option 1)</summary>
+                        <div class="sop-content">
+                            <blockquote>"No… any other questions?"</blockquote>
+                            <a href="#phase3" class="jump-link mt-4 block">&uarr; Return to Phase 3 (Appointment)</a>
+                        </div>
+                    </details>
+                    <details id="script-commission-2">
+                        <summary>Script: "The other agent said they would." (Commission Option 2)</summary>
+                        <div class="sop-content">
+                            <blockquote>"I can appreciate that… can I tell you why that makes me nervous? If other agents do not have the courage… to stand up to you… regarding their own worth… how strong could they possibly be… defending you… and the price we set for your home… I have that courage… do you feel I can sell your home? (YES) Terrific!"</blockquote>
+                            <blockquote>"All we need to do now is simply… sign the contract… so I can help you get what you want… in the time you want… won’t that be great?"</blockquote>
+                            <a href="#phase3" class="jump-link mt-4 block">&uarr; Return to Phase 3 (Appointment)</a>
+                        </div>
+                    </details>
+                    <details id="script-friend-in-biz">
+                        <summary>Script: "I have a friend in the business."</summary>
+                        <div class="sop-content">
+                            <blockquote>"I can appreciate that… and almost everyone does… so let me ask you… do you absolutely have to… sell this home… or… are you just looking to do your friend a favor?"</blockquote>
+                            <blockquote>"Obviously… you had me out for a reason… right? Do you feel I can sell your home? Terrific!"</blockquote>
+                            <blockquote>"All we need to do now is simply… sign the contract… so I can help you get what you want… in the time you want… won’t that be great? Sign the contract!"</blockquote>
+                            <a href="#phase3" class="jump-link mt-4 block">&uarr; Return to Phase 3 (Appointment)</a>
+                        </div>
+                    </details>
+                    <details id="script-think-it-over">
+                        <summary>Script: "We want to think it over."</summary>
+                        <div class="sop-content">
+                            <blockquote>"That’s great…and since three minds are better than two…let’s think out loud…together…tell me…what are you thinking about? You’re right… this is a big decision… isn’t it?"</blockquote>
+                            <blockquote>"Yet… the decision must be made based upon what you want… correct?"</blockquote>
+                            <blockquote>"Let’s do this… sign the contract tonight… contingent upon your approval within 24 hours… that way we both win… can I tell you how?"</blockquote>
+                            <blockquote>"You have 24 hours with no pressure… so you can… feel comfortable… and sleep on it tonight… then I’ll call you in the morning… and you simply… tell me yes… or no. If you say no… I’ll rip up the contract… and you have no obligation… if you… say yes… I’ll begin marketing your property immediately… either way… All we need to do now is simply… sign the contract… so I can help you get what you want… in the time you want… won’t that be great?"</blockquote>
+                            <a href="#phase3" class="jump-link mt-4 block">&uarr; Return to Phase 3 (Appointment)</a>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="section">
+                    <h3>Listing Presentation: Closes & Scripts</h3>
+                    <details id="script-listing-presentation">
+                        <summary>Script: The 20 Minute Presentation (Core Script)</summary>
+                        <div class="sop-content">
+                            <p><strong>#9 –</strong> "...what price do you absolute have to have? ( ) Ouch!"</p>
+                            <p><strong>#10 –</strong> "Based on that…there are a couple of real important questions I need to ask you…"</p>
+                            <p><strong>#11 –</strong> "Specifically…why do you feel your home is worth $... more than your neighbor’s?"</p>
+                            <p><strong>#12 –</strong> "(Name) in today’s market place… that means you’ve simply brought your home up to selling standard… right?"</p>
+                            <p><strong>#13 –</strong> "All homes need [feature]… right?"</p>
+                            <p><strong>#14 –</strong> "New homes have all of that and more… don’t they?"</p>
+                            <p><strong>#15 –</strong> "Let me ask you a question… If a buyer wants to buy your home… but… they plan to get rid of [feature]… the moment they buy your home… how much is it worth then? Exactly!"</p>
+                            <p><strong>#16 –</strong> "Did you add that to your home for the next buyer… or… for your own enjoyment?"</p>
+                            <p><strong>#17 –</strong> "Did you enjoy it? Great!"</p>
+                            <p><strong>#18 –</strong> "If you were purchasing a home… and two similar homes were for sale… one for [Price A]… and one for [Price B]… which would you buy?"</p>
+                            <p><strong>#19 –</strong> "Be Honest!"</p>
+                            <p><strong>#20 –</strong> "Wouldn’t you want to use the extra $[Difference]… to do what you wanted to the home?"</p>
+                            <p><strong>#21 –</strong> "Don’t you think most buyers would feel just like you? Of course they would."</p>
+                            <p><strong>#22 –</strong> "That’s why… I’m going to recommend… again… a price of $[My Price]… based on what we know… do you want to… list your home… for that price tonight?"</p>
+                            <a href="#phase3" class="jump-link mt-4 block">&uarr; Return to Phase 3 (Appointment)</a>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>Script: Powerful Closes for Listing Presentations</summary>
+                        <div class="sop-content">
+                            <p><strong>Close 1 (The Assumptive Close):</strong></p>
+                            <blockquote>"To give your property maximum exposure... I am going to recommend we get a lockbox on the property right away... a sign in the front yard... and of course... we’ll get it on the internet as fast as possible... Now... when would you like us to come by with the sign and lockbox? Sign the contract."</blockquote>
+                            <p><strong>Close 2 (The Simple Close):</strong></p>
+                            <blockquote>"Do you feel I can sell your home? Sign the contract."</blockquote>
+                            <p><strong>Close 3 (The Eliminator Close):</strong></p>
+                            <blockquote>"Is there anything else stopping you from listing your home with me tonight? Sign the contract."</blockquote>
+                            <p><strong>Close 4 (The Agent Canceler Close):</strong></p>
+                            <blockquote>"As a professional service... and to start our relationship... I’ll call the agents you still have appointments with... and cancel the appointments for you... Would you like to know what I’m going to say? ... 'They thought you were terrific... They wanted to give you a chance but... I convinced them to... list with me tonight!' ... Let’s make a list of who I need to call."</blockquote>
+                            <p><strong>Close 5 (The Direct Close):</strong></p>
+                            <blockquote>"Mr. & Mrs. Seller... Based on your time frame... what you want for your home... and the marketing and exposure you need... I’m the right person for the job... Put me to work for you right now... Sign the contract."</blockquote>
+                            <p><strong>Close 6 (The Doctor Analogy):</strong></p>
+                            <blockquote>"Have you noticed that all Realtors say basically the same thing? Let me show you how I separate myself... I sell [X] homes per year while my competitors average [Y] per year... If you were going to hire a doctor to perform surgery... would you hire someone who does it now and then... or... the doctor who’s done it day in and day out for years? ... I agree! Go ahead and sign the contract."</blockquote>
+                            <p><strong>Close 7 (The Final Question):</strong></p>
+                            <blockquote>"When would you like to receive your first offer? ... All we need to do now is simply... sign the contract... so I can help you get what you want in the time you want... won’t that be great?"</blockquote>
+                            <a href="#phase3" class="jump-link mt-4 block">&uarr; Return to Phase 3 (Appointment)</a>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="section">
+                    <h3>Prospecting Scripts (FSBO, Expired, etc.)</h3>
+                    <details id="script-expired-1">
+                        <summary>Script: Expired Listing</summary>
+                        <div class="sop-content">
+                            <blockquote>"Hi, I’m looking for [Name]… Hi [Name]… my name is [Your Name] with [Your Brokerage]… I’m sure you’ve figured out that your home came up on our computer as an expired listing… and I was calling to see…</blockquote>
+                            <blockquote>1. When you plan on interviewing the right agent for the job of selling your home? (Never) Terrific! / Really!</blockquote>
+                            <blockquote>2. If you sold this home… where would you go next? (LA) That’s exciting!</blockquote>
+                            <blockquote>3. How soon do you have to be there? (Already) Ouch!</blockquote>
+                            <blockquote>4. … what do you think stopped your home from selling? (The agent) Really!</blockquote>
+                            <blockquote>5. How did you happen to pick the last agent you listed with? (Referral) Great!</blockquote>
+                            <blockquote>... (Continue with script) ...</blockquote>
+                            <blockquote>10. I would like to apply for the job of selling your home… are you familiar with the techniques I use to sell homes? (No) You’re Kidding!</blockquote>
+                            <blockquote>11. What would be the best time to show you … Monday or Tuesday at [Time]?"</blockquote>
+                            <a href="#phase1" class="jump-link mt-4 block">&uarr; Return to Phase 1 (Lead Gen)</a>
+                        </div>
+                    </details>
+                    <details id="script-fsbo-1">
+                        <summary>Script: For Sale By Owner (FSBO)</summary>
+                        <div class="sop-content">
+                            <blockquote>"Hi, I’m calling about the home for sale…is this the owner? My name is [Your Name] with [Your Brokerage]… I work with a lot of Buyers and Sellers in the area… and I was wondering… how can I help you?"</blockquote>
+                            <blockquote>"Thanks for thinking about that… let me ask you… how much time will you take… before you will consider… interviewing the right agent for thejob of selling your home? ( ) Excellent!"</blockquote>
+                            <blockquote>"What has to happen…before you will consider… hiring a powerful agent… like myself… for the job of selling your home? ( ) Perfect!"</blockquote>
+                            <blockquote>... (Continue with script) ...</blockquote>
+                            <blockquote>"If you were to list… which agent would you list with? (None in mind) Fantastic!"</blockquote>
+                            <blockquote>"Are you familiar with the techniques I use to sell homes? ( ) You’re kidding!"</blockquote>
+                            <blockquote>"What would be the best time to show you… [Day] or [Day]?"</blockquote>
+                            <a href="#phase1" class="jump-link mt-4 block">&uarr; Return to Phase 1 (Lead Gen)</a>
+                        </div>
+                    </details>
+                    <details id="script-fsbo-objection-1">
+                        <summary>Script: FSBO Objection - "Bring me a buyer & I’ll pay you 3%."</summary>
+                        <div class="sop-content">
+                            <blockquote>"I understand, and I appreciate your offer. You’ve probably noticed that agents call saying they might have a buyer in reality don’t have a buyer at all. A few might have a looker, but if they really had a buyer…you’d already have an offer, wouldn’t you?"</blockquote>
+                            <blockquote>"Let me ask you a question…If there was an advantage to you…to listing your home with me…I mean if it made financial sense to list it as opposed to selling privately…would you do so? (what’s the advantage?) Well, I’d be excited to meet with you and show you what that might be... I can come by at 4:00 or would 6:00 be better?"</blockquote>
+                            <a href="#phase1" class="jump-link mt-4 block">&uarr; Return to Phase 1 (Lead Gen)</a>
+                        </div>
+                    </details>
+                    <details id="script-fsbo-objection-2">
+                        <summary>Script: FSBO Objection - "We don’t need an agent…we can sell it on our own."</summary>
+                        <div class="sop-content">
+                            <blockquote>"I agree…you probably could sell it on your own. And I’m sure you know what your doing… However, the challenge that you run into is this…does the buyer pay the commission? (No) No, so for the buyer there are no real estate fees involved... So, what is going to motivate a buyer to do all of that leg work on their own?"</blockquote>
+                            <blockquote>"What you’ve probably already noticed is the number of casual lookers, unqualified prospects, and bargain hunters your home has been attracting. You do want to reach the most serious buyers don’t you? (yes) Great! Let’s go ahead and meet. I can come by today at 4:00 or tomorrow at 6:00…which is better?"</blockquote>
+                            <a href="#phase1" class="jump-link mt-4 block">&uarr; Return to Phase 1 (Lead Gen)</a>
+                        </div>
+                    </details>
+                </div>
+
+                <div class="section">
+                    <h3>Mindset & Affirmations (from Brain Dump)</h3>
+                    <details>
+                        <summary>Key Affirmations (Read Daily)</summary>
+                        <div class="sop-content">
+                            <ul class="list-disc list-inside">
+                                <li>ALL TENSION, ANXIETY AND STRESS IS AUTOMATICALLY CONVERTED IN MY SYSTEM TO POSITIVE ENERGY THAT I USE AT WILL.</li>
+                                <li>FAILURE IS SIMPLY A NEED TO CHANGE MY APPROACH.</li>
+                                <li>I ALWAYS ASK EFFECTIVE QUESTIONS. I ALWAYS ASK FOR THE ORDER.</li>
+                                <li>I AM CONFIDENT AND SELF ASSURED.</li>
+                                <li>I AM CONSTANTLY IMPROVING, ENHANCING AND REFINING IN ALL THAT I AM AND IN ALL THAT I AM DOING.</li>
+                                <li>I AM AN EXCELLENT LISTING AGENT.</li>
+                                <li>I AM PARTICULARLY EFFECTIVE ON THE TELEPHONE.</li>
+                                <li>I AM PARTICULARLY GOOD AT PRICING HOMES TO SELL.</li>
+                                <li>I AM PERSUASIVE AND CONVINCING.</li>
+                                <li>I AM POSITIVE, CONSTRUCTIVE AND CREATIVE.</li>
+                                <li>I AM PROUD TO BE A REAL ESTATE SALESPERSON.</li>
+                                <li>I AM RATIONAL, LOGICAL AND PRACTICAL.</li>
+                                <li>I AM A TRULY EFFECTIVE NEGOTIATOR.</li>
+                                <li>I AM SUCCESS ORIENTED.</li>
+                                <li>I THINK, SAY AND DO PRECISELY WHAT IS NECESSARY TO GET THE LISTING.</li>
+                                <li>I USE TIME TO MY BEST ADVANTAGE.</li>
+                                <li>PEOPLE ARE MY BUSINESS AND MY PRODUCT IS REAL ESTATE.</li>
+                                <li>THE TELEPHONE IS AN EFFECTIVE HUNTING TOOL AND I USE IT WITH EXPERTISE, PRECISION AND FINESSE.</li>
+                            </ul>
+                            <a href="#phase0" class="jump-link mt-4 block">&uarr; Return to Phase 0 (CEO)</a>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>Full "The Commission Cutting Report" by Mike Ferry</summary>
+                        <div class="sop-content">
+                            <p>(This is the full text for your reference when handling commission objections)</p>
+                            <h4>Who Cuts Commissions … And Why?</h4>
+                            <p>It seems that many agents, experienced or not, seem to cut commissions. There really doesn’t seem to be a lot of common denominators … with the exception of two words, “weakness” and “desperation”. Why would I use the words weakness and desperation? Let’s be honest … it certainly doesn’t take a lot of sales skills or tremendous strength to walk into a seller’s home and offer a four or five percent commission...</p>
+                            <p>...[Full text from your brain dump]...</p>
+                            <h4>Who Wins When Commissions Are Cut?</h4>
+                            <p>The truth is … nobody wins when commissions are cut. Why? … Okay, you’re an agent doing twelve to fifteen deals per year or an agent doing 125 to 150 deals a year and you have a qualified, motivated buyer whom you’re showing property to and you’re planning to sell today. Whose properties are you probably going to show? Let’s be real honest here. Are you going to show the listings that are at four to five percent or the listings that are at six to seven percent? I think we all know the answers.</p>
+                            <p>...[Full text from your brain dump]...</p>
+                            <a href="#phase3" class="jump-link mt-4 block">&uarr; Return to Phase 3 (Appointment)</a>
+                        </div>
+                    </details>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const navButtons = document.querySelectorAll('.nav-button');
+        const checklists = document.querySelectorAll('.checklist');
+        const mainContent = document.getElementById('main-content');
+        const storageKey = 'kenMorganPlaybook_v4'; // Upped version for new features
+
+        // --- Motivational Coach Quotes ---
+        const motivationalQuotes = {
+            'client-hub': "The client relationship is your business. Build it with trust and immaculate detail.",
+            'phase0': "A CEO controls their day. Master your habits, master your business. I AM CONSTANTLY IMPROVING.",
+            'phase1': "The telephone is an effective hunting tool. Use it with expertise, precision, and finesse.",
+            'phase2': "Preparation is the foundation of confidence. Know your numbers, know the market, and you will win.",
+            'phase3': "I AM AN EXCELLENT LISTING AGENT. I think, say and do precisely what is necessary to get the listing.",
+            'phase4': "Your marketing is the 'Great Oz.' Make it powerful, professional, and ubiquitous.",
+            'phase5': "FAILURE IS SIMPLY A NEED TO CHANGE MY APPROACH. Qualify every buyer, every time.",
+            'phase6': "I AM A TRULY EFFECTIVE NEGOTIATOR. The first step to winning is knowing what you will not accept.",
+            'phase7': "A flawless transaction creates a client for life. Manage the details, and the referrals will follow.",
+            'phase8': "The deal isn't done at closing. It's done when you ask for the testimonial. Secure the relationship.",
+            'phase9': "I AM CONFIDENT AND SELF ASSURED. My scripts are the tracks I run on. I know them cold.",
+            'default': "Your potential is limitless. It is constrained only by the beliefs you hold about yourself."
+        };
+
+        function getMotivationalQuote(phaseId) {
+            return motivationalQuotes[phaseId] || motivationalQuotes['default'];
+        }
+
+        // --- "What's Next?" Success Coach ---
+        function updateNextStep() {
+            const nextStepTaskEl = document.getElementById('next-step-task');
+            const nextStepLinkEl = document.getElementById('next-step-link');
+            const nextStepQuoteEl = document.getElementById('next-step-quote');
+                        
+            const firstUnchecked = document.querySelector('.checklist input[type="checkbox"]:not(:checked)');
+                        
+            if (firstUnchecked) {
+                const label = firstUnchecked.closest('label');
+                const phase = firstUnchecked.closest('.phase-content');
+                const phaseId = phase.id;
+
+                nextStepTaskEl.textContent = label.textContent.trim();
+                nextStepLinkEl.href = `#${phaseId}`;
+                nextStepLinkEl.style.display = 'inline';
+                nextStepQuoteEl.textContent = getMotivationalQuote(phaseId);
+            } else {
+                nextStepTaskEl.textContent = "All tasks completed! Great work.";
+                nextStepLinkEl.style.display = 'none';
+                nextStepQuoteEl.textContent = "You've mastered the playbook. Time to find the next client!";
+            }
+        }
+
+        // --- Navigation & ScrollSpy ---
+        const sections = document.querySelectorAll('.phase-content');
+        const observerOptions = {
+            root: mainContent,
+            rootMargin: '0px',
+            threshold: 0.2
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    navButtons.forEach(btn => {
+                        btn.classList.toggle('active', btn.getAttribute('href') === `#${id}`);
+                    });
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => observer.observe(section));
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+            });
+        });
+
+        // --- State Management ---
+        let state = {};
+
+        function saveState() {
+            state = {};
+                        
+            // 1. Save Client Hub Data
+            state.clientHub = {
+                clientName: document.getElementById('clientName').value,
+                clientProperty: document.getElementById('clientProperty').value,
+                clientEmail: document.getElementById('clientEmail').value,
+                clientPhone: document.getElementById('clientPhone').value,
+                gDriveLink: document.getElementById('gDriveLink').value,
+                gmailLink: document.getElementById('gmailLink').value,
+                micrositeLink: document.getElementById('micrositeLink').value,
+                clientNotes: document.getElementById('clientNotes').value
+            };
+
+            // 2. Save Checklist Progress
+            state.checklists = {};
+            document.querySelectorAll('.checklist input[type="checkbox"]').forEach(cb => {
+                state.checklists[cb.dataset.taskId] = cb.checked;
+            });
+                                    
+            localStorage.setItem(storageKey, JSON.stringify(state));
+            updateAllProgress();
+            updateNextStep(); // Update coach on every save
+        }
+                
+        function populateDynamicFields(clientData) {
+            const clientName = clientData.clientName || '[Client]';
+            const property = clientData.clientProperty || '[Property]';
+                        
+            document.querySelectorAll('.sop-clientName').forEach(el => {
+                el.textContent = clientName;
+            });
+            document.querySelectorAll('.sop-property').forEach(el => {
+                el.textContent = property;
+            });
+        }
+
+        function loadState(importedState = null) {
+            state = importedState || JSON.parse(localStorage.getItem(storageKey) || '{}');
+
+            // 1. Load Client Hub Data
+            if (state.clientHub) {
+                document.getElementById('clientName').value = state.clientHub.clientName || '';
+                document.getElementById('clientProperty').value = state.clientHub.clientProperty || '';
+                document.getElementById('clientEmail').value = state.clientHub.clientEmail || '';
+                document.getElementById('clientPhone').value = state.clientHub.clientPhone || '';
+                document.getElementById('gDriveLink').value = state.clientHub.gDriveLink || '';
+                document.getElementById('gmailLink').value = state.clientHub.gmailLink || '';
+                document.getElementById('micrositeLink').value = state.clientHub.micrositeLink || '';
+                document.getElementById('clientNotes').value = state.clientHub.clientNotes || '';
+                populateDynamicFields(state.clientHub);
+            } else {
+                 populateDynamicFields({}); // Clear fields
+            }
+
+            // 2. Load Checklist Progress
+            if (state.checklists) {
+                document.querySelectorAll('.checklist input[type="checkbox"]').forEach(cb => {
+                    const isChecked = state.checklists[cb.dataset.taskId] || false;
+                    cb.checked = isChecked;
+                    cb.closest('li').classList.toggle('completed', isChecked);
+                });
+            }
+            updateAllProgress();
+            updateNextStep(); // Update coach on load
+        }
+
+        function updateProgressForPhase(phaseId) {
+            const checklist = document.getElementById(phaseId);
+            if (!checklist) return;
+
+            const tasks = checklist.querySelectorAll('input[type="checkbox"]');
+            const completedTasks = checklist.querySelectorAll('input[type="checkbox"]:checked');
+            const total = tasks.length;
+            const completed = completedTasks.length;
+            const percentage = total > 0 ? (completed / total) * 100 : 0;
+                                    
+            const progressBar = document.getElementById(`progress-${phaseId.replace('checklist-', '')}`);
+            if (progressBar) {
+                progressBar.style.width = `${percentage}%`;
+            }
+        }
+
+        function updateAllProgress() {
+            checklists.forEach(checklist => {
+                updateProgressForPhase(checklist.id);
+            });
+        }
+
+        // --- Event Listeners for Live Save ---
+        checklists.forEach(checklist => {
+            checklist.addEventListener('change', (e) => {
+                if (e.target.type === 'checkbox') {
+                    e.target.closest('li').classList.toggle('completed', e.target.checked);
+                    saveState();
+                }
+            });
+        });
+                        
+        document.getElementById('client-hub').addEventListener('input', saveState);
+
+        // --- Data Portability ---
+        document.getElementById('exportJson').addEventListener('click', () => {
+            saveState(); // Ensure state is current
+            const data = localStorage.getItem(storageKey) || '{}';
+                        
+            // Dynamic Filename Logic
+            let clientName = document.getElementById('clientName').value.trim();
+            if (!clientName) {
+                clientName = 'playbook'; // Default if no name
+            } else {
+                clientName = clientName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            }
+                        
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${clientName}_playbook_progress.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('importJson').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedState = JSON.parse(e.target.result);
+                    if (!importedState.clientHub || !importedState.checklists) {
+                        throw new Error('Invalid playbook file.');
+                    }
+                    loadState(importedState);
+                    saveState(); // Save the imported state to localStorage
+                    alert('Client file imported successfully!');
+                } catch (err) {
+                    alert('Error importing file. Make sure it is a valid JSON backup.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = null; // Clear input
+        });
+                        
+        document.getElementById('resetApp').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset all checklists and clear the Client Hub? This cannot be undone.')) {
+                localStorage.removeItem(storageKey);
+                loadState({}); // Load empty state
+                document.getElementById('client-hub').querySelectorAll('input, textarea').forEach(el => el.value = '');
+                populateDynamicFields({}); // Clear dynamic fields
+            }
+        });
+
+        // --- "Go" Button Listeners ---
+        document.querySelectorAll('.go-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const targetInputId = e.currentTarget.dataset.target;
+                const inputEl = document.getElementById(targetInputId);
+                if (inputEl) {
+                    let url = inputEl.value.trim();
+                    if (url) {
+                        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                            url = 'https://' + url;
+                        }
+                        window.open(url, '_blank');
+                    } else {
+                        alert('Please enter a URL in the box first.');
+                    }
+                }
+            });
+        });
+
+        // Initial Load
+        loadState();
+    });
+</script>
+</body>
+</html>

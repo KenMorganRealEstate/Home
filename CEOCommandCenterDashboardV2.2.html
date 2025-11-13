@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CEO Command Center V2.7 (with Search)</title>
+    <title>CEO Command Center V2.8 (ICS Export)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -54,7 +54,7 @@
             pointer-events: none;
         }
 
-        /* NEW: Search result styling */
+        /* Search result styling */
         mark {
             background-color: #fde047; /* yellow-300 */
             color: #1f2937; /* gray-800 */
@@ -65,8 +65,6 @@
         #search-results::-webkit-scrollbar-track { background: #374151; border-radius: 4px; }
         #search-results::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
         #search-results::-webkit-scrollbar-thumb:hover { background: #6b7280; }
-        /* END NEW */
-
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 p-4 sm:p-6 md:p-8">
@@ -149,6 +147,7 @@
                 <div class="flex flex-wrap gap-4">
                     <button id="export-json" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Export JSON</button>
                     <button id="export-csv" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Export CSV</button>
+                    <button id="export-ics" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded">Export .ICS</button>
                     <label class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded cursor-pointer">
                         Import JSON
                         <input type="file" id="import-json" class="hidden" accept=".json">
@@ -208,6 +207,7 @@
                 <div id="search-results" class="space-y-3 max-h-96 overflow-y-auto pr-2">
                     </div>
             </section>
+
             <section class="bg-gray-800 p-6 rounded-lg shadow-lg">
                 <h2 class="text-2xl font-bold text-white section-title">The 12-Month Plan</h2>
                 
@@ -266,7 +266,7 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const storageKey = 'ceoDashboardData_v7'; // No change to storage key
+        const storageKey = 'ceoDashboardData_v7'; // We can keep the same storage key
         const startWeight = 198;
         const goalWeight = 178;
         let mainData = {};
@@ -282,6 +282,15 @@
         const dayDiff = (date1, date2) => Math.round(Math.abs(new Date(date1) - new Date(date2)) / (1000 * 60 * 60 * 24));
 
         const dailyTaskIds = ['task-business', 'task-workout', 'task-walk', 'task-nutrition', 'task-no-alcohol'];
+        // NEW: Labels for ICS export
+        const dailyTaskLabels = {
+            'task-business': '#1 Business Priority',
+            'task-workout': 'Weight Training',
+            'task-walk': '5km Walk',
+            'task-nutrition': 'On-Plan Nutrition',
+            'task-no-alcohol': 'No Alcohol'
+        };
+        // END NEW
         const filterStatusEl = document.getElementById('filter-status');
                 
         // --- Day Data Helper ---
@@ -530,7 +539,7 @@
             const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
             const link = document.createElement('a');
             link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `ceo_dashboard_v2.7_backup_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute('download', `ceo_dashboard_v2.8_backup_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -571,7 +580,92 @@
             reader.readAsText(file);
         }
 
-        // NEW: Search Function
+        // --- NEW: ICS Export Function ---
+        function exportToIcs() {
+            // Helper function to format text for ICS: escape characters and fold long lines
+            const formatIcsText = (text) => {
+                if (!text) return '';
+                // Escape characters then replace newlines with \n literal
+                let escapedText = text.replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
+                let foldedText = '';
+                // Fold lines at 75 chars, as per RFC 5545
+                while (escapedText.length > 75) {
+                    foldedText += escapedText.substring(0, 75) + '\r\n '; // ' ' at the start of the new line is required
+                    escapedText = escapedText.substring(75);
+                }
+                foldedText += escapedText;
+                return foldedText;
+            };
+
+            let icsContent = [
+                'BEGIN:VCALENDAR',
+                'VERSION:2.0',
+                'PRODID:-//CEOCommandCenter//EN',
+                'CALSCALE:GREGORIAN'
+            ];
+
+            const allDates = Object.keys(mainData).filter(key => key.match(/^\d{4}-\d{2}-\d{2}$/)).sort();
+            const now = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z'; // Format: YYYYMMDDTHHMMSSZ
+
+            for (const dateKey of allDates) {
+                const dayData = mainData[dateKey];
+                if (!dayData) continue; // Skip if no data for this day
+
+                const notes = dayData['daily-notes'];
+                const hasTasks = dailyTaskIds.some(id => dayData[id] !== undefined);
+
+                // Only create an event if there are notes or task data
+                if (notes || hasTasks) {
+                    let description = '';
+                    
+                    // Add task summary
+                    if (hasTasks) {
+                        description += 'Daily Habits:\\n';
+                        dailyTaskIds.forEach(id => {
+                            const status = dayData[id] ? '✅' : (dayData[id] === false ? '❌' : '➖'); // Checked, Unchecked, or Undefined
+                            description += `${status} ${dailyTaskLabels[id]}\\n`;
+                        });
+                        description += '\\n'; // Add a newline
+                    }
+
+                    // Add notes
+                    if (notes) {
+                        description += 'Notes:\\n' + notes;
+                    }
+
+                    if (description === '') continue; // Skip if somehow empty
+
+                    const eventDate = dateKey.replace(/-/g, ''); // Format YYYYMMDD
+                    
+                    icsContent.push(
+                        'BEGIN:VEVENT',
+                        `UID:${dateKey}@ceo.command.center`,
+                        `DTSTAMP:${now}`,
+                        `DTSTART;VALUE=DATE:${eventDate}`, // All-day event
+                        `SUMMARY:CEO Scorecard - ${dateKey}`,
+                        `DESCRIPTION:${formatIcsText(description)}`,
+                        'END:VEVENT'
+                    );
+                }
+            }
+
+            icsContent.push('END:VCALENDAR');
+
+            // Trigger download
+            const dataStr = icsContent.join('\r\n'); // Use CRLF line endings
+            const dataBlob = new Blob([dataStr], { type: 'text/calendar;charset=utf-8' });
+            const url = URL.createObjectURL(dataBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ceo_dashboard_export_${new Date().toISOString().slice(0,10)}.ics`;
+            document.body.appendChild(a);
+            a.click();
+            URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+        // --- END NEW ---
+
+        // --- Search Function ---
         function performSearch() {
             const searchResultsEl = document.getElementById('search-results');
             const searchTerm = document.getElementById('search-input').value.trim();
@@ -624,7 +718,7 @@
                 }).join('');
             }
         }
-        // END NEW
+        // --- END SEARCH ---
 
 
         // --- Event Listeners ---
@@ -648,9 +742,10 @@
             const url = URL.createObjectURL(dataBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ceo_dashboard_v2.7_backup_${new Date().toISOString().slice(0,10)}.json`; // Fixed version number
+            a.download = `ceo_dashboard_v2.8_backup_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
             URL.revokeObjectURL(url);
+            document.body.removeChild(a);
         });
 
         document.getElementById('import-json').addEventListener('change', (event) => {
@@ -673,6 +768,10 @@
                 
         document.getElementById('export-csv').addEventListener('click', exportToCsv);
         document.getElementById('import-csv').addEventListener('change', importFromCsv);
+        
+        // NEW: ICS Listener
+        document.getElementById('export-ics').addEventListener('click', exportToIcs);
+        // END NEW
 
         document.getElementById('reset-data').addEventListener('click', () => {
             if (confirm('Are you sure you want to reset ALL data? This cannot be undone.')) {
@@ -733,7 +832,7 @@
             }
         });
 
-        // NEW: Search Event Listeners
+        // --- Search Event Listeners ---
         document.getElementById('search-button').addEventListener('click', performSearch);
         
         // Allow pressing Enter to search
@@ -753,7 +852,7 @@
                 document.getElementById('daily-scorecard').scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
-        // END NEW
+        // --- END SEARCH ---
 
         // Initial Load
         mainData = JSON.parse(localStorage.getItem(storageKey)) || {};

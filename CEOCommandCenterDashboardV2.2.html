@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CEO Command Center V2.8 (ICS Export)</title>
+    <title>CEO Command Center V3.0 (Streaks & Notes)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -89,6 +90,16 @@
                         </div>
                     </div>
                     
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="bg-gray-700 p-3 rounded-lg">
+                            <p class="text-sm text-gray-400">Current Streak 🔥</p>
+                            <p id="current-streak" class="text-2xl font-bold">0</p>
+                        </div>
+                        <div class="bg-gray-700 p-3 rounded-lg">
+                            <p class="text-sm text-gray-400">Best Streak 🏆</p>
+                            <p id="best-streak" class="text-2xl font-bold">0</p>
+                        </div>
+                    </div>
                     <div class="bg-gray-700 p-3 rounded-lg">
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
                             <div id="stats-perfect" class="bg-green-600 text-white font-semibold py-2 px-1 rounded text-sm">0 Perfect</div>
@@ -192,11 +203,22 @@
                         </div>
                     </div>
                 </div>
-                <div>
-                    <label for="daily-notes" class="block text-lg font-medium text-gray-300 mb-2">Notes for this day:</label>
-                    <textarea id="daily-notes" rows="3" class="w-full bg-gray-700 text-gray-200 border-gray-600 rounded-md p-2"></textarea>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label for="note-win" class="block text-lg font-medium text-gray-300 mb-2">Today's Biggest Win:</label>
+                        <textarea id="note-win" rows="2" class="w-full bg-gray-700 text-gray-200 border-gray-600 rounded-md p-2" placeholder="Business or personal..."></textarea>
+                    </div>
+                    <div>
+                        <label for="note-challenge" class="block text-lg font-medium text-gray-300 mb-2">Today's Biggest Challenge:</label>
+                        <textarea id="note-challenge" rows="2" class="w-full bg-gray-700 text-gray-200 border-gray-600 rounded-md p-2" placeholder="What friction did I face?"></textarea>
+                    </div>
+                    <div>
+                        <label for="note-grateful" class="block text-lg font-medium text-gray-300 mb-2">One Thing I'm Grateful For:</label>
+                        <textarea id="note-grateful" rows="2" class="w-full bg-gray-700 text-gray-200 border-gray-600 rounded-md p-2" placeholder="..."></textarea>
+                    </div>
                 </div>
-            </section>
+                </section>
 
             <section class="bg-gray-800 p-6 rounded-lg shadow-lg">
                 <h2 class="text-2xl font-bold text-white section-title">Search Notes</h2>
@@ -266,7 +288,7 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const storageKey = 'ceoDashboardData_v7'; // We can keep the same storage key
+        const storageKey = 'ceoDashboardData_v7'; // Keep same storage key for compatibility
         const startWeight = 198;
         const goalWeight = 178;
         let mainData = {};
@@ -282,7 +304,6 @@
         const dayDiff = (date1, date2) => Math.round(Math.abs(new Date(date1) - new Date(date2)) / (1000 * 60 * 60 * 24));
 
         const dailyTaskIds = ['task-business', 'task-workout', 'task-walk', 'task-nutrition', 'task-no-alcohol'];
-        // NEW: Labels for ICS export
         const dailyTaskLabels = {
             'task-business': '#1 Business Priority',
             'task-workout': 'Weight Training',
@@ -290,7 +311,6 @@
             'task-nutrition': 'On-Plan Nutrition',
             'task-no-alcohol': 'No Alcohol'
         };
-        // END NEW
         const filterStatusEl = document.getElementById('filter-status');
                 
         // --- Day Data Helper ---
@@ -308,6 +328,46 @@
         }
         
         function calculateAndRenderStats(startDate, endDate) {
+            // --- NEW: Streak Calculation (Always runs on ALL data) ---
+            const allSortedDates = Object.keys(mainData).filter(key => key.match(/^\d{4}-\d{2}-\d{2}$/)).sort();
+            let bestStreak = 0;
+            let tempStreak = 0;
+
+            for (const dateStr of allSortedDates) {
+                if (getDayStatus(mainData[dateStr]) === 'perfect') {
+                    tempStreak++;
+                } else {
+                    if (tempStreak > bestStreak) bestStreak = tempStreak;
+                    tempStreak = 0;
+                }
+            }
+            if (tempStreak > bestStreak) bestStreak = tempStreak; // Final check
+
+            let currentStreak = 0;
+            let checkDate = new Date();
+            let todayStr = toYMD(checkDate);
+
+            // If today is unrated, start streak check from yesterday
+            if (getDayStatus(mainData[todayStr]) === 'unrated') {
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+
+            while (true) {
+                let dateStr = toYMD(checkDate);
+                if (allSortedDates.includes(dateStr) && getDayStatus(mainData[dateStr]) === 'perfect') {
+                    currentStreak++;
+                    checkDate.setDate(checkDate.getDate() - 1);
+                } else {
+                    break; // Streak ends
+                }
+            }
+            
+            // Update Streak UI
+            document.getElementById('current-streak').textContent = currentStreak;
+            document.getElementById('best-streak').textContent = bestStreak;
+            // --- END NEW ---
+
+
             // 1. Calculate Overall Plan Progress (NOT date-filtered)
             const planTasks = document.querySelectorAll('.plan-task');
             const checkedPlanTasks = document.querySelectorAll('.plan-task:checked');
@@ -317,8 +377,6 @@
             overallProgressBar.textContent = `${overallProgress.toFixed(0)}%`;
 
             // 2. Filter daily data based on parameters
-            const allSortedDates = Object.keys(mainData).filter(key => key.match(/^\d{4}-\d{2}-\d{2}$/)).sort();
-                        
             let datesToProcess;
             let totalDaysInRange = 0;
 
@@ -467,8 +525,21 @@
                         
             document.querySelectorAll('.daily-task').forEach(i => i.checked = dataForDay[i.id] || false);
             document.querySelectorAll('.plan-task').forEach(i => i.checked = planData[i.id] || false);
-                        
-            document.getElementById('daily-notes').value = dataForDay['daily-notes'] || '';
+            
+            // NEW: Backward-compatible notes loading
+            if (dataForDay['daily-notes']) {
+                // Old data exists, populate the 'Win' field
+                document.getElementById('note-win').value = dataForDay['daily-notes'] || '';
+                document.getElementById('note-challenge').value = '';
+                document.getElementById('note-grateful').value = '';
+            } else {
+                // Load new structured notes
+                document.getElementById('note-win').value = dataForDay['note-win'] || '';
+                document.getElementById('note-challenge').value = dataForDay['note-challenge'] || '';
+                document.getElementById('note-grateful').value = dataForDay['note-grateful'] || '';
+            }
+            // END NEW
+
             document.getElementById('current-weight').value = dataForDay['current-weight'] || '';
                         
             updateWeightMetrics();
@@ -483,7 +554,18 @@
             if (!mainData['planTasks']) mainData['planTasks'] = {};
                         
             document.querySelectorAll('.daily-task').forEach(i => mainData[dateStr][i.id] = i.checked);
-            mainData[dateStr]['daily-notes'] = document.getElementById('daily-notes').value;
+            
+            // NEW: Save structured notes
+            mainData[dateStr]['note-win'] = document.getElementById('note-win').value;
+            mainData[dateStr]['note-challenge'] = document.getElementById('note-challenge').value;
+            mainData[dateStr]['note-grateful'] = document.getElementById('note-grateful').value;
+            
+            // Deprecate old notes, but check if it exists and clear it if we are saving new notes
+            if (mainData[dateStr]['daily-notes']) {
+                delete mainData[dateStr]['daily-notes'];
+            }
+            // END NEW
+
             mainData[dateStr]['current-weight'] = document.getElementById('current-weight').value;
             document.querySelectorAll('.plan-task').forEach(i => mainData['planTasks'][i.id] = i.checked);
 
@@ -527,7 +609,7 @@
             });
         }
                 
-        // --- CSV Functions ---
+        // --- CSV Functions (Unchanged) ---
         function exportToCsv() {
             if (Object.keys(mainData).length === 0) { alert('No data to export!'); return; }
             const jsonData = JSON.stringify(mainData);
@@ -539,7 +621,7 @@
             const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
             const link = document.createElement('a');
             link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `ceo_dashboard_v2.8_backup_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute('download', `ceo_dashboard_v3.0_backup_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -580,17 +662,14 @@
             reader.readAsText(file);
         }
 
-        // --- NEW: ICS Export Function ---
+        // --- ICS Export Function (UPGRADED) ---
         function exportToIcs() {
-            // Helper function to format text for ICS: escape characters and fold long lines
             const formatIcsText = (text) => {
                 if (!text) return '';
-                // Escape characters then replace newlines with \n literal
                 let escapedText = text.replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
                 let foldedText = '';
-                // Fold lines at 75 chars, as per RFC 5545
                 while (escapedText.length > 75) {
-                    foldedText += escapedText.substring(0, 75) + '\r\n '; // ' ' at the start of the new line is required
+                    foldedText += escapedText.substring(0, 75) + '\r\n '; // ' ' at start of new line
                     escapedText = escapedText.substring(75);
                 }
                 foldedText += escapedText;
@@ -605,67 +684,71 @@
             ];
 
             const allDates = Object.keys(mainData).filter(key => key.match(/^\d{4}-\d{2}-\d{2}$/)).sort();
-            const now = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z'; // Format: YYYYMMDDTHHMMSSZ
+            const now = new Date().toISOString().replace(/[-:.]/g, '').slice(0, 15) + 'Z';
 
             for (const dateKey of allDates) {
                 const dayData = mainData[dateKey];
-                if (!dayData) continue; // Skip if no data for this day
+                if (!dayData) continue;
 
-                const notes = dayData['daily-notes'];
+                // NEW: Read from all note fields
+                const notesWin = dayData['note-win'];
+                const notesChallenge = dayData['note-challenge'];
+                const notesGrateful = dayData['note-grateful'];
+                const oldNotes = dayData['daily-notes']; // For backward compatibility
                 const hasTasks = dailyTaskIds.some(id => dayData[id] !== undefined);
 
-                // Only create an event if there are notes or task data
-                if (notes || hasTasks) {
-                    let description = '';
-                    
-                    // Add task summary
-                    if (hasTasks) {
-                        description += 'Daily Habits:\\n';
-                        dailyTaskIds.forEach(id => {
-                            const status = dayData[id] ? '✅' : (dayData[id] === false ? '❌' : '➖'); // Checked, Unchecked, or Undefined
-                            description += `${status} ${dailyTaskLabels[id]}\\n`;
-                        });
-                        description += '\\n'; // Add a newline
-                    }
-
-                    // Add notes
-                    if (notes) {
-                        description += 'Notes:\\n' + notes;
-                    }
-
-                    if (description === '') continue; // Skip if somehow empty
-
-                    const eventDate = dateKey.replace(/-/g, ''); // Format YYYYMMDD
-                    
-                    icsContent.push(
-                        'BEGIN:VEVENT',
-                        `UID:${dateKey}@ceo.command.center`,
-                        `DTSTAMP:${now}`,
-                        `DTSTART;VALUE=DATE:${eventDate}`, // All-day event
-                        `SUMMARY:CEO Scorecard - ${dateKey}`,
-                        `DESCRIPTION:${formatIcsText(description)}`,
-                        'END:VEVENT'
-                    );
+                let description = '';
+                
+                if (hasTasks) {
+                    description += 'Daily Habits:\\n';
+                    dailyTaskIds.forEach(id => {
+                        const status = dayData[id] ? '✅' : (dayData[id] === false ? '❌' : '➖');
+                        description += `${status} ${dailyTaskLabels[id]}\\n`;
+                    });
+                    description += '\\n';
                 }
+
+                // NEW: Add structured notes to description
+                if (notesWin) description += 'Today\'s Win:\\n' + notesWin + '\\n\\n';
+                if (notesChallenge) description += 'Today\'s Challenge:\\n' + notesChallenge + '\\n\\n';
+                if (notesGrateful) description += 'Grateful For:\\n' + notesGrateful + '\\n\\n';
+                // Only show old notes if new ones are empty (from an old import)
+                if (oldNotes && !notesWin && !notesChallenge && !notesGrateful) {
+                     description += 'Notes:\\n' + oldNotes;
+                }
+                // END NEW
+                
+                if (description === '') continue; // Skip if no tasks and no notes
+
+                const eventDate = dateKey.replace(/-/g, ''); // YYYYMMDD
+                
+                icsContent.push(
+                    'BEGIN:VEVENT',
+                    `UID:${dateKey}@ceo.command.center`,
+                    `DTSTAMP:${now}`,
+                    `DTSTART;VALUE=DATE:${eventDate}`,
+                    `SUMMARY:CEO Scorecard - ${dateKey}`,
+                    `DESCRIPTION:${formatIcsText(description)}`,
+                    'END:VEVENT'
+                );
             }
 
             icsContent.push('END:VCALENDAR');
 
-            // Trigger download
-            const dataStr = icsContent.join('\r\n'); // Use CRLF line endings
+            const dataStr = icsContent.join('\r\n');
             const dataBlob = new Blob([dataStr], { type: 'text/calendar;charset=utf-8' });
             const url = URL.createObjectURL(dataBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ceo_dashboard_export_${new Date().toISOString().slice(0,10)}.ics`;
+            a.download = `ceo_dashboard_v3.0_export_${new Date().toISOString().slice(0,10)}.ics`;
             document.body.appendChild(a);
             a.click();
             URL.revokeObjectURL(url);
             document.body.removeChild(a);
         }
-        // --- END NEW ---
+        // --- END ICS ---
 
-        // --- Search Function ---
+        // --- Search Function (UPGRADED) ---
         function performSearch() {
             const searchResultsEl = document.getElementById('search-results');
             const searchTerm = document.getElementById('search-input').value.trim();
@@ -678,35 +761,39 @@
             const searchLower = searchTerm.toLowerCase();
             const results = [];
 
-            // Iterate over all keys in mainData
             for (const dateKey of Object.keys(mainData)) {
-                // Check if the key is a date (YYYY-MM-DD format)
                 if (dateKey.match(/^\d{4}-\d{2}-\d{2}$/)) {
                     const dayData = mainData[dateKey];
-                    // Check if notes exist and include the search term
-                    if (dayData && dayData['daily-notes'] && dayData['daily-notes'].toLowerCase().includes(searchLower)) {
+                    if (!dayData) continue;
+
+                    // NEW: Search all note fields
+                    const oldNotes = dayData['daily-notes'] || '';
+                    const noteWin = dayData['note-win'] || '';
+                    const noteChallenge = dayData['note-challenge'] || '';
+                    const noteGrateful = dayData['note-grateful'] || '';
+
+                    const combinedNotes = `${noteWin} ${noteChallenge} ${noteGrateful} ${oldNotes}`.trim();
+                    // END NEW
+
+                    if (combinedNotes.toLowerCase().includes(searchLower)) {
                         results.push({
                             date: dateKey,
-                            note: dayData['daily-notes']
+                            note: combinedNotes // Pass the combined notes for highlighting
                         });
                     }
                 }
             }
 
-            // Sort results by date, newest first
             results.sort((a, b) => b.date.localeCompare(a.date));
 
-            // Render results
             if (results.length === 0) {
                 searchResultsEl.innerHTML = '<p class="text-gray-400">No notes found matching your search.</p>';
             } else {
-                const searchRegex = new RegExp(searchTerm, 'gi'); // 'g' for global, 'i' for case-insensitive
+                const searchRegex = new RegExp(searchTerm, 'gi');
                 searchResultsEl.innerHTML = results.map(result => {
-                    // Escape HTML characters from the note to prevent XSS or broken layout
                     const escapedNote = result.note.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                    // Add the <mark> tag for highlighting
+                    // Highlighting will now work across the combined text
                     const highlightedNote = escapedNote.replace(searchRegex, (match) => `<mark>${match}</mark>`);
-                    
                     const displayDate = toDisplayDate(new Date(result.date.replace(/-/g, '/')));
 
                     return `
@@ -734,7 +821,7 @@
         
         document.querySelectorAll('input, textarea').forEach(el => el.addEventListener('input', saveData));
 
-        // --- Data Management Listeners ---
+        // --- Data Management Listeners (Unchanged, except .ics) ---
         document.getElementById('export-json').addEventListener('click', () => {
             const dataStr = localStorage.getItem(storageKey);
             if(!dataStr) { alert('No data to export!'); return; }
@@ -742,7 +829,7 @@
             const url = URL.createObjectURL(dataBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ceo_dashboard_v2.8_backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `ceo_dashboard_v3.0_backup_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
             URL.revokeObjectURL(url);
             document.body.removeChild(a);
@@ -768,15 +855,13 @@
                 
         document.getElementById('export-csv').addEventListener('click', exportToCsv);
         document.getElementById('import-csv').addEventListener('change', importFromCsv);
-        
-        // NEW: ICS Listener
-        document.getElementById('export-ics').addEventListener('click', exportToIcs);
-        // END NEW
+        document.getElementById('export-ics').addEventListener('click', exportToIcs); // Listener for new button
 
         document.getElementById('reset-data').addEventListener('click', () => {
             if (confirm('Are you sure you want to reset ALL data? This cannot be undone.')) {
                 localStorage.removeItem(storageKey);
                 mainData = {};
+                // This will clear all inputs, including new textareas
                 document.querySelectorAll('input, textarea').forEach(el => el.type === 'checkbox' ? el.checked = false : el.value = '');
                 document.getElementById('filter-start-date').value = '';
                 document.getElementById('filter-end-date').value = '';
@@ -786,12 +871,12 @@
                 document.querySelector('.calendar-filter-btn.active').classList.remove('active');
                 document.querySelector('.calendar-filter-btn[data-filter="all"]').classList.add('active');
                                 
-                loadDataForDate(toYMD(selectedDate));
+                loadDataForDate(toYMD(selectedDate)); // This will reload the empty state
                 alert('All data has been reset.');
             }
         });
 
-        // --- Date Filter Event Listeners ---
+        // --- Date Filter Event Listeners (Unchanged) ---
         document.getElementById('filter-stats').addEventListener('click', () => {
             const startVal = document.getElementById('filter-start-date').value;
             const endVal = document.getElementById('filter-end-date').value;
@@ -818,41 +903,34 @@
             calculateAndRenderStats(null, null);
         });
         
-        // --- Calendar Filter Event Listener ---
+        // --- Calendar Filter Event Listener (Unchanged) ---
         document.getElementById('calendar-filter-controls').addEventListener('click', (e) => {
             const btn = e.target.closest('.calendar-filter-btn');
             if (btn && btn.dataset.filter) {
-                // Update active state
                 document.querySelector('.calendar-filter-btn.active').classList.remove('active');
                 btn.classList.add('active');
-                // Update global state
                 activeCalendarFilter = btn.dataset.filter;
-                // Re-render calendar
                 renderCalendar();
             }
         });
 
-        // --- Search Event Listeners ---
+        // --- Search Event Listeners (Unchanged) ---
         document.getElementById('search-button').addEventListener('click', performSearch);
         
-        // Allow pressing Enter to search
         document.getElementById('search-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 performSearch();
             }
         });
 
-        // Handle clicks on search results (event delegation)
         document.getElementById('search-results').addEventListener('click', (e) => {
             const item = e.target.closest('.search-result-item');
             if (item && item.dataset.date) {
                 const dateStr = item.dataset.date;
                 loadDataForDate(dateStr);
-                // Scroll to the scorecard
                 document.getElementById('daily-scorecard').scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
-        // --- END SEARCH ---
 
         // Initial Load
         mainData = JSON.parse(localStorage.getItem(storageKey)) || {};

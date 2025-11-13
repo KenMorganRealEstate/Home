@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CEO Command Center V3.2 (Filter & Tooltips)</title>
+    <title>CEO Command Center V3.3 (Links & ICS Fix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -66,9 +66,21 @@
         #search-results::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
         #search-results::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 
-        /* NEW: Add pointer for tooltip items */
+        /* Add pointer for tooltip items */
         [title] {
             cursor: help;
+        }
+
+        /* NEW: Style for link "buttons" */
+        .btn-link {
+            display: inline-block;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
         }
     </style>
 </head>
@@ -172,8 +184,11 @@
                         Import CSV
                         <input type="file" id="import-csv" class="hidden" accept=".csv">
                     </label>
-                     <button id="reset-data" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Reset Data</button>
-                </div>
+                    <button id="reset-data" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Reset Data</button>
+                    
+                    <a href="https://drive.google.com/drive/u/2/folders/1B1-Uv29KXNJum8JnMWUT7lMyucVTZ6G7" target="_blank" class="btn-link bg-sky-600 hover:bg-sky-700">Go to Drive Backup</a>
+                    <a href="https://calendar.google.com/calendar/u/0/r/settings/export" target="_blank" class="btn-link bg-yellow-600 hover:bg-yellow-700 text-gray-900">Go to Calendar Import</a>
+                    </div>
             </section>
         </div>
 
@@ -263,7 +278,7 @@
                         <li><input type="checkbox" id="s2-t2" class="plan-task"><label for="s2-t2" class="ml-2">Add 20+ contacts/week to Lofty.</label></li>
                         <li><input type="checkbox" id="s2-t3" class="plan-task"><label for="s2-t3" class="ml-2">Publish 1 video/week.</label></li>
                         <li><input type="checkbox" id="s2-t4" class="plan-task"><label for="s2-t4" class="ml-2">Secure 2 Buyer Rep Agreements.</label></li>
-                        <li><input type="checkbox" id="s2-t5" class="plan-task"><label for="s2-t5" class="ml-2">Secure 1 Listing Agreement.</label></li>
+                        <li><input type="checkbox"id="s2-t5" class="plan-task"><label for="s2-t5" class="ml-2">Secure 1 Listing Agreement.</label></li>
                         <li><input type="checkbox" id="s2-t6" class="plan-task"><label for="s2-t6" class="ml-2">Close first transaction.</label></li>
                         <li><input type="checkbox" id="s2-t7" class="plan-task"><label for="s2-t7" class="ml-2">Establish mentor referral partnership.</label></li>
                     </ul>
@@ -309,12 +324,12 @@
         let activeCalendarFilter = 'all'; 
         
         const toYMD = (date) => date.toISOString().slice(0, 10);
-        // Updated toDisplayDate to handle YYYY-MM-DD strings safely
         const toDisplayDate = (dateOrStr) => {
             if (dateOrStr instanceof Date) {
                 return dateOrStr.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
             }
             if (typeof dateOrStr === 'string' && dateOrStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                 // Use replace with / for Safari compatibility
                  return new Date(dateOrStr.replace(/-/g, '/')).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
             }
             return dateOrStr; // fallback
@@ -340,9 +355,9 @@
             const checkedCount = dailyTaskIds.filter(id => dayData[id]).length;
             if (checkedCount === dailyTaskIds.length) return 'perfect';
             if (checkedCount > 0) return 'good-effort';
-            if (dailyTaskIds.some(id => dayData[id] === false)) return 'missed'; // Has data, but nothing checked
+            if (dailyTaskIds.some(id => dayData[id] === false)) return 'missed';
                         
-            return 'unrated'; // Default case if data is present but ambiguous
+            return 'unrated';
         }
         
         function calculateAndRenderStats(startDate, endDate) {
@@ -354,21 +369,21 @@
 
             for (const dateStr of allSortedDates) {
                 if (getDayStatus(mainData[dateStr]) === 'perfect') {
-                    if (tempStreak === 0) tempStreakStart = dateStr; // Mark start of a new streak
+                    if (tempStreak === 0) tempStreakStart = dateStr;
                     tempStreak++;
                 } else {
                     if (tempStreak > bestStreak) {
                         bestStreak = tempStreak;
                         bestStreakStart = tempStreakStart;
-                        bestStreakEnd = allSortedDates[allSortedDates.indexOf(dateStr) - 1]; // Last day of streak
+                        bestStreakEnd = allSortedDates[allSortedDates.indexOf(dateStr) - 1];
                     }
                     tempStreak = 0;
                 }
             }
-            if (tempStreak > bestStreak) { // Final check
+            if (tempStreak > bestStreak) {
                 bestStreak = tempStreak;
                 bestStreakStart = tempStreakStart;
-                bestStreakEnd = allSortedDates[allSortedDates.length - 1]; // Streak goes to end
+                bestStreakEnd = allSortedDates[allSortedDates.length - 1];
             }
 
             let currentStreak = 0;
@@ -379,21 +394,20 @@
             if (getDayStatus(mainData[todayStr]) === 'unrated') {
                 checkDate.setDate(checkDate.getDate() - 1);
             }
-            currentStreakEnd = toYMD(checkDate); // End of current streak is today or yesterday
+            currentStreakEnd = toYMD(checkDate);
 
             let currentStreakStart = currentStreakEnd;
             while (true) {
                 let dateStr = toYMD(checkDate);
                 if (allSortedDates.includes(dateStr) && getDayStatus(mainData[dateStr]) === 'perfect') {
                     currentStreak++;
-                    currentStreakStart = dateStr; // Update start date as we go back
+                    currentStreakStart = dateStr;
                     checkDate.setDate(checkDate.getDate() - 1);
                 } else {
-                    break; // Streak ends
+                    break;
                 }
             }
             
-            // Update Streak UI & Tooltips
             document.getElementById('current-streak').textContent = currentStreak;
             document.getElementById('best-streak').textContent = bestStreak;
             
@@ -437,7 +451,6 @@
             let totalHabits = 0, totalCheckedHabits = 0, latestWeight = startWeight;
             let perfectDays = 0, goodEffortDays = 0, missedDays = 0;
             let totalDaysWithData = 0;
-            // NEW: Arrays for tooltip dates
             let perfectDayDates = [], goodEffortDayDates = [], missedDayDates = [];
 
             datesToProcess.forEach(dateStr => {
@@ -448,17 +461,17 @@
                     case 'perfect':
                         perfectDays++;
                         totalDaysWithData++;
-                        perfectDayDates.push(dateStr); // NEW
+                        perfectDayDates.push(dateStr);
                         break;
                     case 'good-effort':
                         goodEffortDays++;
                         totalDaysWithData++;
-                        goodEffortDayDates.push(dateStr); // NEW
+                        goodEffortDayDates.push(dateStr);
                         break;
                     case 'missed':
                         missedDays++;
                         totalDaysWithData++;
-                        missedDayDates.push(dateStr); // NEW
+                        missedDayDates.push(dateStr);
                         break;
                     case 'unrated':
                         if (dayData && Object.keys(dayData).length > 0) {
@@ -482,7 +495,7 @@
             });
             
             let unratedDays = 0; 
-            let unratedDayDates = []; // NEW
+            let unratedDayDates = [];
             if (startDate && endDate) { 
                  const allDatesInRange = [];
                  let currentDate = new Date(startDate.replace(/-/g, '/'));
@@ -498,7 +511,7 @@
                      if(status !== 'unrated') {
                          ratedDaysCount++;
                      } else {
-                         unratedDayDates.push(dateStr); // NEW
+                         unratedDayDates.push(dateStr);
                      }
                  });
                  unratedDays = allDatesInRange.length - ratedDaysCount;
@@ -536,7 +549,7 @@
             
             const statsUnratedEl = document.getElementById('stats-unrated');
             statsUnratedEl.textContent = `${unratedDays} Unrated`;
-            if (startDate) { // Only show date-specific unrated list if filtering
+            if (startDate) {
                 statsUnratedEl.title = unratedDayDates.length > 0 ? `Dates:\n${unratedDayDates.map(toDisplayDate).join(', ')}` : 'No unrated days in this period.';
             } else {
                 statsUnratedEl.title = 'Total unrated days with any data.';
@@ -545,7 +558,7 @@
         
         function renderCalendar() {
             const calendarEl = document.getElementById('calendar');
-            calendarEl.innerHTML = '<div class="font-bold">S</div><div class="font-bold">M</div><div class="font-bold">T</div><div class="font-bold">W</div><div class="font-bold">T</div><div class="font-bold">F</div><div class="font-bold">S</div>'; // Reset header
+            calendarEl.innerHTML = '<div class="font-bold">S</div><div class="font-bold">M</div><div class="font-bold">T</div><div class="font-bold">W</div><div class="font-bold">T</div><div class="font-bold">F</div><div class="font-bold">S</div>';
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
             document.getElementById('month-year').textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
@@ -573,7 +586,6 @@
                 else if (status === 'good-effort') dayEl.classList.add('good-effort');
                 else if (status === 'missed') dayEl.classList.add('missed');
 
-                // Apply visual filter
                 if (activeCalendarFilter !== 'all' && status !== activeCalendarFilter) {
                     dayEl.classList.add('filtered-out');
                 }
@@ -583,7 +595,7 @@
         }
                         
         function loadDataForDate(dateStr) {
-            selectedDate = new Date(dateStr.replace(/-/g, '/')); // Handle Safari date parsing
+            selectedDate = new Date(dateStr.replace(/-/g, '/'));
             document.getElementById('selected-date-display').textContent = toDisplayDate(selectedDate);
             document.getElementById('weight-date').textContent = toYMD(selectedDate) === toYMD(new Date()) ? "Today" : toDisplayDate(selectedDate);
 
@@ -593,14 +605,11 @@
             document.querySelectorAll('.daily-task').forEach(i => i.checked = dataForDay[i.id] || false);
             document.querySelectorAll('.plan-task').forEach(i => i.checked = planData[i.id] || false);
             
-            // Backward-compatible notes loading
             if (dataForDay['daily-notes']) {
-                // Old data exists, populate the 'Win' field
                 document.getElementById('note-win').value = dataForDay['daily-notes'] || '';
                 document.getElementById('note-challenge').value = '';
                 document.getElementById('note-grateful').value = '';
             } else {
-                // Load new structured notes
                 document.getElementById('note-win').value = dataForDay['note-win'] || '';
                 document.getElementById('note-challenge').value = dataForDay['note-challenge'] || '';
                 document.getElementById('note-grateful').value = dataForDay['note-grateful'] || '';
@@ -621,7 +630,6 @@
                         
             document.querySelectorAll('.daily-task').forEach(i => mainData[dateStr][i.id] = i.checked);
             
-            // Save structured notes
             mainData[dateStr]['note-win'] = document.getElementById('note-win').value;
             mainData[dateStr]['note-challenge'] = document.getElementById('note-challenge').value;
             mainData[dateStr]['note-grateful'] = document.getElementById('note-grateful').value;
@@ -685,7 +693,7 @@
             const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
             const link = document.createElement('a');
             link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `ceo_dashboard_v3.2_backup_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute('download', `ceo_dashboard_v3.3_backup_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -726,12 +734,15 @@
             reader.readAsText(file);
         }
 
-        // --- ICS Export Function ---
+        // --- ICS Export Function (FIXED) ---
         function exportToIcs() {
+            // This function escapes text for ICS and handles line folding
             const formatIcsText = (text) => {
                 if (!text) return '';
+                // Escape characters, THEN replace newlines with the \n literal
                 let escapedText = text.replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
                 let foldedText = '';
+                // Fold lines at 75 chars
                 while (escapedText.length > 75) {
                     foldedText += escapedText.substring(0, 75) + '\r\n '; // ' ' at start of new line
                     escapedText = escapedText.substring(75);
@@ -762,20 +773,21 @@
 
                 let description = '';
                 
+                // FIXED: Use real newlines (\n) here, not escaped ones (\\n)
                 if (hasTasks) {
-                    description += 'Daily Habits:\\n';
+                    description += 'Daily Habits:\n';
                     dailyTaskIds.forEach(id => {
                         const status = dayData[id] ? '✅' : (dayData[id] === false ? '❌' : '➖');
-                        description += `${status} ${dailyTaskLabels[id]}\\n`;
+                        description += `${status} ${dailyTaskLabels[id]}\n`;
                     });
-                    description += '\\n';
+                    description += '\n'; // Add a blank line
                 }
 
-                if (notesWin) description += 'Today\'s Win:\\n' + notesWin + '\\n\\n';
-                if (notesChallenge) description += 'Today\'s Challenge:\\n' + notesChallenge + '\\n\\n';
-                if (notesGrateful) description += 'Grateful For:\\n' + notesGrateful + '\\n\\n';
+                if (notesWin) description += 'Today\'s Win:\n' + notesWin + '\n\n';
+                if (notesChallenge) description += 'Today\'s Challenge:\n' + notesChallenge + '\n\n';
+                if (notesGrateful) description += 'Grateful For:\n' + notesGrateful + '\n\n';
                 if (oldNotes && !notesWin && !notesChallenge && !notesGrateful) {
-                     description += 'Notes:\\n' + oldNotes;
+                     description += 'Notes:\n' + oldNotes;
                 }
                 
                 if (description === '') continue;
@@ -788,6 +800,7 @@
                     `DTSTAMP:${now}`,
                     `DTSTART;VALUE=DATE:${eventDate}`,
                     `SUMMARY:CEO Scorecard - ${dateKey}`,
+                    // formatIcsText will now correctly handle the real newlines
                     `DESCRIPTION:${formatIcsText(description)}`,
                     'END:VEVENT'
                 );
@@ -800,7 +813,7 @@
             const url = URL.createObjectURL(dataBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ceo_dashboard_v3.2_export_${new Date().toISOString().slice(0,10)}.ics`;
+            a.download = `ceo_dashboard_v3.3_export_${new Date().toISOString().slice(0,10)}.ics`;
             document.body.appendChild(a);
             a.click();
             URL.revokeObjectURL(url);
@@ -899,7 +912,7 @@
             const url = URL.createObjectURL(dataBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ceo_dashboard_v3.2_backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `ceo_dashboard_v3.3_backup_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
             URL.revokeObjectURL(url);
             document.body.removeChild(a);
@@ -932,7 +945,6 @@
                 localStorage.removeItem(storageKey);
                 mainData = {};
                 document.querySelectorAll('input, textarea').forEach(el => el.type === 'checkbox' ? el.checked = false : el.value = '');
-                // Clear filter inputs
                 document.getElementById('filter-start-date').value = '';
                 document.getElementById('filter-end-date').value = '';
                 filterStartDate = null;
@@ -941,8 +953,7 @@
                 document.querySelector('.calendar-filter-btn.active').classList.remove('active');
                 document.querySelector('.calendar-filter-btn[data-filter="all"]').classList.add('active');
                 
-                // NEW: Re-apply default filter after reset
-                setDefaultDateFilter();
+                setDefaultDateFilter(); // Re-apply default filter
                                 
                 loadDataForDate(toYMD(selectedDate));
                 alert('All data has been reset.');
@@ -1014,7 +1025,7 @@
             changeSelectedDay(1);
         });
 
-        // --- NEW: Default Filter Function ---
+        // --- Default Filter Function ---
         function setDefaultDateFilter() {
             const today = new Date();
             const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -1031,7 +1042,7 @@
 
         // --- Initial Load ---
         mainData = JSON.parse(localStorage.getItem(storageKey)) || {};
-        setDefaultDateFilter(); // NEW: Set the filter before loading
+        setDefaultDateFilter(); // Set the filter before loading
         loadDataForDate(toYMD(selectedDate));
     });
     </script>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CEO Command Center V3.1 (Nav & Scroll)</title>
+    <title>CEO Command Center V3.2 (Filter & Tooltips)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
@@ -65,6 +65,11 @@
         #search-results::-webkit-scrollbar-track { background: #374151; border-radius: 4px; }
         #search-results::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
         #search-results::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+        /* NEW: Add pointer for tooltip items */
+        [title] {
+            cursor: help;
+        }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 p-4 sm:p-6 md:p-8">
@@ -74,27 +79,27 @@
             <section class="bg-gray-800 p-6 rounded-lg shadow-lg">
                 <h2 class="text-2xl font-bold text-white section-title">YTD Performance</h2>
                 <div class="space-y-4">
-                    <div class="text-center bg-gray-700 p-3 rounded-lg">
+                    <div class="text-center bg-gray-700 p-3 rounded-lg" title="Percentage of completed habits on rated days in the selected period.">
                         <p class="text-sm text-gray-400">Habit Consistency</p>
                         <p id="habit-consistency" class="text-3xl font-bold text-green-400">0%</p>
                     </div>
                     <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="bg-gray-700 p-3 rounded-lg">
+                        <div id="perfect-days-box" class="bg-gray-700 p-3 rounded-lg" title="All 5 habits completed.">
                             <p class="text-sm text-gray-400">Perfect Days</p>
                             <p id="perfect-days" class="text-2xl font-bold">0</p>
                         </div>
-                        <div class="bg-gray-700 p-3 rounded-lg">
+                        <div id="weight-loss-box" class="bg-gray-700 p-3 rounded-lg" title="Calculated from your starting weight of 198 lbs.">
                             <p class="text-sm text-gray-400">Weight Loss</p>
                             <p id="total-weight-loss" class="text-2xl font-bold">0 lbs</p>
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4 text-center">
-                        <div class="bg-gray-700 p-3 rounded-lg">
+                        <div id="current-streak-box" class="bg-gray-700 p-3 rounded-lg" title="Consecutive 'Perfect Days' leading up to today.">
                             <p class="text-sm text-gray-400">Current Streak 🔥</p>
                             <p id="current-streak" class="text-2xl font-bold">0</p>
                         </div>
-                        <div class="bg-gray-700 p-3 rounded-lg">
+                        <div id="best-streak-box" class="bg-gray-700 p-3 rounded-lg" title="Longest consecutive 'Perfect Day' streak ever recorded.">
                             <p class="text-sm text-gray-400">Best Streak 🏆</p>
                             <p id="best-streak" class="text-2xl font-bold">0</p>
                         </div>
@@ -102,10 +107,10 @@
 
                     <div class="bg-gray-700 p-3 rounded-lg">
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
-                            <div id="stats-perfect" class="bg-green-600 text-white font-semibold py-2 px-1 rounded text-sm">0 Perfect</div>
-                            <div id="stats-good" class="bg-yellow-600 text-white font-semibold py-2 px-1 rounded text-sm">0 Good</div>
-                            <div id="stats-missed" class="bg-red-600 text-white font-semibold py-2 px-1 rounded text-sm">0 Missed</div>
-                            <div id="stats-unrated" class="bg-gray-500 text-white font-semibold py-2 px-1 rounded text-sm">0 Unrated</div>
+                            <div id="stats-perfect" class="bg-green-600 text-white font-semibold py-2 px-1 rounded text-sm" title="Days with all 5 habits complete.">0 Perfect</div>
+                            <div id="stats-good" class="bg-yellow-600 text-white font-semibold py-2 px-1 rounded text-sm" title="Days with 1-4 habits complete.">0 Good</div>
+                            <div id="stats-missed" class="bg-red-600 text-white font-semibold py-2 px-1 rounded text-sm" title="Days with 0 habits complete (but at least one marked 'no').">0 Missed</div>
+                            <div id="stats-unrated" class="bg-gray-500 text-white font-semibold py-2 px-1 rounded text-sm" title="Days with no habit data recorded.">0 Unrated</div>
                         </div>
                     </div>
                     <div>
@@ -127,7 +132,7 @@
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                              <button id="filter-stats" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded text-sm">Filter</button>
-                             <button id="reset-filter" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded text-sm">Reset</button>
+                             <button id="reset-filter" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded text-sm">Reset (All-Time)</button>
                         </div>
                         <p id="filter-status" class="text-sm text-yellow-300 text-center pt-1"></p>
                     </div>
@@ -177,11 +182,11 @@
                 <div class="flex justify-between items-center flex-wrap gap-2">
                     <h2 class="text-2xl font-bold text-white section-title">CEO Scorecard</h2>
                     <div class="flex items-center gap-3">
-                        <button id="prev-day" class="p-2 rounded-md hover:bg-gray-700 text-lg font-bold">&lt;</button>
+                        <button id="prev-day" class="p-2 rounded-md hover:bg-gray-700 text-lg font-bold" title="Previous Day">&lt;</button>
                         <p id="selected-date-display" class="text-lg text-blue-300 font-semibold"></p>
-                        <button id="next-day" class="p-2 rounded-md hover:bg-gray-700 text-lg font-bold">&gt;</button>
+                        <button id="next-day" class="p-2 rounded-md hover:bg-gray-700 text-lg font-bold" title="Next Day">&gt;</button>
                     </div>
-                    </div>
+                </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div class="space-y-4 text-lg">
@@ -304,7 +309,16 @@
         let activeCalendarFilter = 'all'; 
         
         const toYMD = (date) => date.toISOString().slice(0, 10);
-        const toDisplayDate = (date) => date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+        // Updated toDisplayDate to handle YYYY-MM-DD strings safely
+        const toDisplayDate = (dateOrStr) => {
+            if (dateOrStr instanceof Date) {
+                return dateOrStr.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            }
+            if (typeof dateOrStr === 'string' && dateOrStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                 return new Date(dateOrStr.replace(/-/g, '/')).toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+            }
+            return dateOrStr; // fallback
+        };
         const dayDiff = (date1, date2) => Math.round(Math.abs(new Date(date1) - new Date(date2)) / (1000 * 60 * 60 * 24));
 
         const dailyTaskIds = ['task-business', 'task-workout', 'task-walk', 'task-nutrition', 'task-no-alcohol'];
@@ -336,39 +350,62 @@
             const allSortedDates = Object.keys(mainData).filter(key => key.match(/^\d{4}-\d{2}-\d{2}$/)).sort();
             let bestStreak = 0;
             let tempStreak = 0;
+            let bestStreakStart = '', bestStreakEnd = '', tempStreakStart = '';
 
             for (const dateStr of allSortedDates) {
                 if (getDayStatus(mainData[dateStr]) === 'perfect') {
+                    if (tempStreak === 0) tempStreakStart = dateStr; // Mark start of a new streak
                     tempStreak++;
                 } else {
-                    if (tempStreak > bestStreak) bestStreak = tempStreak;
+                    if (tempStreak > bestStreak) {
+                        bestStreak = tempStreak;
+                        bestStreakStart = tempStreakStart;
+                        bestStreakEnd = allSortedDates[allSortedDates.indexOf(dateStr) - 1]; // Last day of streak
+                    }
                     tempStreak = 0;
                 }
             }
-            if (tempStreak > bestStreak) bestStreak = tempStreak; // Final check
+            if (tempStreak > bestStreak) { // Final check
+                bestStreak = tempStreak;
+                bestStreakStart = tempStreakStart;
+                bestStreakEnd = allSortedDates[allSortedDates.length - 1]; // Streak goes to end
+            }
 
             let currentStreak = 0;
             let checkDate = new Date();
             let todayStr = toYMD(checkDate);
+            let currentStreakEnd = '';
 
-            // If today is unrated, start streak check from yesterday
             if (getDayStatus(mainData[todayStr]) === 'unrated') {
                 checkDate.setDate(checkDate.getDate() - 1);
             }
+            currentStreakEnd = toYMD(checkDate); // End of current streak is today or yesterday
 
+            let currentStreakStart = currentStreakEnd;
             while (true) {
                 let dateStr = toYMD(checkDate);
                 if (allSortedDates.includes(dateStr) && getDayStatus(mainData[dateStr]) === 'perfect') {
                     currentStreak++;
+                    currentStreakStart = dateStr; // Update start date as we go back
                     checkDate.setDate(checkDate.getDate() - 1);
                 } else {
                     break; // Streak ends
                 }
             }
             
-            // Update Streak UI
+            // Update Streak UI & Tooltips
             document.getElementById('current-streak').textContent = currentStreak;
             document.getElementById('best-streak').textContent = bestStreak;
+            
+            const currentStreakBox = document.getElementById('current-streak-box');
+            currentStreakBox.title = currentStreak > 0 
+                ? `Current Streak: ${currentStreak} days\n(${toDisplayDate(currentStreakStart)} - ${toDisplayDate(currentStreakEnd)})` 
+                : 'No current streak. Start one today!';
+            
+            const bestStreakBox = document.getElementById('best-streak-box');
+            bestStreakBox.title = bestStreak > 0 
+                ? `Best Streak: ${bestStreak} days\n(${toDisplayDate(bestStreakStart)} - ${toDisplayDate(bestStreakEnd)})`
+                : 'No best streak recorded yet.';
             // --- END Streak ---
 
 
@@ -396,11 +433,13 @@
                 }
             }
             
-            // 3. Calculate date-filtered stats
+            // 3. Calculate date-filtered stats & collect dates for tooltips
             let totalHabits = 0, totalCheckedHabits = 0, latestWeight = startWeight;
             let perfectDays = 0, goodEffortDays = 0, missedDays = 0;
             let totalDaysWithData = 0;
-            
+            // NEW: Arrays for tooltip dates
+            let perfectDayDates = [], goodEffortDayDates = [], missedDayDates = [];
+
             datesToProcess.forEach(dateStr => {
                 const dayData = mainData[dateStr];
                 const status = getDayStatus(dayData);
@@ -409,24 +448,25 @@
                     case 'perfect':
                         perfectDays++;
                         totalDaysWithData++;
+                        perfectDayDates.push(dateStr); // NEW
                         break;
                     case 'good-effort':
                         goodEffortDays++;
                         totalDaysWithData++;
+                        goodEffortDayDates.push(dateStr); // NEW
                         break;
                     case 'missed':
                         missedDays++;
                         totalDaysWithData++;
+                        missedDayDates.push(dateStr); // NEW
                         break;
                     case 'unrated':
-                        // Check if *any* data exists (e.g., just notes or weight)
                         if (dayData && Object.keys(dayData).length > 0) {
                              totalDaysWithData++;
                         }
                         break;
                 }
 
-                // Calculate habit consistency only from days with habit data
                 if (status !== 'unrated') {
                      dailyTaskIds.forEach(id => {
                         if (dayData[id] !== undefined) {
@@ -442,6 +482,7 @@
             });
             
             let unratedDays = 0; 
+            let unratedDayDates = []; // NEW
             if (startDate && endDate) { 
                  const allDatesInRange = [];
                  let currentDate = new Date(startDate.replace(/-/g, '/'));
@@ -454,7 +495,11 @@
                   let ratedDaysCount = 0;
                  allDatesInRange.forEach(dateStr => {
                      const status = getDayStatus(mainData[dateStr]);
-                     if(status !== 'unrated') ratedDaysCount++;
+                     if(status !== 'unrated') {
+                         ratedDaysCount++;
+                     } else {
+                         unratedDayDates.push(dateStr); // NEW
+                     }
                  });
                  unratedDays = allDatesInRange.length - ratedDaysCount;
 
@@ -468,16 +513,34 @@
             const habitConsistency = totalHabits > 0 ? (totalCheckedHabits / totalHabits) * 100 : 0;
             const totalWeightLoss = startWeight - latestWeight;
 
-            // Update main stat cards
+            // Update main stat cards & tooltips
             document.getElementById('habit-consistency').textContent = `${habitConsistency.toFixed(0)}%`;
+            const perfectDaysBox = document.getElementById('perfect-days-box');
             document.getElementById('perfect-days').textContent = perfectDays;
+            perfectDaysBox.title = perfectDayDates.length > 0 ? `Perfect Days:\n${perfectDayDates.map(toDisplayDate).join(', ')}` : 'No perfect days in this period.';
+            
             document.getElementById('total-weight-loss').textContent = `${totalWeightLoss.toFixed(1)} lbs`;
 
-            // Update new summary bar
-            document.getElementById('stats-perfect').textContent = `${perfectDays} Perfect`;
-            document.getElementById('stats-good').textContent = `${goodEffortDays} Good`;
-            document.getElementById('stats-missed').textContent = `${missedDays} Missed`;
-            document.getElementById('stats-unrated').textContent = `${unratedDays} Unrated`;
+            // Update new summary bar & tooltips
+            const statsPerfectEl = document.getElementById('stats-perfect');
+            statsPerfectEl.textContent = `${perfectDays} Perfect`;
+            statsPerfectEl.title = perfectDayDates.length > 0 ? `Dates:\n${perfectDayDates.map(toDisplayDate).join(', ')}` : 'No perfect days in this period.';
+
+            const statsGoodEl = document.getElementById('stats-good');
+            statsGoodEl.textContent = `${goodEffortDays} Good`;
+            statsGoodEl.title = goodEffortDayDates.length > 0 ? `Dates:\n${goodEffortDayDates.map(toDisplayDate).join(', ')}` : 'No good effort days in this period.';
+            
+            const statsMissedEl = document.getElementById('stats-missed');
+            statsMissedEl.textContent = `${missedDays} Missed`;
+            statsMissedEl.title = missedDayDates.length > 0 ? `Dates:\n${missedDayDates.map(toDisplayDate).join(', ')}` : 'No missed days in this period.';
+            
+            const statsUnratedEl = document.getElementById('stats-unrated');
+            statsUnratedEl.textContent = `${unratedDays} Unrated`;
+            if (startDate) { // Only show date-specific unrated list if filtering
+                statsUnratedEl.title = unratedDayDates.length > 0 ? `Dates:\n${unratedDayDates.map(toDisplayDate).join(', ')}` : 'No unrated days in this period.';
+            } else {
+                statsUnratedEl.title = 'Total unrated days with any data.';
+            }
         }
         
         function renderCalendar() {
@@ -563,7 +626,6 @@
             mainData[dateStr]['note-challenge'] = document.getElementById('note-challenge').value;
             mainData[dateStr]['note-grateful'] = document.getElementById('note-grateful').value;
             
-            // Deprecate old notes, but check if it exists and clear it if we are saving new notes
             if (mainData[dateStr]['daily-notes']) {
                 delete mainData[dateStr]['daily-notes'];
             }
@@ -623,7 +685,7 @@
             const encodedUri = encodeURI('data:text/csv;charset=utf-8,' + csvContent);
             const link = document.createElement('a');
             link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `ceo_dashboard_v3.1_backup_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute('download', `ceo_dashboard_v3.2_backup_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -664,7 +726,7 @@
             reader.readAsText(file);
         }
 
-        // --- ICS Export Function (Upgraded for new notes) ---
+        // --- ICS Export Function ---
         function exportToIcs() {
             const formatIcsText = (text) => {
                 if (!text) return '';
@@ -695,7 +757,7 @@
                 const notesWin = dayData['note-win'];
                 const notesChallenge = dayData['note-challenge'];
                 const notesGrateful = dayData['note-grateful'];
-                const oldNotes = dayData['daily-notes']; // For backward compatibility
+                const oldNotes = dayData['daily-notes'];
                 const hasTasks = dailyTaskIds.some(id => dayData[id] !== undefined);
 
                 let description = '';
@@ -738,7 +800,7 @@
             const url = URL.createObjectURL(dataBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ceo_dashboard_v3.1_export_${new Date().toISOString().slice(0,10)}.ics`;
+            a.download = `ceo_dashboard_v3.2_export_${new Date().toISOString().slice(0,10)}.ics`;
             document.body.appendChild(a);
             a.click();
             URL.revokeObjectURL(url);
@@ -746,7 +808,7 @@
         }
         // --- END ICS ---
 
-        // --- Search Function (Upgraded for new notes) ---
+        // --- Search Function ---
         function performSearch() {
             const searchResultsEl = document.getElementById('search-results');
             const searchTerm = document.getElementById('search-input').value.trim();
@@ -802,20 +864,17 @@
         }
         // --- END SEARCH ---
 
-        // --- NEW: Day Navigation Helper ---
+        // --- Day Navigation Helper ---
         function changeSelectedDay(days) {
             selectedDate.setDate(selectedDate.getDate() + days);
             
-            // Check if the new selectedDate is in a different month/year
             if (selectedDate.getMonth() !== currentDate.getMonth() || selectedDate.getFullYear() !== currentDate.getFullYear()) {
-                // Update currentDate to match the new selectedDate's month and year
                 currentDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
             }
             
-            // loadDataForDate will call renderCalendar(), which uses the updated currentDate
             loadDataForDate(toYMD(selectedDate));
         }
-        // --- END NEW ---
+        // --- END Day Nav ---
 
 
         // --- Event Listeners ---
@@ -826,7 +885,6 @@
             const dayEl = e.target.closest('.day');
             if (dayEl && dayEl.dataset.date) {
                 loadDataForDate(dayEl.dataset.date);
-                // NEW: Scroll to top
                 document.getElementById('daily-scorecard').scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
@@ -841,7 +899,7 @@
             const url = URL.createObjectURL(dataBlob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `ceo_dashboard_v3.1_backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `ceo_dashboard_v3.2_backup_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
             URL.revokeObjectURL(url);
             document.body.removeChild(a);
@@ -874,6 +932,7 @@
                 localStorage.removeItem(storageKey);
                 mainData = {};
                 document.querySelectorAll('input, textarea').forEach(el => el.type === 'checkbox' ? el.checked = false : el.value = '');
+                // Clear filter inputs
                 document.getElementById('filter-start-date').value = '';
                 document.getElementById('filter-end-date').value = '';
                 filterStartDate = null;
@@ -881,6 +940,9 @@
                 activeCalendarFilter = 'all';
                 document.querySelector('.calendar-filter-btn.active').classList.remove('active');
                 document.querySelector('.calendar-filter-btn[data-filter="all"]').classList.add('active');
+                
+                // NEW: Re-apply default filter after reset
+                setDefaultDateFilter();
                                 
                 loadDataForDate(toYMD(selectedDate));
                 alert('All data has been reset.');
@@ -943,7 +1005,7 @@
             }
         });
 
-        // --- NEW: Day Navigation Listeners ---
+        // --- Day Navigation Listeners ---
         document.getElementById('prev-day').addEventListener('click', () => {
             changeSelectedDay(-1);
         });
@@ -951,10 +1013,25 @@
         document.getElementById('next-day').addEventListener('click', () => {
             changeSelectedDay(1);
         });
-        // --- END NEW ---
 
-        // Initial Load
+        // --- NEW: Default Filter Function ---
+        function setDefaultDateFilter() {
+            const today = new Date();
+            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            const startVal = toYMD(firstDayOfMonth);
+            const endVal = toYMD(today);
+
+            document.getElementById('filter-start-date').value = startVal;
+            document.getElementById('filter-end-date').value = endVal;
+            
+            filterStartDate = startVal;
+            filterEndDate = endVal;
+        }
+
+        // --- Initial Load ---
         mainData = JSON.parse(localStorage.getItem(storageKey)) || {};
+        setDefaultDateFilter(); // NEW: Set the filter before loading
         loadDataForDate(toYMD(selectedDate));
     });
     </script>

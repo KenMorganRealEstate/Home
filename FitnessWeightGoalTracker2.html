@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUISE READY: MISSION CONTROL</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        missionTeal: { DEFAULT: '#008080', light: '#20B2AA', dark: '#004d4d' },
+                        missionOrange: { DEFAULT: '#FF7F50', light: '#FFA07A', dark: '#CC5500' },
+                        missionBg: '#0f172a',
+                        panelBg: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #0f172a; font-family: 'Segoe UI', Roboto, sans-serif; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #008080; border-radius: 4px; }
+        
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-3d {
+            transition: all 0.1s;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+        }
+        .btn-3d:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.2);
+        }
+
+        .fear-img-container { position: relative; overflow: hidden; }
+        .fear-img-container::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to bottom, transparent 60%, rgba(0,0,0, 0.95));
+            pointer-events: none;
+        }
+        
+        .mission-input {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #334155;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+        .mission-input:focus { outline: none; border-color: #FF7F50; }
+
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: #FF7F50; cursor: pointer; margin-top: -6px; 
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #334155; border-radius: 2px;
+        }
+        
+        .mission-item:hover { background: rgba(255,255,255,0.05); }
+        .mission-item.selected { border-left: 4px solid #FF7F50; background: rgba(255, 127, 80, 0.1); }
+    </style>
+</head>
+<body class="text-gray-200 p-4 min-h-screen flex flex-col items-center">
+
+    <div class="w-full max-w-7xl space-y-4">
+        
+        <!-- 1. HEADER: ACTIVE MISSION SELECTOR -->
+        <div class="bg-missionTeal text-white p-4 rounded-xl shadow-lg border-b-4 border-missionTeal-dark relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-30"></div>
+            
+            <div class="flex items-center gap-3 z-10 w-full md:w-auto">
+                <i data-lucide="crosshair" class="w-8 h-8 flex-shrink-0"></i> 
+                <div class="flex-grow">
+                    <div class="text-[10px] font-bold text-missionBg uppercase tracking-wider">ACTIVE MISSION</div>
+                    <select id="missionSelector" onchange="switchMission()" class="w-full md:w-auto bg-transparent font-black text-xl md:text-3xl uppercase tracking-widest outline-none cursor-pointer hover:text-missionOrange transition border-b border-transparent hover:border-white/20 pb-1">
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+            </div>
+
+            <button type="button" onclick="toggleMissionManager()" class="z-10 btn-3d bg-black/30 hover:bg-black/50 text-white text-xs font-bold py-3 px-6 rounded border border-white/20 flex items-center gap-2 transition">
+                <i data-lucide="settings"></i> CONFIGURE MISSIONS
+            </button>
+        </div>
+
+        <!-- 1.5 MISSION MANAGER PANEL (Pop-up Overlay) -->
+        <div id="missionManager" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+            <div class="glass-panel w-full max-w-4xl rounded-xl border-l-4 border-missionOrange bg-gray-900 flex flex-col max-h-[90vh]">
+                
+                <!-- Header -->
+                <div class="p-6 border-b border-gray-700 flex justify-between items-center">
+                    <h2 class="text-xl font-bold text-missionOrange flex items-center gap-2"><i data-lucide="list"></i> MISSION COMMAND CENTER</h2>
+                    <button type="button" onclick="toggleMissionManager()" class="text-gray-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+                </div>
+
+                <!-- Content: Split View -->
+                <div class="flex flex-col md:flex-row flex-grow overflow-hidden">
+                    
+                    <!-- Left: Mission List -->
+                    <div class="w-full md:w-1/3 border-r border-gray-700 flex flex-col bg-black/20">
+                        <div class="p-3 bg-gray-800 text-xs font-bold text-gray-400 uppercase tracking-wider">Saved Missions</div>
+                        <div id="missionListContainer" class="flex-grow overflow-y-auto p-2 space-y-2">
+                            <!-- Populated by JS -->
+                        </div>
+                        <div class="p-4 border-t border-gray-700">
+                            <button type="button" onclick="prepareCreateNew()" class="w-full btn-3d bg-green-700 hover:bg-green-600 text-white font-bold py-3 rounded flex items-center justify-center gap-2 text-xs">
+                                <i data-lucide="plus-circle" class="w-4 h-4"></i> CREATE NEW
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Right: Editor -->
+                    <div class="w-full md:w-2/3 p-6 overflow-y-auto">
+                        <h3 class="text-missionTeal font-bold text-sm uppercase mb-4 border-b border-gray-700 pb-2" id="editorTitle">Edit Active Mission</h3>
+                        
+                        <input type="hidden" id="editId"> <!-- Hidden ID tracker -->
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Mission Name</label>
+                                <input type="text" id="editName" class="mission-input text-lg font-bold" placeholder="e.g. SUMMER SHRED">
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Start Date</label>
+                                    <input type="date" id="editStart" class="mission-input">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Target Date</label>
+                                    <input type="date" id="editEnd" class="mission-input">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Start Weight</label>
+                                    <input type="number" id="editStartW" step="0.1" class="mission-input">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Goal Weight</label>
+                                    <input type="number" id="editGoalW" step="0.1" class="mission-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex gap-3">
+                            <button type="button" onclick="saveMissionFromEditor()" class="flex-1 btn-3d bg-missionTeal hover:bg-missionTeal-light text-white font-bold py-3 rounded">
+                                SAVE CHANGES
+                            </button>
+                            <button type="button" onclick="loadMissionFromEditor()" class="flex-1 btn-3d bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded">
+                                LOAD THIS MISSION
+                            </button>
+                            <button type="button" onclick="deleteMissionFromEditor()" class="btn-3d bg-red-900 hover:bg-red-700 text-white font-bold py-3 px-4 rounded" title="Delete Mission">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. TOP ROW: COUNTDOWN & PROGRESS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="glass-panel p-4 rounded-xl flex flex-col justify-center items-center bg-gray-900 border-l-4 border-missionTeal">
+                <div class="flex gap-4 text-center">
+                    <div><span id="cnt-days" class="text-4xl font-bold text-white">00</span><div class="text-xs text-gray-400">DAYS</div></div>
+                    <div class="text-4xl font-bold text-gray-600">:</div>
+                    <div><span id="cnt-hours" class="text-4xl font-bold text-white">00</span><div class="text-xs text-gray-400">HRS</div></div>
+                    <div class="text-4xl font-bold text-gray-600">:</div>
+                    <div><span id="cnt-mins" class="text-4xl font-bold text-white">00</span><div class="text-xs text-gray-400">MIN</div></div>
+                </div>
+            </div>
+
+            <div class="md:col-span-2 glass-panel p-6 rounded-xl bg-gray-900 border-r-4 border-missionOrange flex flex-col justify-center relative">
+                <div class="flex justify-between mb-2 text-sm font-bold z-10 relative">
+                    <span class="text-gray-400">Start: <span id="disp-start-weight">--</span></span>
+                    <span id="progress-text" class="text-missionOrange text-lg drop-shadow-md">Loading...</span>
+                    <span class="text-missionTeal">Goal: <span id="disp-goal-weight">--</span></span>
+                </div>
+                <div class="h-8 bg-gray-800 rounded-full overflow-hidden relative shadow-inner border border-gray-700">
+                    <div id="progress-fill" class="h-full bg-gradient-to-r from-missionTeal-dark to-missionTeal transition-all duration-1000 flex items-center justify-end pr-2" style="width: 0%">
+                        <span id="pct-text" class="text-xs font-bold text-black mix-blend-screen">0%</span>
+                    </div>
+                    <div id="pace-marker" class="absolute top-0 h-full w-1 bg-missionOrange shadow-[0_0_15px_#FF7F50] z-20" style="left: 0%"></div>
+                </div>
+                <!-- Status Verdict -->
+                <div id="status-verdict" class="text-center mt-2 text-xs font-mono font-bold text-gray-400 uppercase">
+                    Analyzing Trajectory...
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. MAIN DASHBOARD GRID -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- LEFT SIDEBAR: INPUTS & STATS (4 cols) -->
+            <div class="lg:col-span-4 space-y-4">
+                <!-- LOG INPUT -->
+                <div class="glass-panel rounded-xl overflow-hidden">
+                    <div class="bg-missionTeal-dark p-2 text-center font-bold uppercase tracking-wider text-sm flex justify-between px-4">
+                        <span>Daily Log Entry</span>
+                        <i data-lucide="pen-tool" class="w-4 h-4"></i>
+                    </div>
+                    
+                    <div class="p-4 flex gap-3">
+                        <div class="flex-1">
+                            <label class="text-xs text-gray-400 block mb-1 font-bold">DATE</label>
+                            <input type="date" id="inpDate" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white focus:border-missionTeal outline-none font-mono">
+                        </div>
+                        <div class="flex-1">
+                            <label class="text-xs text-gray-400 block mb-1 font-bold">WEIGHT</label>
+                            <input type="number" id="inpWeight" step="0.1" class="w-full bg-gray-900 border border-gray-700 rounded p-2 text-white font-bold text-xl text-center focus:border-missionOrange outline-none" placeholder="---">
+                        </div>
+                    </div>
+
+                    <!-- Mood Slider -->
+                    <div class="px-4 mb-2">
+                         <div class="flex justify-between text-xs font-bold text-gray-400 mb-1">
+                             <span>VIBE CHECK</span>
+                             <span id="mood-val-display" class="text-missionOrange">5/10</span>
+                         </div>
+                         <input type="range" id="inpMood" min="1" max="10" value="5" class="w-full" oninput="document.getElementById('mood-val-display').innerText = this.value + '/10'; saveEntry()">
+                    </div>
+
+                    <!-- Habits -->
+                    <div class="px-4 pb-2 grid grid-cols-2 gap-2">
+                        <div onclick="toggleHabit('carnivore')" id="h-carnivore" class="cursor-pointer p-3 rounded-lg bg-gray-800 border border-gray-700 group hover:bg-gray-700 transition">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-xs text-gray-400 group-[.active]:text-white">🥩 MEAT</span>
+                                <span class="status-icon text-gray-600 group-[.active]:text-missionTeal">○</span>
+                            </div>
+                        </div>
+                        <div onclick="toggleHabit('walk')" id="h-walk" class="cursor-pointer p-3 rounded-lg bg-gray-800 border border-gray-700 group hover:bg-gray-700 transition">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-xs text-gray-400 group-[.active]:text-white">🚶 WALK</span>
+                                <span class="status-icon text-gray-600 group-[.active]:text-missionTeal">○</span>
+                            </div>
+                        </div>
+                        <div onclick="toggleHabit('lift')" id="h-lift" class="cursor-pointer p-3 rounded-lg bg-gray-800 border border-gray-700 group hover:bg-gray-700 transition">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-xs text-gray-400 group-[.active]:text-white">🏋️ LIFT</span>
+                                <span class="status-icon text-gray-600 group-[.active]:text-missionTeal">○</span>
+                            </div>
+                        </div>
+                        <div onclick="toggleHabit('alcohol')" id="h-alcohol" class="cursor-pointer p-3 rounded-lg bg-gray-800 border border-gray-700 group hover:bg-gray-700 transition active">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-xs text-gray-400 group-[.active]:text-white">🚫 NO ALC</span>
+                                <span class="status-icon text-gray-600 group-[.active]:text-missionOrange">✓</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 pt-0">
+                        <input type="text" id="inpNotes" class="w-full bg-gray-900 border border-gray-700 rounded p-3 text-sm text-white focus:border-missionTeal outline-none mt-2" placeholder="Notes...">
+                    </div>
+                </div>
+
+                <!-- DISCIPLINE ANALYTICS (Restored) -->
+                <div class="glass-panel rounded-xl overflow-hidden p-4 border-l-4 border-missionTeal">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xs font-bold text-gray-400 uppercase">DISCIPLINE ANALYTICS</h3>
+                        <span class="text-xs font-bold text-missionTeal">ACTUAL %</span>
+                    </div>
+                    
+                    <div class="space-y-3 text-xs font-bold">
+                        <!-- Meat -->
+                        <div>
+                            <div class="flex justify-between mb-1"><span class="flex items-center gap-1">🥩 Carnivore</span><span id="stat-c-val" class="text-white">0%</span></div>
+                            <div class="h-2 bg-gray-800 rounded-full"><div id="bar-c" class="h-full bg-missionTeal rounded-full transition-all duration-500" style="width:0%"></div></div>
+                        </div>
+                        <!-- Walk -->
+                        <div>
+                            <div class="flex justify-between mb-1"><span class="flex items-center gap-1">🚶 Walking</span><span id="stat-w-val" class="text-white">0%</span></div>
+                            <div class="h-2 bg-gray-800 rounded-full"><div id="bar-w" class="h-full bg-missionTeal rounded-full transition-all duration-500" style="width:0%"></div></div>
+                        </div>
+                        <!-- Lift -->
+                        <div>
+                            <div class="flex justify-between mb-1"><span class="flex items-center gap-1">🏋️ Lifting</span><span id="stat-l-val" class="text-white">0%</span></div>
+                            <div class="h-2 bg-gray-800 rounded-full"><div id="bar-l" class="h-full bg-missionTeal rounded-full transition-all duration-500" style="width:0%"></div></div>
+                        </div>
+                        <!-- Alc -->
+                        <div>
+                            <div class="flex justify-between mb-1"><span class="flex items-center gap-1">🚫 Zero Alcohol</span><span id="stat-a-val" class="text-white">0%</span></div>
+                            <div class="h-2 bg-gray-800 rounded-full"><div id="bar-a" class="h-full bg-missionOrange rounded-full transition-all duration-500" style="width:0%"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DEEP STATS & FORECAST -->
+                <div class="glass-panel rounded-xl overflow-hidden">
+                     <div class="bg-gray-800 p-2 text-center font-bold uppercase tracking-wider text-xs text-gray-400 border-b border-gray-700">
+                         Performance Stats (Filtered)
+                     </div>
+                     <div class="p-4 space-y-4">
+                         <div class="bg-gray-900 rounded p-3 border-l-2 border-missionOrange">
+                             <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                 <span>Rate of Loss</span>
+                                 <span id="stat-rate" class="text-white font-mono font-bold">--</span>
+                             </div>
+                             <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                 <span>Forecast Weight</span>
+                                 <span id="stat-projected" class="text-white font-mono font-bold">--</span>
+                             </div>
+                             <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                 <span>Avg Vibe</span>
+                                 <span id="stat-mood" class="text-missionOrange font-mono font-bold">--</span>
+                             </div>
+                             <div class="flex justify-between text-xs text-gray-400">
+                                 <span>vs Goal</span>
+                                 <span id="stat-diff" class="font-mono font-bold">--</span>
+                             </div>
+                         </div>
+                         <div id="forecast-msg" class="text-xs font-bold text-center p-2 rounded bg-black/30 text-gray-300 leading-relaxed border border-gray-700">
+                             Calculating...
+                         </div>
+                     </div>
+                </div>
+            </div>
+
+            <!-- RIGHT MAIN AREA: GRAPH & VISUALS (8 cols) -->
+            <div class="lg:col-span-8 space-y-4">
+                
+                <!-- FILTER TOOLBAR -->
+                <div class="flex flex-wrap gap-2 items-center justify-end">
+                    <span class="text-xs font-bold text-gray-500 uppercase mr-2">View Filter:</span>
+                    <div class="flex items-center gap-2 bg-gray-800 p-1 rounded text-xs">
+                        <input type="date" id="filterStart" onchange="applyFilter()" class="bg-transparent text-white border-b border-gray-600 focus:border-missionTeal outline-none w-24">
+                        <span class="text-gray-500">to</span>
+                        <input type="date" id="filterEnd" onchange="applyFilter()" class="bg-transparent text-white border-b border-gray-600 focus:border-missionTeal outline-none w-24">
+                    </div>
+                    <button type="button" onclick="resetFilter()" class="btn-3d bg-gray-700 text-white text-xs font-bold py-1 px-3 rounded">RESET TO MISSION</button>
+                </div>
+
+                <!-- GRAPH -->
+                <div class="glass-panel rounded-xl overflow-hidden flex flex-col h-[400px]">
+                     <div class="bg-missionTeal-dark p-2 text-center font-bold uppercase tracking-wider text-sm">Trajectory</div>
+                     <div class="p-2 bg-gray-900 flex-grow relative">
+                        <canvas id="weightChart"></canvas>
+                     </div>
+                </div>
+
+                <!-- VISUAL PROGRAMMING -->
+                <div class="glass-panel rounded-xl overflow-hidden flex flex-col border-t-4 border-missionOrange relative group">
+                    <div class="absolute top-0 left-0 w-full bg-gradient-to-b from-black/80 to-transparent p-2 z-10 flex justify-between items-center">
+                        <span class="font-bold uppercase tracking-wider text-missionOrange text-xs">⚠️ VISUAL PROGRAMMING</span>
+                        <button type="button" onclick="cycleFearImage()" class="text-gray-400 hover:text-white"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
+                    </div>
+                    
+                    <div class="relative h-[300px] md:h-[350px] bg-black fear-img-container">
+                        <img id="fear-img" src="" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500 cursor-pointer" onclick="cycleFearImage()">
+                        
+                        <div class="absolute bottom-0 left-0 w-full p-6 z-20">
+                            <p id="fear-quote" class="text-white font-mono text-sm md:text-lg leading-relaxed drop-shadow-md">"LOADING WISDOM..."</p>
+                            <div class="flex justify-between items-end mt-2">
+                                <p id="quote-author" class="text-missionOrange text-xs font-bold uppercase tracking-wider"></p>
+                                <a href="https://photos.app.goo.gl/HBVGGen5bt1LmQYo8" target="_blank" class="bg-missionOrange hover:bg-white hover:text-missionOrange text-black text-xs font-bold py-2 px-4 rounded-full transition shadow-lg flex items-center gap-2">
+                                    <i data-lucide="image" class="w-3 h-3"></i> OPEN GOOGLE ALBUM
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 4. CONTROL DECK -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <button type="button" onclick="syncGoogle()" class="md:col-span-2 btn-3d bg-blue-700 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 uppercase tracking-wider">
+                <span class="text-xl">🚢</span> Sync to Calendar
+            </button>
+             <button type="button" onclick="exportFullICS()" class="btn-3d bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm">
+                <i data-lucide="calendar-days" class="w-4 h-4"></i> EXPORT FULL CALENDAR
+            </button>
+             <button type="button" onclick="exportJSON()" class="btn-3d bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm">
+                <i data-lucide="download" class="w-4 h-4"></i> JSON
+            </button>
+            <button type="button" onclick="exportCSV()" class="btn-3d bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> CSV
+            </button>
+            <label class="btn-3d bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 cursor-pointer text-sm">
+                <i data-lucide="upload" class="w-4 h-4"></i> IMPORT
+                <input type="file" onchange="importJSON(this)" class="hidden">
+            </label>
+        </div>
+
+    </div>
+
+    <script>
+        // --- CONSTANTS & IMAGES ---
+        const IMAGE_LIB = [
+            "https://github.com/KenMorganRealEstate/Home/blob/main/111.png?raw=true",
+            "https://github.com/KenMorganRealEstate/Home/blob/main/222.png?raw=true",
+            "https://github.com/KenMorganRealEstate/Home/blob/main/333.png?raw=true",
+            "https://github.com/KenMorganRealEstate/Home/blob/main/444.png?raw=true",
+            "https://github.com/KenMorganRealEstate/Home/blob/main/555.png?raw=true"
+        ];
+
+        const QUOTES = [
+            {t: "The buffet line sees everything.", a: "Reality Check"},
+            {t: "Discipline is choosing what you want most over what you want now.", a: "Unknown"},
+            {t: "A goal is a dream with a deadline.", a: "Napoleon Hill"},
+            {t: "Do not negotiate with weakness.", a: "Unknown"},
+            {t: "The ship leaves with or without your abs.", a: "Reality"},
+            {t: "Success is not final, failure is not fatal.", a: "Winston Churchill"}
+        ];
+
+        // --- APP STATE ---
+        let appState = {
+            entries: [], // Universal Timeline
+            missions: [], 
+            activeMissionId: null,
+            filter: { start: null, end: null },
+            currentEntry: { carnivore: false, walk: false, lift: false, alcohol: true, mood: 5 },
+            imgIndex: 0
+        };
+
+        const DEFAULT_MISSION = {
+            id: 1,
+            name: "CRUISE PREP",
+            start: "2025-11-21",
+            end: "2026-02-01",
+            startW: 201.6,
+            goalW: 175.0
+        };
+
+        window.onload = () => {
+            lucide.createIcons();
+            initCharts(); 
+            loadData();
+            startCountdown();
+            cycleFearImage();
+            
+            document.getElementById('inpDate').valueAsDate = new Date();
+            loadEntryForDate(document.getElementById('inpDate').value);
+
+            // Event Listeners
+            document.getElementById('inpWeight').addEventListener('input', saveEntry);
+            document.getElementById('inpNotes').addEventListener('input', saveEntry);
+            document.getElementById('inpMood').addEventListener('input', (e) => {
+                 document.getElementById('mood-val-display').innerText = e.target.value + '/10';
+                 saveEntry();
+            });
+            document.getElementById('inpDate').addEventListener('change', (e) => loadEntryForDate(e.target.value));
+        };
+
+        // --- DATA MANAGEMENT ---
+        function loadData() {
+            const savedEntries = localStorage.getItem('cruiseMissionData');
+            const savedMissions = localStorage.getItem('cruiseMissionGoals');
+            const savedActiveId = localStorage.getItem('cruiseMissionActiveId');
+
+            if (savedEntries) appState.entries = JSON.parse(savedEntries);
+            else appState.entries = [{date: DEFAULT_MISSION.start, weight: DEFAULT_MISSION.startW, carnivore:true, walk:true, lift:true, alcohol:true, mood:5, notes:"Start"}];
+
+            if (savedMissions) appState.missions = JSON.parse(savedMissions);
+            else appState.missions = [JSON.parse(JSON.stringify(DEFAULT_MISSION))];
+
+            // Set Active Mission
+            if(savedActiveId) appState.activeMissionId = parseInt(savedActiveId);
+            else appState.activeMissionId = appState.missions[0].id;
+
+            // Ensure valid selection
+            if(!appState.missions.find(m => m.id === appState.activeMissionId)) {
+                appState.activeMissionId = appState.missions[0].id;
+            }
+
+            populateMissionSelector();
+            loadMissionParams(); 
+        }
+
+        function saveData() {
+            localStorage.setItem('cruiseMissionData', JSON.stringify(appState.entries));
+            localStorage.setItem('cruiseMissionGoals', JSON.stringify(appState.missions));
+            localStorage.setItem('cruiseMissionActiveId', appState.activeMissionId);
+        }
+
+        // --- MISSION LOGIC ---
+        function getActiveMission() {
+            return appState.missions.find(m => m.id === appState.activeMissionId) || DEFAULT_MISSION;
+        }
+
+        function populateMissionSelector() {
+            const sel = document.getElementById('missionSelector');
+            sel.innerHTML = '';
+            appState.missions.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id;
+                opt.innerText = m.name;
+                opt.selected = m.id === appState.activeMissionId;
+                opt.className = "text-black";
+                sel.appendChild(opt);
+            });
+        }
+
+        function switchMission() {
+            const newId = parseInt(document.getElementById('missionSelector').value);
+            appState.activeMissionId = newId;
+            loadMissionParams();
+            saveData();
+            refreshUI();
+        }
+
+        function loadMissionParams() {
+            const m = getActiveMission();
+            
+            // Update Editor Inputs with correct IDs
+            document.getElementById('editId').value = m.id;
+            document.getElementById('editName').value = m.name;
+            document.getElementById('editStart').value = m.start;
+            document.getElementById('editEnd').value = m.end;
+            document.getElementById('editStartW').value = m.startW;
+            document.getElementById('editGoalW').value = m.goalW;
+            
+            document.getElementById('editorTitle').innerText = "Edit Active Mission";
+
+            // Default Filter to Mission Range
+            resetFilter(); 
+            renderMissionList(); // Highlight current
+        }
+
+        // NEW: CORRECT LOGIC FOR SAVING/CREATING
+        function saveMissionFromEditor() {
+            const idVal = document.getElementById('editId').value;
+            const name = document.getElementById('editName').value;
+            
+            if(!name) { alert("Name required"); return; }
+
+            const newConfig = {
+                name: name.toUpperCase(),
+                start: document.getElementById('editStart').value,
+                end: document.getElementById('editEnd').value,
+                startW: parseFloat(document.getElementById('editStartW').value),
+                goalW: parseFloat(document.getElementById('editGoalW').value)
+            };
+
+            if(idVal === "NEW") {
+                // CREATE NEW
+                const newId = Date.now();
+                // PUSH NEW OBJECT TO ARRAY
+                appState.missions.push({ id: newId, ...newConfig });
+                appState.activeMissionId = newId; 
+                alert("New Mission Created Successfully!");
+            } else {
+                // UPDATE EXISTING
+                const idx = appState.missions.findIndex(m => m.id === parseInt(idVal));
+                if(idx > -1) {
+                    appState.missions[idx] = { ...appState.missions[idx], ...newConfig };
+                    alert("Mission Saved!");
+                }
+            }
+
+            saveData();
+            populateMissionSelector();
+            renderMissionList();
+            loadMissionParams(); // Reload form with active data
+            refreshUI();
+        }
+
+        function prepareCreateNew() {
+            document.getElementById('editId').value = "NEW";
+            document.getElementById('editName').value = "";
+            document.getElementById('editStart').value = new Date().toISOString().split('T')[0];
+            document.getElementById('editEnd').value = "";
+            document.getElementById('editStartW').value = "";
+            document.getElementById('editGoalW').value = "";
+            
+            document.getElementById('editorTitle').innerText = "Create New Mission";
+            
+            // Highlight change visual cue
+            renderMissionList();
+        }
+
+        function loadMissionFromEditor() {
+            const idVal = document.getElementById('editId').value;
+            if(idVal === "NEW") {
+                alert("Save the new mission first.");
+                return;
+            }
+            appState.activeMissionId = parseInt(idVal);
+            saveData();
+            populateMissionSelector();
+            loadMissionParams();
+            refreshUI();
+        }
+
+        function deleteMissionFromEditor() {
+            const idVal = document.getElementById('editId').value;
+            
+            if(idVal === "NEW") return;
+            
+            if(appState.missions.length <= 1) {
+                alert("Cannot delete the last mission. You must have at least one active mission.");
+                return;
+            }
+
+            if(confirm("⚠️ ARE YOU SURE?\n\nThis will permanently delete this mission configuration.\n(Your weight log history remains safe).")) {
+                appState.missions = appState.missions.filter(m => m.id !== parseInt(idVal));
+                
+                // Switch to first available
+                if(appState.activeMissionId === parseInt(idVal)) {
+                    appState.activeMissionId = appState.missions[0].id;
+                }
+                
+                saveData();
+                populateMissionSelector();
+                renderMissionList();
+                loadMissionParams();
+                refreshUI();
+            }
+        }
+
+        function toggleMissionManager() {
+            const el = document.getElementById('missionManager');
+            el.classList.toggle('hidden');
+            if(!el.classList.contains('hidden')) {
+                renderMissionList();
+                loadMissionParams(); 
+            }
+        }
+        
+        function renderMissionList() {
+            const container = document.getElementById('missionListContainer');
+            container.innerHTML = '';
+            const currentEditingId = document.getElementById('editId').value;
+            
+            appState.missions.forEach(m => {
+                const div = document.createElement('div');
+                // Highlight if editing OR if active (different styles)
+                let bgClass = 'bg-black/40';
+                if(m.id == currentEditingId) bgClass = 'bg-missionTeal/30 border-missionTeal';
+                else if(m.id === appState.activeMissionId) bgClass = 'bg-missionOrange/10 border-missionOrange/50';
+
+                div.className = `mission-item p-3 rounded cursor-pointer flex justify-between items-center border border-transparent transition-colors ${bgClass}`;
+                div.innerHTML = `
+                    <div class="flex-grow" onclick="loadMissionToEditor(${m.id})">
+                        <div class="font-bold text-sm text-white">${m.name}</div>
+                        <div class="text-[10px] text-gray-400">${m.start} to ${m.end}</div>
+                    </div>
+                    ${m.id === appState.activeMissionId ? '<i data-lucide="check-circle" class="w-4 h-4 text-missionOrange"></i>' : ''}
+                `;
+                container.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+        
+        function loadMissionToEditor(id) {
+            const m = appState.missions.find(x => x.id === id);
+            if(!m) return;
+
+            document.getElementById('editId').value = m.id;
+            document.getElementById('editName').value = m.name;
+            document.getElementById('editStart').value = m.start;
+            document.getElementById('editEnd').value = m.end;
+            document.getElementById('editStartW').value = m.startW;
+            document.getElementById('editGoalW').value = m.goalW;
+            
+            document.getElementById('editorTitle').innerText = "Edit Mission Details";
+            renderMissionList(); 
+        }
+
+        // --- FILTER LOGIC ---
+        function applyFilter() {
+            appState.filter.start = document.getElementById('filterStart').value;
+            appState.filter.end = document.getElementById('filterEnd').value;
+            refreshUI();
+        }
+
+        function resetFilter() {
+            const m = getActiveMission();
+            appState.filter.start = m.start;
+            appState.filter.end = m.end;
+            document.getElementById('filterStart').value = m.start;
+            document.getElementById('filterEnd').value = m.end;
+            refreshUI();
+        }
+
+        function refreshUI() {
+            updateProgressUI();
+            updateDeepStats();
+            updateCharts();
+            startCountdown();
+        }
+
+        // --- DAILY LOG LOGIC ---
+        function loadEntryForDate(dateStr) {
+            const entry = appState.entries.find(e => e.date === dateStr);
+            if(entry) {
+                document.getElementById('inpWeight').value = entry.weight;
+                document.getElementById('inpNotes').value = entry.notes || "";
+                document.getElementById('inpMood').value = entry.mood || 5;
+                document.getElementById('mood-val-display').innerText = (entry.mood || 5) + '/10';
+                appState.currentEntry = { ...entry };
+            } else {
+                const sorted = [...appState.entries].sort((a,b) => new Date(a.date) - new Date(b.date));
+                const last = sorted[sorted.length-1];
+                
+                document.getElementById('inpWeight').value = last ? last.weight : "";
+                document.getElementById('inpNotes').value = "";
+                document.getElementById('inpMood').value = 5;
+                document.getElementById('mood-val-display').innerText = '5/10';
+                appState.currentEntry = { carnivore: false, walk: false, lift: false, alcohol: true, mood: 5 };
+            }
+            renderChecklist();
+        }
+
+        function saveEntry() {
+            const date = document.getElementById('inpDate').value;
+            const weight = parseFloat(document.getElementById('inpWeight').value);
+            if(!date) return;
+
+            const newEntry = {
+                date: date,
+                weight: weight || null,
+                notes: document.getElementById('inpNotes').value,
+                mood: document.getElementById('inpMood').value,
+                ...appState.currentEntry
+            };
+
+            appState.entries = appState.entries.filter(e => e.date !== date);
+            appState.entries.push(newEntry);
+            appState.entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            saveData();
+            refreshUI();
+        }
+
+        function toggleHabit(key) {
+            appState.currentEntry[key] = !appState.currentEntry[key];
+            saveEntry();
+            renderChecklist();
+        }
+
+        function renderChecklist() {
+            const update = (id, active, isAlc) => {
+                const el = document.getElementById('h-' + id);
+                const icon = el.querySelector('.status-icon');
+                if(active) {
+                    el.classList.add('active', isAlc ? 'border-missionOrange' : 'border-missionTeal');
+                    el.classList.remove('border-gray-700');
+                    icon.innerText = "✓";
+                } else {
+                    el.classList.remove('active', 'border-missionOrange', 'border-missionTeal');
+                    el.classList.add('border-gray-700');
+                    icon.innerText = "○";
+                }
+            };
+            update('carnivore', appState.currentEntry.carnivore, false);
+            update('walk', appState.currentEntry.walk, false);
+            update('lift', appState.currentEntry.lift, false);
+            update('alcohol', appState.currentEntry.alcohol, true);
+        }
+
+        // --- STATS & CHARTS ---
+        function getFilteredEntries() {
+            const start = new Date(appState.filter.start);
+            const end = new Date(appState.filter.end);
+            start.setHours(0,0,0,0); end.setHours(23,59,59,999);
+            
+            return appState.entries.filter(e => {
+                const d = new Date(e.date);
+                return d >= start && d <= end;
+            }).sort((a,b) => new Date(a.date) - new Date(b.date));
+        }
+
+        function updateDeepStats() {
+            const mission = getActiveMission();
+            const filtered = getFilteredEntries();
+            const weightEntries = filtered.filter(e => e.weight);
+
+            // 1. MOOD & HABIT ANALYTICS (Discipline)
+            const total = filtered.length;
+            if(total > 0) {
+                const setBar = (id, count) => {
+                    const pct = Math.round((count/total)*100);
+                    document.getElementById(`stat-${id}-val`).innerText = `${pct}%`;
+                    document.getElementById(`bar-${id}`).style.width = `${pct}%`;
+                };
+                setBar('c', filtered.filter(e=>e.carnivore).length);
+                setBar('w', filtered.filter(e=>e.walk).length);
+                setBar('l', filtered.filter(e=>e.lift).length);
+                setBar('a', filtered.filter(e=>e.alcohol).length);
+
+                const sum = filtered.reduce((acc, e) => acc + (parseInt(e.mood)||5), 0);
+                document.getElementById('stat-mood').innerText = (sum / total).toFixed(1) + "/10";
+            } else {
+                ['c','w','l','a'].forEach(id => {
+                    document.getElementById(`stat-${id}-val`).innerText = "0%";
+                    document.getElementById(`bar-${id}`).style.width = "0%";
+                });
+                document.getElementById('stat-mood').innerText = "--";
+            }
+
+            // 2. PROJECTION
+            if(weightEntries.length < 2) {
+                document.getElementById('stat-rate').innerText = "Need 2+ logs";
+                document.getElementById('forecast-msg').innerText = "LOG MORE DATA IN FILTER RANGE FOR FORECAST.";
+                return;
+            }
+
+            const first = weightEntries[0];
+            const last = weightEntries[weightEntries.length-1];
+            const days = (new Date(last.date) - new Date(first.date)) / 86400000;
+            
+            if(days <= 0) return;
+
+            const rate = (first.weight - last.weight) / days; 
+            
+            const today = new Date(); today.setHours(0,0,0,0);
+            const target = new Date(mission.end); target.setHours(0,0,0,0);
+            const daysLeft = (target - today) / 86400000;
+
+            const projectedW = last.weight - (rate * daysLeft);
+            const diff = projectedW - mission.goalW;
+
+            document.getElementById('stat-rate').innerText = `${rate.toFixed(2)} lbs/day`;
+            document.getElementById('stat-projected').innerText = `${projectedW.toFixed(1)} lbs`;
+
+            const diffEl = document.getElementById('stat-diff');
+            const msgEl = document.getElementById('forecast-msg');
+            
+            if(diff <= 0) {
+                diffEl.innerText = `${Math.abs(diff).toFixed(1)} lbs UNDER`;
+                diffEl.className = "font-mono font-bold text-missionTeal";
+                msgEl.innerText = `ON TRACK. PROJECTED TO FINISH AT ${projectedW.toFixed(1)} LBS.`;
+                msgEl.className = "text-xs font-bold text-center p-2 rounded bg-missionTeal/20 text-missionTeal border border-missionTeal";
+            } else {
+                diffEl.innerText = `${diff.toFixed(1)} lbs OVER`;
+                diffEl.className = "font-mono font-bold text-missionOrange";
+                msgEl.innerText = `WARNING: PACE TOO SLOW. FORECAST: ${projectedW.toFixed(1)} LBS.`;
+                msgEl.className = "text-xs font-bold text-center p-2 rounded bg-missionOrange/20 text-missionOrange border border-missionOrange animate-pulse";
+            }
+        }
+
+        function updateProgressUI() {
+            const mission = getActiveMission();
+            const weightEntries = appState.entries.filter(e => e.weight).sort((a,b) => new Date(a.date) - new Date(b.date));
+            const curr = weightEntries.length > 0 ? weightEntries[weightEntries.length-1].weight : mission.startW;
+
+            const totalToLose = mission.startW - mission.goalW;
+            const lost = mission.startW - curr;
+            let pct = (lost / totalToLose) * 100;
+            
+            document.getElementById('disp-start-weight').innerText = mission.startW;
+            document.getElementById('disp-goal-weight').innerText = mission.goalW;
+            document.getElementById('progress-text').innerText = `${curr} lbs (${(curr - mission.goalW).toFixed(1)} to go)`;
+            
+            let uiPct = Math.max(0, Math.min(100, pct));
+            document.getElementById('progress-fill').style.width = `${uiPct}%`;
+            document.getElementById('pct-text').innerText = `${pct.toFixed(1)}%`;
+
+            const startMs = new Date(mission.start).getTime();
+            const endMs = new Date(mission.end).getTime();
+            const nowMs = new Date().getTime();
+            let timePct = ((nowMs - startMs) / (endMs - startMs)) * 100;
+            document.getElementById('pace-marker').style.left = `${Math.max(0, Math.min(100, timePct))}%`;
+        }
+
+        // --- CHART ---
+        let weightChart;
+        function initCharts() {
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            weightChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: '#64748b', maxTicksLimit: 6 } },
+                        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            if (!weightChart) return; 
+
+            const start = new Date(appState.filter.start);
+            const end = new Date(appState.filter.end);
+            const mission = getActiveMission();
+            
+            const labels = [];
+            const goalData = [];
+            const actData = [];
+
+            const mStart = new Date(mission.start);
+            const mEnd = new Date(mission.end);
+            const mDays = (mEnd - mStart) / 86400000;
+            const perDay = (mission.startW - mission.goalW) / mDays;
+
+            for(let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+                const dStr = d.toISOString().split('T')[0];
+                labels.push(d.toLocaleDateString(undefined, {month:'short', day:'numeric'}));
+                
+                const daysFromMStart = (d - mStart) / 86400000;
+                goalData.push(mission.startW - (daysFromMStart * perDay));
+
+                const entry = appState.entries.find(e => e.date === dStr);
+                actData.push(entry && entry.weight ? entry.weight : null);
+            }
+
+            weightChart.data.labels = labels;
+            weightChart.data.datasets = [
+                { label: 'Goal Pace', data: goalData, borderColor: '#FF7F50', borderDash: [5,5], pointRadius: 0, borderWidth: 2 },
+                { label: 'Actual', data: actData, borderColor: '#008080', backgroundColor: 'rgba(0,128,128,0.2)', borderWidth: 3, spanGaps: true, fill: true }
+            ];
+            weightChart.update();
+        }
+
+        // --- VISUALS ---
+        function startCountdown() {
+            const mission = getActiveMission();
+            const tick = () => {
+                const diff = new Date(mission.end) - new Date();
+                if(diff < 0) { document.getElementById('cnt-days').innerText = "00"; return; }
+                const d = Math.floor(diff / 86400000);
+                const h = Math.floor((diff % 86400000) / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                document.getElementById('cnt-days').innerText = d;
+                document.getElementById('cnt-hours').innerText = h;
+                document.getElementById('cnt-mins').innerText = m;
+            };
+            tick(); 
+            if(window.timerId) clearInterval(window.timerId);
+            window.timerId = setInterval(tick, 60000);
+        }
+
+        function cycleFearImage() {
+            const img = document.getElementById('fear-img');
+            appState.imgIndex = (appState.imgIndex + 1) % IMAGE_LIB.length;
+            img.src = IMAGE_LIB[appState.imgIndex];
+            
+            const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+            document.getElementById('fear-quote').innerText = `"${q.t}"`;
+            document.getElementById('quote-author').innerText = `- ${q.a}`;
+        }
+
+        // --- EXPORTS ---
+        function syncGoogle() {
+            const entry = appState.entries.find(e => e.date === document.getElementById('inpDate').value) || appState.currentEntry;
+            const w = document.getElementById('inpWeight').value;
+            const mission = getActiveMission();
+            const left = (parseFloat(w) - mission.goalW).toFixed(1);
+            const mood = entry.mood || 5;
+
+            const title = encodeURIComponent(`🚢 ${mission.name}: ${w}lbs (${left} to go)`);
+            const desc = encodeURIComponent(`Vibe: ${mood}/10\n🥩MEAT ${entry.carnivore?'✅':'❌'} 🚶WALK ${entry.walk?'✅':'❌'} 🏋️LIFT ${entry.lift?'✅':'❌'} 🚫NO-ALC ${entry.alcohol?'✅':'❌'}\nNotes: ${document.getElementById('inpNotes').value}`);
+            const d = document.getElementById('inpDate').value.replace(/-/g, '');
+            window.open(`https://calendar.google.com/calendar/r/eventedit?text=${title}&details=${desc}&dates=${d}/${d}`, '_blank');
+        }
+
+        function exportFullICS() {
+            const mission = getActiveMission();
+            let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//MissionControl//Stats//EN\n";
+            
+            // Calculate daily pace
+            const start = new Date(mission.start);
+            const end = new Date(mission.end);
+            const totalDays = (end - start) / 86400000;
+            const perDay = (mission.startW - mission.goalW) / totalDays;
+
+            let current = new Date(start);
+            while(current <= end) {
+                const dStr = current.toISOString().split('T')[0];
+                const dateClean = dStr.replace(/-/g, '');
+                const daysPassed = (current - start) / 86400000;
+                const targetW = (mission.startW - (daysPassed * perDay)).toFixed(1);
+                
+                // Check for actual data
+                const entry = appState.entries.find(e => e.date === dStr);
+                
+                let summary = `🎯 Tgt: ${targetW}`;
+                let desc = `Target Weight: ${targetW} lbs\nGoal: ${mission.name}`;
+                
+                if(entry && entry.weight) {
+                    summary = `✅ ${entry.weight} / 🎯 ${targetW}`;
+                    desc += `\n\nACTUAL DATA:\nWeight: ${entry.weight}\nVibe: ${entry.mood || 5}/10\n`;
+                    desc += `Meat: ${entry.carnivore?'YES':'NO'}\nWalk: ${entry.walk?'YES':'NO'}\nLift: ${entry.lift?'YES':'NO'}\nAlc-Free: ${entry.alcohol?'YES':'NO'}`;
+                    if(entry.notes) desc += `\nNotes: ${entry.notes}`;
+                }
+
+                ics += "BEGIN:VEVENT\n";
+                ics += `DTSTART;VALUE=DATE:${dateClean}\n`;
+                ics += `DTEND;VALUE=DATE:${dateClean}\n`; // Single day event
+                ics += `SUMMARY:${summary}\n`;
+                ics += `DESCRIPTION:${desc.replace(/\n/g, '\\n')}\n`;
+                ics += "END:VEVENT\n";
+
+                current.setDate(current.getDate() + 1);
+            }
+            
+            ics += "END:VCALENDAR";
+            
+            const blob = new Blob([ics], {type: 'text/calendar'});
+            const a = document.createElement('a'); 
+            a.href = URL.createObjectURL(blob); 
+            a.download = `${mission.name.replace(/\s+/g, '_')}_FULL_PLAN.ics`; 
+            a.click();
+        }
+
+        function exportJSON() {
+            const blob = new Blob([JSON.stringify(appState, null, 2)], {type: 'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cruise_data.json'; a.click();
+        }
+        function exportCSV() {
+            let csv = "Date,Weight,Mood,Carnivore,Walk,Lift,NoAlc,Notes\n";
+            appState.entries.sort((a,b)=>new Date(a.date)-new Date(b.date)).forEach(e => {
+                csv += `${e.date},${e.weight||''},${e.mood||5},${e.carnivore},${e.walk},${e.lift},${e.alcohol},"${e.notes||''}"\n`;
+            });
+            const blob = new Blob([csv], {type: 'text/csv'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cruise_data.csv'; a.click();
+        }
+        function importJSON(input) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if(data.entries && data.missions) {
+                        appState = data; 
+                    } else if(Array.isArray(data)) {
+                        appState.entries = data; 
+                    }
+                    saveData();
+                    
+                    // Force complete UI refresh without reload
+                    populateMissionSelector();
+                    loadMissionParams();
+                    refreshUI();
+                    alert("Data Imported Successfully");
+                } catch(err) { alert("Import Failed"); }
+            };
+            reader.readAsText(input.files[0]);
+        }
+    </script>
+</body>
+</html>

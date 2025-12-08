@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The "True Cost" Housing Simulator</title>
+    <!-- Load Chart.js for the graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-green: #4CAF50;
+            --accent-blue: #2196F3;
+            --accent-red: #F44336;
+            --accent-purple: #9C27B0;
+            --accent-orange: #FF9800;
+            --accent-gold: #FFD700;
+            --accent-teal: #009688;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        h1 { color: var(--accent-green); margin-bottom: 5px; text-align: center; }
+        p.subtitle { color: #aaa; margin-top: 0; margin-bottom: 20px; font-style: italic; text-align: center; }
+        
+        /* Layout Grid */
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            max-width: 1300px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* Controls Panel */
+        .controls {
+            background-color: var(--panel-bg);
+            padding: 20px;
+            border-radius: 12px;
+            flex: 1 1 300px; /* Grow, Shrink, Basis */
+            max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        
+        .control-group { margin-bottom: 15px; }
+        
+        label { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.9rem; 
+            color: #bbb; 
+            margin-bottom: 8px; 
+        }
+        
+        .val-display { 
+            color: var(--accent-green); 
+            font-weight: bold; 
+            font-family: monospace;
+            font-size: 1rem;
+        }
+        
+        input[type=range] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: var(--accent-green);
+            height: 6px;
+            background: #333;
+            border-radius: 5px;
+            appearance: none;
+            outline: none;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            cursor: pointer;
+        }
+
+        /* Improvements Section */
+        .improvements-section {
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #333;
+        }
+        
+        .rent-section {
+            background: #2b2515; /* Slight gold tint bg */
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #554400;
+        }
+
+        .invest-section {
+            background: #152b2b; /* Slight teal tint bg */
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #004d40;
+        }
+        
+        .add-improvement-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .input-text {
+            background: #333;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            width: 50%;
+        }
+        
+        .input-cost {
+            background: #333;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            width: 30%;
+        }
+        
+        .btn-add {
+            background: var(--accent-green);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 20%;
+        }
+        
+        .btn-add:hover { background: #43A047; }
+
+        .items-list {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: 1px solid #333;
+            align-items: center;
+        }
+        
+        .btn-delete {
+            background: transparent;
+            color: var(--accent-red);
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-left: 10px;
+        }
+
+        .calc-display {
+            font-size: 0.85rem;
+            color: #aaa;
+            text-align: right;
+            margin-top: 5px;
+            border-top: 1px solid #444;
+            padding-top: 5px;
+        }
+
+        .highlight-calc {
+            color: var(--accent-purple);
+            font-weight: bold;
+        }
+
+        /* Toggle Switch */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #443300;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #444;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--accent-gold);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        /* Chart Area */
+        .chart-container {
+            background-color: var(--panel-bg);
+            padding: 20px;
+            border-radius: 12px;
+            flex: 2 1 400px; /* Takes up twice as much space as controls if possible */
+            min-width: 300px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .canvas-wrapper {
+            position: relative;
+            height: 500px;
+            width: 100%;
+        }
+
+        /* Monthly Snapshot Bar */
+        .monthly-snapshot {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #333;
+            transition: background 0.3s;
+        }
+
+        .snap-box {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .snap-title { font-size: 0.8rem; color: #aaa; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; }
+        .snap-val { font-size: 1.3rem; font-weight: bold; }
+        .snap-sub { font-size: 0.75rem; color: #888; margin-top: 2px; }
+        .snap-year-indicator { grid-column: 1/-1; text-align: center; font-size: 0.7rem; color: #666; margin-top: -10px; margin-bottom: 5px;}
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+            margin-top: 20px;
+            background: #2c2c2c;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 0.75rem; color: #aaa; display: block; margin-bottom: 5px;}
+        .stat-value { font-size: 1.0rem; font-weight: bold; display: block; }
+        
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.red { color: var(--accent-red); }
+        .stat-value.blue { color: var(--accent-blue); }
+        .stat-value.purple { color: var(--accent-purple); }
+        .stat-value.gold { color: var(--accent-gold); }
+        .stat-value.teal { color: var(--accent-teal); }
+
+        .section-title {
+            color: #fff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        
+        .tooltip {
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            color: #ccc;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        @media (max-width: 850px) {
+            .container { flex-direction: column; align-items: stretch; }
+            .controls, .chart-container { max-width: 100%; }
+            .stats-bar, .breakdown-bar { grid-template-columns: 1fr 1fr; gap: 15px; }
+            .monthly-snapshot { grid-template-columns: 1fr; gap: 15px; text-align: center;}
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Interactive Real Estate Sandbox</h1>
+    <p class="subtitle">Owning vs. Renting & Investing the Difference</p>
+
+    <div class="container">
+        <!-- Controls Sidebar -->
+        <div class="controls">
+            <div class="section-title">Purchase Details</div>
+            
+            <div class="control-group">
+                <label>Purchase Price: <span id="val-price" class="val-display">$174,000</span></label>
+                <input type="range" id="price" min="150000" max="1500000" step="1000" value="174000">
+            </div>
+            
+            <div class="control-group">
+                <label>Down Payment: <span id="val-down" class="val-display">$17,400</span></label>
+                <input type="range" id="down" min="0" max="500000" step="100" value="17400">
+            </div>
+
+            <div class="control-group">
+                <label>Interest Rate (Avg): <span id="val-rate" class="val-display">6.6%</span></label>
+                <input type="range" id="rate" min="1.0" max="15.0" step="0.1" value="6.6">
+            </div>
+
+            <div class="control-group">
+                <label>Mortgage Length (Amortization): <span id="val-amort" class="val-display">23 Years</span></label>
+                <input type="range" id="amort" min="5" max="30" step="1" value="23">
+            </div>
+
+            <div class="control-group">
+                <label>Timeline (Years Owned): <span id="val-years" class="val-display">32 Years</span></label>
+                <input type="range" id="years" min="5" max="50" step="1" value="32">
+            </div>
+
+            <div class="section-title" style="margin-top: 25px;">Ownership Costs</div>
+
+            <div class="control-group">
+                <label>Property Tax (Monthly Avg): <span id="val-tax" class="val-display">$475</span></label>
+                <input type="range" id="tax" min="0" max="1500" step="5" value="475">
+            </div>
+
+            <div class="control-group">
+                <label>General Maint. (Paint/Minor): <span id="val-maint" class="val-display">$150</span></label>
+                <input type="range" id="maint" min="0" max="1000" step="10" value="150">
+            </div>
+            
+             <div class="control-group">
+                <label>Annual Appreciation: <span id="val-growth" class="val-display">6.0%</span></label>
+                <input type="range" id="growth" min="0" max="10.0" step="0.5" value="6.0">
+            </div>
+
+            <!-- Rent Comparison Section -->
+            <div class="rent-section">
+                <label style="color:#FFD700; font-weight:bold;">Renting Scenario</label>
+                
+                <div class="switch-container">
+                    <span style="font-size:0.8rem; color:#ddd;">Invest the Difference?</span>
+                    <label class="switch">
+                        <input type="checkbox" id="invest-diff" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div style="font-size:0.7rem; color:#aaa; margin-bottom:10px;">
+                    <strong>ON:</strong> Matches Homeowner Monthly Spend.<br>
+                    <strong>OFF:</strong> Invests $0 (Only fixed extra below).
+                </div>
+
+                <div class="control-group">
+                    <label>Initial Monthly Rent: <span id="val-rent" class="val-display" style="color:#FFD700">$1,000</span></label>
+                    <input type="range" id="rent" min="500" max="5000" step="50" value="1000" style="accent-color:#FFD700">
+                </div>
+
+                <div class="control-group">
+                    <label>Rent Inflation (Annual): <span id="val-rent-inf" class="val-display" style="color:#FFD700">3.0%</span></label>
+                    <input type="range" id="rent-inf" min="0" max="10.0" step="0.5" value="3.0" style="accent-color:#FFD700">
+                </div>
+
+                <div class="control-group">
+                    <label>Stock Market Return: <span id="val-stock" class="val-display" style="color:#FFD700">8.0%</span></label>
+                    <input type="range" id="stock" min="0" max="15.0" step="0.5" value="8.0" style="accent-color:#FFD700">
+                </div>
+            </div>
+
+            <!-- Additional Investments Section -->
+            <div class="invest-section">
+                <label style="color:#009688; font-weight:bold;">Extra Monthly Savings</label>
+                <div style="font-size:0.75rem; color:#aaa; margin-bottom:10px; line-height:1.4;">
+                    Manual fixed investments (on top of surplus).
+                </div>
+
+                <div class="control-group">
+                    <label>Owner Extra Invest: <span id="val-owner-invest" class="val-display" style="color:#009688">$0</span></label>
+                    <input type="range" id="owner-invest" min="0" max="2000" step="50" value="0" style="accent-color:#009688">
+                </div>
+
+                <div class="control-group">
+                    <label>Renter Extra Invest: <span id="val-renter-invest" class="val-display" style="color:#FFD700">$0</span></label>
+                    <input type="range" id="renter-invest" min="0" max="2000" step="50" value="0" style="accent-color:#FFD700">
+                </div>
+            </div>
+
+            <!-- Improvements Calculator -->
+            <div class="improvements-section">
+                <label style="color:#fff; font-weight:bold;">Renovations Calculator</label>
+                <div style="font-size:0.8rem; color:#aaa; margin-bottom:10px;">Big items averaged over timeline.</div>
+                
+                <div class="add-improvement-row">
+                    <input type="text" id="imp-name" placeholder="Item" class="input-text">
+                    <input type="number" id="imp-cost" placeholder="$" class="input-cost">
+                    <button class="btn-add" onclick="addImprovement()">+</button>
+                </div>
+
+                <div class="items-list" id="items-list"></div>
+
+                <div class="calc-display">
+                    Avg Monthly Cost: <span id="avg-reno-cost" class="highlight-calc">$0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Area -->
+        <div class="chart-container">
+            <!-- Monthly Snapshot Visual -->
+            <div class="monthly-snapshot">
+                <div class="snap-year-indicator" id="snap-year-label">Showing: Year 1 Averages</div>
+                <div class="snap-box">
+                    <span class="snap-title">Owner Monthly</span>
+                    <span id="snap-owner" class="snap-val" style="color:#4CAF50;">$0</span>
+                    <span id="snap-owner-breakdown" class="snap-sub">Mort+Tax+Maint</span>
+                </div>
+                <div class="snap-box">
+                    <span class="snap-title">Renter Monthly</span>
+                    <span id="snap-renter" class="snap-val" style="color:#FFD700;">$0</span>
+                    <span class="snap-sub">Rent Payment</span>
+                </div>
+                <div class="snap-box">
+                    <span class="snap-title">The Difference</span>
+                    <span id="snap-diff" class="snap-val">$0</span>
+                    <span id="snap-diff-label" class="snap-sub">Invested Monthly</span>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <canvas id="myChart"></canvas>
+            </div>
+            
+            <div class="stats-bar">
+                <div class="stat-box">
+                    <span class="stat-label">Home Equity</span>
+                    <span id="final-equity" class="stat-value blue">$0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Owner Investments</span>
+                    <span id="final-owner-inv" class="stat-value teal">$0</span>
+                </div>
+                 <div class="stat-box">
+                    <span class="stat-label">Renter Net Worth</span>
+                    <span id="final-renter" class="stat-value gold">$0</span>
+                </div>
+                <div class="stat-box" style="background:#222; border-radius:5px; padding:0 5px;">
+                    <span class="stat-label">Real Profit (Owner)</span>
+                    <span id="final-profit" class="stat-value purple">$0</span>
+                </div>
+            </div>
+
+            <div class="tooltip">
+                <strong>Hover over the chart</strong> to see monthly costs update dynamically for that specific year. <br>
+                <strong>Real Profit</strong> = Equity + Owner Investments - All Sunk Costs.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. State Management ---
+        let improvements = [
+            { name: "Roof", cost: 5500 },
+            { name: "Furnace & 2 ACs", cost: 11500 },
+            { name: "Garage Door", cost: 1500 },
+            { name: "Hardwood Floors/Stairs", cost: 9000 },
+            { name: "Windows", cost: 5500 },
+            { name: "Granite Counters", cost: 3500 },
+            { name: "Toilets", cost: 1000 },
+            { name: "Back Deck", cost: 1500 },
+            { name: "Front Step", cost: 3000 },
+            { name: "Driveway", cost: 2000 },
+            { name: "California Shutters", cost: 3500 }
+        ];
+        
+        // Data stores for hover interaction
+        let yearlyDataStore = [];
+
+        const inputs = {
+            price: document.getElementById('price'),
+            down: document.getElementById('down'),
+            rate: document.getElementById('rate'),
+            amort: document.getElementById('amort'),
+            years: document.getElementById('years'),
+            tax: document.getElementById('tax'),
+            maint: document.getElementById('maint'),
+            growth: document.getElementById('growth'),
+            rent: document.getElementById('rent'),
+            rentInf: document.getElementById('rent-inf'),
+            stock: document.getElementById('stock'),
+            ownerInvest: document.getElementById('owner-invest'),
+            renterInvest: document.getElementById('renter-invest'),
+            investDiff: document.getElementById('invest-diff') // New Toggle
+        };
+
+        const displays = {
+            price: document.getElementById('val-price'),
+            down: document.getElementById('val-down'),
+            rate: document.getElementById('val-rate'),
+            amort: document.getElementById('val-amort'),
+            years: document.getElementById('val-years'),
+            tax: document.getElementById('val-tax'),
+            maint: document.getElementById('val-maint'),
+            growth: document.getElementById('val-growth'),
+            rent: document.getElementById('val-rent'),
+            rentInf: document.getElementById('val-rent-inf'),
+            stock: document.getElementById('val-stock'),
+            ownerInvest: document.getElementById('val-owner-invest'),
+            renterInvest: document.getElementById('val-renter-invest')
+        };
+
+        const stats = {
+            sunk: document.getElementById('final-sunk'),
+            equity: document.getElementById('final-equity'),
+            profit: document.getElementById('final-profit'),
+            renter: document.getElementById('final-renter'),
+            ownerInv: document.getElementById('final-owner-inv')
+        };
+
+        const snap = {
+            yearLabel: document.getElementById('snap-year-label'),
+            owner: document.getElementById('snap-owner'),
+            ownerBreak: document.getElementById('snap-owner-breakdown'),
+            renter: document.getElementById('snap-renter'),
+            diff: document.getElementById('snap-diff'),
+            diffLabel: document.getElementById('snap-diff-label')
+        };
+
+        // --- 2. Chart Logic ---
+        const ctx = document.getElementById('myChart').getContext('2d');
+        
+        const verticalLinePlugin = {
+            id: 'verticalLine',
+            afterDraw: (chart) => {
+                if (chart.tooltip?._active?.length) {
+                    const x = chart.tooltip._active[0].element.x;
+                    const yAxis = chart.scales.y;
+                    const ctx = chart.ctx;
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x, yAxis.top);
+                    ctx.lineTo(x, yAxis.bottom);
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        };
+
+        let myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Home Equity',
+                        borderColor: '#2196F3',
+                        backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        tension: 0.1,
+                        fill: true,
+                        data: []
+                    },
+                    {
+                        label: 'Owner Investments',
+                        borderColor: '#009688',
+                        backgroundColor: 'rgba(0, 150, 136, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.1,
+                        fill: true,
+                        data: []
+                    },
+                    {
+                        label: 'Renter Net Worth',
+                        borderColor: '#FFD700',
+                        backgroundColor: 'transparent',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        tension: 0.1,
+                        data: []
+                    },
+                    {
+                        label: 'Sunk Costs',
+                        borderColor: '#F44336',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        borderDash: [5, 5],
+                        tension: 0.1,
+                        data: []
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                onHover: (event, elements) => {
+                    if (elements && elements.length > 0) {
+                        const index = elements[0].index;
+                        updateSnapshotDisplay(index);
+                    } else {
+                        // Optional: Reset to Year 1 or keep last
+                        // updateSnapshotDisplay(0); 
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#333' },
+                        ticks: { color: '#888' },
+                        title: { display: true, text: 'Years' }
+                    },
+                    y: {
+                        grid: { color: '#333' },
+                        ticks: { 
+                            color: '#888', 
+                            callback: function(value) { return '$' + value/1000 + 'k'; } 
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#ddd' } },
+                    tooltip: {
+                        backgroundColor: 'rgba(30, 30, 30, 0.95)',
+                        titleColor: '#fff',
+                        bodyColor: '#ddd',
+                        borderColor: '#555',
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(context.raw);
+                                return label;
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [verticalLinePlugin]
+        });
+
+        // --- 3. Improvement Logic ---
+        function addImprovement() {
+            const name = document.getElementById('imp-name').value;
+            const cost = parseFloat(document.getElementById('imp-cost').value);
+
+            if (name && cost > 0) {
+                improvements.push({ name, cost });
+                document.getElementById('imp-name').value = '';
+                document.getElementById('imp-cost').value = '';
+                renderImprovements();
+                updateSimulation();
+            }
+        }
+
+        function removeImprovement(index) {
+            improvements.splice(index, 1);
+            renderImprovements();
+            updateSimulation();
+        }
+
+        function renderImprovements() {
+            const list = document.getElementById('items-list');
+            list.innerHTML = '';
+            let total = 0;
+
+            improvements.forEach((imp, index) => {
+                total += imp.cost;
+                const div = document.createElement('div');
+                div.className = 'item-row';
+                div.innerHTML = `
+                    <span>${imp.name}</span>
+                    <div style="display:flex; align-items:center;">
+                        <span style="color:#4CAF50;">$${imp.cost.toLocaleString()}</span>
+                        <button class="btn-delete" onclick="removeImprovement(${index})">&times;</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+            
+            const years = parseInt(inputs.years.value);
+            const monthlyAvg = total / years / 12;
+            document.getElementById('avg-reno-cost').innerText = '$' + Math.round(monthlyAvg).toLocaleString() + '/mo';
+        }
+
+        // --- 4. Snapshot Logic ---
+        function updateSnapshotDisplay(yearIndex) {
+            if (!yearlyDataStore[yearIndex]) return;
+            const data = yearlyDataStore[yearIndex];
+            const shouldInvestDiff = inputs.investDiff.checked;
+
+            snap.yearLabel.innerText = `Showing: Year ${yearIndex} Monthly Averages`;
+            snap.owner.innerText = '$' + Math.round(data.ownerMonthly).toLocaleString();
+            snap.renter.innerText = '$' + Math.round(data.rentMonthly).toLocaleString();
+            
+            // Logic for the difference box
+            if (shouldInvestDiff) {
+                snap.diff.innerText = '$' + Math.round(Math.abs(data.diff)).toLocaleString();
+                if(data.diff > 0) {
+                    snap.diff.style.color = '#FFD700';
+                    snap.diffLabel.innerText = 'Surplus (Invested)';
+                } else {
+                    snap.diff.style.color = '#F44336';
+                    snap.diffLabel.innerText = 'Deficit (From Savings)';
+                }
+            } else {
+                snap.diff.innerText = '$0';
+                snap.diff.style.color = '#888';
+                snap.diffLabel.innerText = 'Invested (Feature OFF)';
+            }
+            
+            // Sub-label for Owner breakdown
+            snap.ownerBreak.innerText = `Mort: $${Math.round(data.mort)} + Tax: $${Math.round(data.tax)} + Maint: $${Math.round(data.maint)}`;
+        }
+
+        // --- 5. Simulation Logic ---
+        function updateSimulation() {
+            // Get Values
+            const price = parseInt(inputs.price.value);
+            const down = parseInt(inputs.down.value);
+            const rate = parseFloat(inputs.rate.value);
+            const amort = parseInt(inputs.amort.value);
+            const years = parseInt(inputs.years.value);
+            const tax = parseInt(inputs.tax.value);
+            const generalMaint = parseInt(inputs.maint.value);
+            const growth = parseFloat(inputs.growth.value);
+            
+            // Rent & Invest Vars
+            let rent = parseInt(inputs.rent.value);
+            const rentInf = parseFloat(inputs.rentInf.value);
+            const stockReturn = parseFloat(inputs.stock.value);
+            const ownerExtraInvest = parseInt(inputs.ownerInvest.value);
+            const renterExtraInvest = parseInt(inputs.renterInvest.value);
+            const shouldInvestDiff = inputs.investDiff.checked;
+
+            // Update Labels
+            displays.price.innerText = '$' + price.toLocaleString();
+            displays.down.innerText = '$' + down.toLocaleString();
+            displays.rate.innerText = rate + '%';
+            displays.amort.innerText = amort + ' Years';
+            displays.years.innerText = years + ' Years';
+            displays.tax.innerText = '$' + tax;
+            displays.maint.innerText = '$' + generalMaint;
+            displays.growth.innerText = growth + '%';
+            displays.rent.innerText = '$' + rent.toLocaleString();
+            displays.rentInf.innerText = rentInf + '%';
+            displays.stock.innerText = stockReturn + '%';
+            displays.ownerInvest.innerText = '$' + ownerExtraInvest;
+            displays.renterInvest.innerText = '$' + renterExtraInvest;
+
+            // Renos
+            renderImprovements();
+            const totalRenos = improvements.reduce((sum, item) => sum + item.cost, 0);
+            const renoMonthly = totalRenos / years / 12;
+
+            // Mortgage Setup
+            const loan = price - down;
+            const monthlyRate = rate / 100 / 12;
+            const amortizationMonths = amort * 12; 
+            
+            let monthlyPmt = 0;
+            if(monthlyRate > 0) {
+                monthlyPmt = loan * (monthlyRate * Math.pow(1 + monthlyRate, amortizationMonths)) / (Math.pow(1 + monthlyRate, amortizationMonths) - 1);
+            } else {
+                monthlyPmt = loan / amortizationMonths;
+            }
+
+            // Reset Data Store
+            yearlyDataStore = [];
+
+            // Arrays for Chart
+            let labels = [];
+            let dataEquity = [];
+            let dataOwnerInvest = [];
+            let dataSunk = [];
+            let dataRenterWealth = [];
+
+            let balance = loan;
+            let currentValue = price;
+            let cumulativeSunk = 0;
+            
+            // Initial Wealth
+            let renterInvestments = down; // Renter invests down payment
+            let ownerInvestments = 0; // Owner starts with 0 extra investments
+
+            // Loop 0 (Initial State)
+            labels.push(0);
+            dataEquity.push(currentValue - balance);
+            dataOwnerInvest.push(0);
+            dataSunk.push(0);
+            dataRenterWealth.push(renterInvestments);
+            
+            // Store Year 0 Snapshot (Baseline)
+            yearlyDataStore.push({
+                ownerMonthly: monthlyPmt + tax + generalMaint + renoMonthly,
+                rentMonthly: rent,
+                diff: (monthlyPmt + tax + generalMaint + renoMonthly) - rent,
+                mort: monthlyPmt,
+                tax: tax,
+                maint: generalMaint + renoMonthly
+            });
+
+            for(let y = 1; y <= years; y++) {
+                labels.push(y);
+                
+                // Store yearly stats to push to array AFTER loop
+                let yearlyInterest = 0;
+                let yearlyMortgagePaid = 0; // Principal + Interest
+                
+                // For Snapshot Logic (capture first month of the year or avg)
+                let snapshotOwnerMonthly = 0;
+                let snapshotRent = rent; // Rent is constant for the year
+                
+                for(let m = 0; m < 12; m++) {
+                    let principal = 0;
+                    let interest = 0;
+                    let paymentThisMonth = 0;
+                    
+                    if(balance > 0) {
+                        interest = balance * monthlyRate;
+                        principal = monthlyPmt - interest;
+                        if(principal > balance) {
+                            principal = balance;
+                            paymentThisMonth = principal + interest; // Partial payment
+                        } else {
+                            paymentThisMonth = monthlyPmt;
+                        }
+                        
+                        balance -= principal;
+                        yearlyInterest += interest;
+                        yearlyMortgagePaid += paymentThisMonth;
+                    }
+                    
+                    // --- OWNER LOOP ---
+                    // Owner Monthly Cashflow
+                    const ownerMonthlyOut = paymentThisMonth + tax + generalMaint + renoMonthly;
+                    
+                    if(m === 0) snapshotOwnerMonthly = ownerMonthlyOut; // Capture Jan for snapshot
+
+                    // Owner Investment (Fixed Extra)
+                    ownerInvestments = ownerInvestments * (1 + (stockReturn/100/12));
+                    ownerInvestments += ownerExtraInvest;
+                    
+                    // --- RENTER LOOP ---
+                    // Renter invests surplus (if toggle ON) + fixed extra
+                    const surplus = ownerMonthlyOut - rent;
+                    
+                    // Grow Investments
+                    renterInvestments = renterInvestments * (1 + (stockReturn/100/12));
+                    
+                    // Add contributions
+                    if(shouldInvestDiff) {
+                        renterInvestments += surplus;
+                    }
+                    
+                    renterInvestments += renterExtraInvest;
+                }
+
+                // Store Data for Chart
+                dataEquity.push(currentValue - (balance > 0 ? balance : 0));
+                dataOwnerInvest.push(ownerInvestments);
+                dataRenterWealth.push(renterInvestments);
+                
+                // Calculate Sunk
+                const yearTax = tax * 12;
+                const yearMaint = (generalMaint + renoMonthly) * 12;
+                cumulativeSunk += yearlyInterest + yearTax + yearMaint;
+                dataSunk.push(cumulativeSunk);
+
+                // Store Data for Tooltip Snapshot
+                yearlyDataStore.push({
+                    ownerMonthly: snapshotOwnerMonthly,
+                    rentMonthly: snapshotRent,
+                    diff: snapshotOwnerMonthly - snapshotRent,
+                    mort: (snapshotOwnerMonthly - tax - generalMaint - renoMonthly), // Deriving mort back
+                    tax: tax,
+                    maint: generalMaint + renoMonthly
+                });
+
+                // Annual Inflation updates for NEXT year
+                currentValue = currentValue * (1 + growth/100);
+                rent = rent * (1 + rentInf/100);
+            }
+
+            // Update Chart
+            myChart.data.labels = labels;
+            myChart.data.datasets[0].data = dataEquity; // Owner Equity
+            myChart.data.datasets[1].data = dataOwnerInvest; // Owner Invest
+            myChart.data.datasets[2].data = dataRenterWealth; // Renter
+            myChart.data.datasets[3].data = dataSunk;
+            myChart.update('none');
+
+            // Update Final Stats
+            const lastEquity = dataEquity[years];
+            const lastOwnerInv = dataOwnerInvest[years];
+            const lastRenter = dataRenterWealth[years];
+            const lastSunk = dataSunk[years];
+
+            stats.equity.innerText = '$' + Math.round(lastEquity).toLocaleString();
+            stats.ownerInv.innerText = '$' + Math.round(lastOwnerInv).toLocaleString();
+            stats.renter.innerText = '$' + Math.round(lastRenter).toLocaleString();
+            
+            // Real Profit (Owner Net Worth - Sunk)
+            const finalProfit = (lastEquity + lastOwnerInv) - lastSunk;
+            stats.profit.innerText = (finalProfit >= 0 ? '+' : '') + '$' + Math.round(finalProfit).toLocaleString();
+            stats.profit.style.color = finalProfit >= 0 ? '#9C27B0' : '#F44336';
+            
+            // Update snapshot to Year 1 initially
+            updateSnapshotDisplay(1);
+        }
+
+        // Event Listeners
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', updateSimulation);
+            // Specifically for checkbox change
+            if(input.type === 'checkbox') {
+                input.addEventListener('change', updateSimulation);
+            }
+        });
+
+        // Init
+        renderImprovements();
+        updateSimulation();
+    </script>
+</body>
+</html>

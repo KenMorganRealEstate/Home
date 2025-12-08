@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The "True Cost" Housing Simulator</title>
+    <!-- Load Chart.js for the graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-green: #4CAF50;
+            --accent-blue: #2196F3;
+            --accent-red: #F44336;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        h1 { color: var(--accent-green); margin-bottom: 5px; text-align: center; }
+        p.subtitle { color: #aaa; margin-top: 0; margin-bottom: 20px; font-style: italic; text-align: center; }
+        
+        /* Layout Grid */
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* Controls Panel */
+        .controls {
+            background-color: var(--panel-bg);
+            padding: 20px;
+            border-radius: 12px;
+            flex: 1 1 300px; /* Grow, Shrink, Basis */
+            max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        
+        .control-group { margin-bottom: 15px; }
+        
+        label { 
+            display: flex; 
+            justify-content: space-between; 
+            font-size: 0.9rem; 
+            color: #bbb; 
+            margin-bottom: 8px; 
+        }
+        
+        .val-display { 
+            color: var(--accent-green); 
+            font-weight: bold; 
+            font-family: monospace;
+            font-size: 1rem;
+        }
+        
+        input[type=range] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: var(--accent-green);
+            height: 6px;
+            background: #333;
+            border-radius: 5px;
+            appearance: none;
+            outline: none;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            cursor: pointer;
+        }
+
+        /* Chart Area */
+        .chart-container {
+            background-color: var(--panel-bg);
+            padding: 20px;
+            border-radius: 12px;
+            flex: 2 1 400px; /* Takes up twice as much space as controls if possible */
+            min-width: 300px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .canvas-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            width: 100%;
+            margin-top: 20px;
+            background: #2c2c2c;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .stat-box { text-align: center; }
+        .stat-label { font-size: 0.8rem; color: #aaa; display: block; margin-bottom: 5px;}
+        .stat-value { font-size: 1.1rem; font-weight: bold; display: block; }
+        
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.red { color: var(--accent-red); }
+        .stat-value.blue { color: var(--accent-blue); }
+
+        .section-title {
+            color: #fff;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+        
+        .tooltip {
+            background: #333;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            color: #ccc;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .container { flex-direction: column; align-items: stretch; }
+            .controls, .chart-container { max-width: 100%; }
+            .stats-bar { grid-template-columns: 1fr; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Interactive Real Estate Sandbox</h1>
+    <p class="subtitle">Adjust parameters to simulate 25 years of ownership</p>
+
+    <div class="container">
+        <!-- Controls Sidebar -->
+        <div class="controls">
+            <div class="section-title">Purchase Details</div>
+            
+            <div class="control-group">
+                <label>Purchase Price: <span id="val-price" class="val-display">$460,000</span></label>
+                <input type="range" id="price" min="174000" max="1500000" step="10000" value="460000">
+            </div>
+            
+            <div class="control-group">
+                <label>Down Payment: <span id="val-down" class="val-display">$25,000</span></label>
+                <input type="range" id="down" min="0" max="500000" step="5000" value="25000">
+            </div>
+
+            <div class="control-group">
+                <label>Interest Rate: <span id="val-rate" class="val-display">4.5%</span></label>
+                <input type="range" id="rate" min="1.0" max="10.0" step="0.1" value="4.5">
+            </div>
+
+            <div class="control-group">
+                <label>Amortization: <span id="val-years" class="val-display">25 Years</span></label>
+                <input type="range" id="years" min="5" max="30" step="5" value="25">
+            </div>
+
+            <div class="section-title" style="margin-top: 25px;">Recurring Costs</div>
+
+            <div class="control-group">
+                <label>Property Tax (Monthly): <span id="val-tax" class="val-display">$250</span></label>
+                <input type="range" id="tax" min="0" max="1000" step="10" value="250">
+            </div>
+
+            <div class="control-group">
+                <label>Maintenance/Repairs (Mo): <span id="val-maint" class="val-display">$150</span></label>
+                <input type="range" id="maint" min="0" max="1000" step="10" value="150">
+            </div>
+
+            <div class="control-group">
+                <label>Condo Fee (Monthly): <span id="val-condo" class="val-display">$0</span></label>
+                <input type="range" id="condo" min="0" max="1500" step="10" value="0">
+            </div>
+
+            <div class="section-title" style="margin-top: 25px;">Market Growth</div>
+
+            <div class="control-group">
+                <label>Annual Appreciation: <span id="val-growth" class="val-display">3.0%</span></label>
+                <input type="range" id="growth" min="0" max="10.0" step="0.5" value="3.0">
+            </div>
+        </div>
+
+        <!-- Chart Area -->
+        <div class="chart-container">
+            <div class="canvas-wrapper">
+                <canvas id="myChart"></canvas>
+            </div>
+            <div class="stats-bar">
+                <div class="stat-box">
+                    <span class="stat-label">Final Home Value</span>
+                    <span id="final-value" class="stat-value green">$0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Net Equity (Profit)</span>
+                    <span id="final-equity" class="stat-value blue">$0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Total Sunk Costs</span>
+                    <span id="final-sunk" class="stat-value red">$0</span>
+                </div>
+            </div>
+            <div class="tooltip">
+                *Sunk Costs = Interest + Taxes + Fees + Maintenance. (Money you never see again).
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Get Elements ---
+        const inputs = {
+            price: document.getElementById('price'),
+            down: document.getElementById('down'),
+            rate: document.getElementById('rate'),
+            years: document.getElementById('years'),
+            tax: document.getElementById('tax'),
+            maint: document.getElementById('maint'),
+            condo: document.getElementById('condo'),
+            growth: document.getElementById('growth')
+        };
+
+        const displays = {
+            price: document.getElementById('val-price'),
+            down: document.getElementById('val-down'),
+            rate: document.getElementById('val-rate'),
+            years: document.getElementById('val-years'),
+            tax: document.getElementById('val-tax'),
+            maint: document.getElementById('val-maint'),
+            condo: document.getElementById('val-condo'),
+            growth: document.getElementById('val-growth')
+        };
+
+        const stats = {
+            value: document.getElementById('final-value'),
+            sunk: document.getElementById('final-sunk'),
+            equity: document.getElementById('final-equity')
+        };
+
+        // --- 2. Initialize Chart ---
+        const ctx = document.getElementById('myChart').getContext('2d');
+        
+        // Custom Plugin to draw vertical line on hover
+        const verticalLinePlugin = {
+            id: 'verticalLine',
+            afterDraw: (chart) => {
+                if (chart.tooltip?._active?.length) {
+                    const x = chart.tooltip._active[0].element.x;
+                    const yAxis = chart.scales.y;
+                    const ctx = chart.ctx;
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x, yAxis.top);
+                    ctx.lineTo(x, yAxis.bottom);
+                    ctx.lineWidth = 1;
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }
+        };
+
+        let myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [
+                    {
+                        label: 'Home Value (Asset)',
+                        borderColor: '#4CAF50', // Green
+                        backgroundColor: '#4CAF50',
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        tension: 0.1,
+                        data: []
+                    },
+                    {
+                        label: 'Net Equity (Your Wealth)',
+                        borderColor: '#2196F3', // Blue
+                        backgroundColor: 'rgba(33, 150, 243, 0.15)', // Transparent Blue fill
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        tension: 0.1,
+                        fill: true,
+                        data: []
+                    },
+                    {
+                        label: 'Total Sunk Costs',
+                        borderColor: '#F44336', // Red
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        borderDash: [5, 5],
+                        tension: 0.1,
+                        data: []
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    x: {
+                        grid: { color: '#333' },
+                        ticks: { color: '#888' },
+                        title: { display: true, text: 'Years Owned', color: '#666' }
+                    },
+                    y: {
+                        grid: { color: '#333' },
+                        ticks: { 
+                            color: '#888', 
+                            callback: function(value) { return '$' + value/1000 + 'k'; } 
+                        },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#ddd', usePointStyle: true } },
+                    tooltip: {
+                        backgroundColor: 'rgba(30, 30, 30, 0.9)',
+                        titleColor: '#fff',
+                        bodyColor: '#ddd',
+                        borderColor: '#555',
+                        borderWidth: 1,
+                        padding: 10,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) { label += ': '; }
+                                label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(context.raw);
+                                return label;
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [verticalLinePlugin]
+        });
+
+        // --- 3. Calculation Logic ---
+        function updateSimulation() {
+            // Get Values from DOM
+            const price = parseInt(inputs.price.value);
+            const down = parseInt(inputs.down.value);
+            const rate = parseFloat(inputs.rate.value);
+            const years = parseInt(inputs.years.value);
+            const tax = parseInt(inputs.tax.value);
+            const maint = parseInt(inputs.maint.value);
+            const condo = parseInt(inputs.condo.value);
+            const growth = parseFloat(inputs.growth.value);
+
+            // Update Labels in DOM
+            displays.price.innerText = '$' + price.toLocaleString();
+            displays.down.innerText = '$' + down.toLocaleString();
+            displays.rate.innerText = rate + '%';
+            displays.years.innerText = years + ' Years';
+            displays.tax.innerText = '$' + tax;
+            displays.maint.innerText = '$' + maint;
+            displays.condo.innerText = '$' + condo;
+            displays.growth.innerText = growth + '%';
+
+            // Math Setup
+            const loan = price - down;
+            const monthlyRate = rate / 100 / 12;
+            const totalMonths = years * 12;
+            
+            let monthlyPmt = 0;
+            if(monthlyRate > 0) {
+                monthlyPmt = loan * (monthlyRate * Math.pow(1 + monthlyRate, totalMonths)) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+            } else {
+                monthlyPmt = loan / totalMonths;
+            }
+
+            // Arrays for Chart
+            let labels = [];
+            let dataValue = [];
+            let dataEquity = [];
+            let dataSunk = [];
+
+            let balance = loan;
+            let currentValue = price;
+            let cumulativeSunk = 0;
+
+            // Loop through years
+            for(let y = 0; y <= years; y++) {
+                labels.push(y);
+                dataValue.push(currentValue);
+                // Equity = Current Value - Remaining Mortgage Balance
+                let currentEquity = currentValue - (balance > 0 ? balance : 0);
+                dataEquity.push(currentEquity);
+                dataSunk.push(cumulativeSunk);
+
+                // Process 12 months for the *next* year
+                if(y < years) {
+                    let yearlyInterest = 0;
+                    for(let m = 0; m < 12; m++) {
+                        if(balance > 0) {
+                            let interest = balance * monthlyRate;
+                            let principal = monthlyPmt - interest;
+                            balance -= principal;
+                            yearlyInterest += interest;
+                        }
+                    }
+                    
+                    // Add Annual Costs to Sunk
+                    // Sunk Cost = Interest Paid + Taxes + Maintenance + Condo Fees
+                    const yearlyFixed = (tax + maint + condo) * 12;
+                    cumulativeSunk += yearlyInterest + yearlyFixed;
+
+                    // Appreciate Home
+                    currentValue = currentValue * (1 + growth/100);
+                }
+            }
+
+            // Update Chart Data
+            myChart.data.labels = labels;
+            myChart.data.datasets[0].data = dataValue;
+            myChart.data.datasets[1].data = dataEquity;
+            myChart.data.datasets[2].data = dataSunk;
+            myChart.update('none'); // 'none' mode prevents full re-animation on slider drag for better performance
+
+            // Update Final Stats
+            stats.value.innerText = '$' + Math.round(dataValue[years]).toLocaleString();
+            stats.sunk.innerText = '$' + Math.round(dataSunk[years]).toLocaleString();
+            stats.equity.innerText = '$' + Math.round(dataEquity[years]).toLocaleString();
+        }
+
+        // --- 4. Event Listeners ---
+        // Use 'input' event for real-time updates while dragging
+        Object.values(inputs).forEach(input => {
+            input.addEventListener('input', updateSimulation);
+        });
+
+        // Run once on load
+        updateSimulation();
+    </script>
+</body>
+</html>

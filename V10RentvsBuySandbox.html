@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -757,6 +758,16 @@
             gap: 10px;
         }
 
+.inspector-subtitle {
+            font-size: 0.85rem;
+            color: #888;
+            font-style: italic;
+            margin-top: -15px; /* Pulls it closer to the header */
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 15px;
+        }
+
         .inspector-val {
             color: #fff;
             font-weight: bold;
@@ -793,6 +804,36 @@
         .insp-total { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; margin-top: 5px; font-size: 1rem; font-weight: 700; display: flex; justify-content: space-between; }
         .insp-big { font-size: 1.4rem; color: #fff; font-weight: 700; text-align: center; margin-top: 10px; }
 
+/* --- DYNAMIC NARRATIVE STYLES (New) --- */
+        .inspector-narrative {
+            background: rgba(33, 150, 243, 0.1);
+            border-left: 4px solid #2196F3;
+            color: #ddd;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            transition: all 0.3s ease;
+        }
+        
+        .inspector-narrative.renter-lead {
+            border-left-color: #FFD700;
+            background: rgba(255, 215, 0, 0.1);
+        }
+        
+        .inspector-narrative.owner-lead {
+            border-left-color: #2196F3;
+            background: rgba(33, 150, 243, 0.1);
+        }
+
+        .inspector-narrative.freedom {
+            border-left-color: #9C27B0;
+            background: rgba(156, 39, 176, 0.1);
+            font-weight: bold;
+        }
+
+        /* Analysis Grid */
         /* Analysis Grid */
         .analysis-grid {
             display: grid;
@@ -1544,6 +1585,7 @@
                     <div class="inspector-title"><span>⏳</span> Time Travel Inspector</div>
                     <div id="insp-year-display" class="inspector-val">Year 32</div>
                 </div>
+<div class="inspector-subtitle">Adjust the slider below to view your exact financial position at any specific year in the timeline.</div>
                 <div class="control-group">
                     <input type="range" id="inspector-slider" min="1" max="32" step="1" value="32">
                 </div>
@@ -1571,6 +1613,9 @@
                         <div id="insp-winner-text" style="text-align:center; font-size:0.8rem; color:#aaa; margin-top:5px;">Homeowner Wins</div>
                     </div>
                 </div>
+
+                <div id="insp-narrative" class="inspector-narrative">Initializing...</div>
+
             </div>
 
             <div class="analysis-grid">
@@ -2291,20 +2336,20 @@
             };
         }
 
-        // --- TIMELINE INSPECTOR LOGIC ---
+        // --- TIMELINE INSPECTOR LOGIC (ENHANCED) ---
         function updateInspector(yearIndex) {
             const inspectorSlider = document.getElementById('inspector-slider');
             const inspYearDisplay = document.getElementById('insp-year-display');
             const inspVerdictYear = document.getElementById('insp-verdict-year');
             const inspWinnerVal = document.getElementById('insp-winner-val');
             const inspWinnerTxt = document.getElementById('insp-winner-text');
+            const inspNarrative = document.getElementById('insp-narrative');
 
             // Set Labels
             inspYearDisplay.innerText = `Year ${yearIndex}`;
             inspVerdictYear.innerText = yearIndex;
 
-            // Get Data from Global Arrays (using index)
-            // Note: Chart arrays index 0 is Year 0. Year 1 is index 1.
+            // Get Data from Global Arrays
             const idx = parseInt(yearIndex);
             
             if (!globalChartData.equity || !globalChartData.equity[idx]) return;
@@ -2317,10 +2362,10 @@
 
             // Renter Stats
             const renterInv = globalChartData.renterWealth[idx];
-            const renterSunk = globalChartData.sunkRenter[idx]; // We added this array
+            const renterSunk = globalChartData.sunkRenter[idx]; 
             const renterTotal = renterInv;
 
-            // Populate DOM
+            // Populate Numbers
             document.getElementById('insp-owner-out').innerText = '$' + Math.round(ownerSunk).toLocaleString();
             document.getElementById('insp-owner-eq').innerText = '$' + Math.round(ownerEquity).toLocaleString();
             document.getElementById('insp-owner-inv').innerText = '$' + Math.round(ownerInv).toLocaleString();
@@ -2333,12 +2378,46 @@
             // Verdict
             const diff = ownerTotal - renterTotal;
             const winner = diff >= 0 ? "Homeowner Wins" : "Renter Wins";
-            const color = diff >= 0 ? "#2196F3" : "#FFD700"; // Blue or Gold
+            const color = diff >= 0 ? "#2196F3" : "#FFD700";
 
             inspWinnerVal.innerText = (diff >= 0 ? '+' : '-') + '$' + Math.round(Math.abs(diff)).toLocaleString();
             inspWinnerVal.style.color = color;
             inspWinnerTxt.innerText = winner;
             inspWinnerTxt.style.color = color;
+
+            // --- DYNAMIC NARRATIVE LOGIC ---
+            // Note: yearlyDataStore index 1 = Year 1. 
+            const yearData = yearlyDataStore[idx] || yearlyDataStore[1]; 
+            const isMortgagePaid = yearData.mort <= 0;
+            const ownerMonthly = yearData.ownerMonthly;
+            const rentMonthly = yearData.rentMonthly;
+            const investSavingsOn = inputs.investDiff.checked;
+
+            let narrativeText = "";
+            let narrativeClass = "";
+
+            if (!investSavingsOn) {
+                narrativeText = "<strong>Manual Mode:</strong> 'Invest the Savings' is OFF. Any monthly surplus is being spent on lifestyle, not invested.";
+                narrativeClass = "renter-lead"; // Neutral styling
+            } else if (isMortgagePaid) {
+                const surplus = rentMonthly - ownerMonthly;
+                narrativeText = `🚀 <strong>Wealth Acceleration Mode:</strong> The mortgage is PAID OFF! The Homeowner is now investing their massive monthly surplus of <strong>$${Math.round(surplus).toLocaleString()}</strong> (Former mortgage payment + Rent savings).`;
+                narrativeClass = "freedom";
+            } else if (rentMonthly > ownerMonthly) {
+                const surplus = rentMonthly - ownerMonthly;
+                narrativeText = `📈 <strong>Inflation Crossover:</strong> Rent ($${Math.round(rentMonthly)}) has risen higher than the Owner's costs ($${Math.round(ownerMonthly)}). The Homeowner is automatically investing the <strong>$${Math.round(surplus)}/mo</strong> difference.`;
+                narrativeClass = "owner-lead";
+            } else {
+                const surplus = ownerMonthly - rentMonthly;
+                narrativeText = `💰 <strong>Renter Advantage:</strong> Rent ($${Math.round(rentMonthly)}) is currently cheaper than buying ($${Math.round(ownerMonthly)}). The Renter is investing the <strong>$${Math.round(surplus)}/mo</strong> difference to build wealth.`;
+                narrativeClass = "renter-lead";
+            }
+
+            // Only update if the element exists (in case HTML wasn't updated yet)
+            if (inspNarrative) {
+                inspNarrative.innerHTML = narrativeText;
+                inspNarrative.className = "inspector-narrative " + narrativeClass;
+            }
         }
 
         // Add Listener for the Time Travel Slider

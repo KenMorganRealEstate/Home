@@ -63,6 +63,26 @@
         .btn-p1 { background-color: var(--accent-p1); color: #000; }
         .btn-p2 { background-color: var(--accent-p2); color: #fff; }
         .btn-action { background-color: #f1c40f; color: #000; margin-right: 10px;}
+        
+        /* Start Overlay */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #start-overlay h2 { font-size: 3em; margin-bottom: 40px; color: #fff; }
+        .role-select { display: flex; gap: 40px; }
+        .role-card { 
+            background: #2c3e50; padding: 40px; border-radius: 15px; 
+            text-align: center; cursor: pointer; transition: transform 0.2s; border: 3px solid transparent;
+        }
+        .role-card:hover { transform: scale(1.05); }
+        .role-p1:hover { border-color: var(--accent-p1); }
+        .role-p2:hover { border-color: var(--accent-p2); }
 
         #rules-container {
             display: none;
@@ -149,6 +169,23 @@
     </style>
 </head>
 <body>
+
+<div id="start-overlay">
+    <h2>ZONING WAR</h2>
+    <p style="color: #ccc; margin-bottom: 30px; font-size: 1.2em;">Who are you?</p>
+    <div class="role-select">
+        <div class="role-card role-p1" onclick="selectRole('p1')">
+            <h3 style="color: var(--accent-p1); font-size: 2em;">PLAYER 1</h3>
+            <p>(Blue)</p>
+            <p>You start the round.</p>
+        </div>
+        <div class="role-card role-p2" onclick="selectRole('p2')">
+            <h3 style="color: var(--accent-p2); font-size: 2em;">PLAYER 2</h3>
+            <p>(Red)</p>
+            <p>You wait for Player 1's file.</p>
+        </div>
+    </div>
+</div>
 
 <div id="container">
     <header>
@@ -269,16 +306,17 @@
     let gameState = {
         round: 1,
         gameOver: false,
-        // Phases: 'start', 'p1_moving', 'p2_moving_reply', 'p1_resolving'
         phase: 'start', 
         p1: { cash: STARTING_CASH, color: 'var(--accent-p1)' },
         p2: { cash: STARTING_CASH, color: 'var(--accent-p2)' },
-        grid: [], // Array of tile objects
-        auctionTileIdx: null, // Index of tile currently up for auction
-        p1CommitHash: null, // The hash P1 sends to P2
-        p2EncryptedMove: null, // The move P2 sends back to P1
+        grid: [], 
+        auctionTileIdx: null, 
+        p1CommitHash: null, 
+        p2EncryptedMove: null, 
         logHistory: []
     };
+
+    let localRole = null; // 'p1' or 'p2'
 
     // --- Initialization ---
     function initGame() {
@@ -305,14 +343,17 @@
             gridContainer.appendChild(tileDiv);
         }
 
-        // 2. Pick first auction tile (ensure it's not already owned, though none are at start)
+        // 2. Pick first auction tile
         pickNextAuctionTile();
         
         gameState.phase = 'start';
-        updateUI();
         addLog("System initialized. Grid generated. Ready for Round 1.");
-        setStatus("Player 1: It is your turn to initiate the round. Make your move.");
-        document.getElementById('btn-import').disabled = false;
+    }
+
+    function selectRole(role) {
+        localRole = role;
+        document.getElementById('start-overlay').style.display = 'none';
+        updateUI();
     }
 
     function pickNextAuctionTile() {
@@ -325,24 +366,25 @@
         gameState.auctionTileIdx = available[randomIndex].id;
     }
 
-
     // --- Main Game Loop & Security Flow ---
 
-    // Simple non-crypto hash for obfuscation (sufficient for this use case)
     function simpleHash(str) {
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
             const char = str.charCodeAt(i);
             hash = (hash << 5) - hash + char;
-            hash |= 0; // Convert to 32bit integer
+            hash |= 0; 
         }
         return hash.toString(16);
     }
 
     function commitAction() {
         const actionType = document.getElementById('action-select').value;
-        let moveData = { type: actionType, player: getCurrentActivePlayer() };
-        let playerObj = gameState[moveData.player];
+        // P1 moves in phase 'start', P2 moves in phase 'p2_moving_reply'
+        let playerKey = (gameState.phase === 'start' || gameState.phase === 'p1_moving') ? 'p1' : 'p2';
+        
+        let moveData = { type: actionType, player: playerKey };
+        let playerObj = gameState[playerKey];
 
         // Validate inputs
         if (actionType === 'bid') {
@@ -361,13 +403,13 @@
         }
 
         // Security Flow Handling
-        if (gameState.phase === 'start' || gameState.phase === 'p1_moving') {
+        if (playerKey === 'p1') {
             // ---> Step 1: P1 Commits and Hashes <---
             const salt = Math.random().toString(36).substring(2, 15);
             const moveString = JSON.stringify(moveData);
             const hash = simpleHash(moveString + salt);
 
-            // Save secret locally (crucial!)
+            // Save secret locally
             localStorage.setItem('zw_p1_secret', moveString);
             localStorage.setItem('zw_p1_salt', salt);
 
@@ -376,9 +418,9 @@
             setStatus("P1 Move Locked. EXPORT this file and send to Player 2.");
             addLog("Player 1 locked their move secretly.");
 
-        } else if (gameState.phase === 'p2_moving_reply') {
+        } else if (playerKey === 'p2') {
              // ---> Step 2: P2 Finalizes and embeds move <---
-             gameState.p2EncryptedMove = moveData; // It's not actually encrypted in the JSON, just stored.
+             gameState.p2EncryptedMove = moveData; 
              gameState.phase = 'p1_resolving';
              setStatus("P2 Move Finalized. EXPORT file and send back to Player 1 for resolution.");
              addLog("Player 2 finalized their move.");
@@ -390,13 +432,11 @@
     function resolveRound() {
         // ---> Step 3: P1 resolves the round <---
         
-        // 1. Retrieve P1 secret from local storage
         const p1SecretStr = localStorage.getItem('zw_p1_secret');
         const p1Salt = localStorage.getItem('zw_p1_salt');
 
-        if(!p1SecretStr || !p1Salt) { alert("Security Error: Could not find your local secret move."); return; }
+        if(!p1SecretStr || !p1Salt) { alert("Security Error: Could not find your local secret move. Are you on the same computer you started the round on?"); return; }
 
-        // 2. Verify Hash Integrity
         const calculatedHash = simpleHash(p1SecretStr + p1Salt);
         if (calculatedHash !== gameState.p1CommitHash) {
             alert("SECURITY ALERT: The file hash does not match your local secret. File may have been tampered with.");
@@ -409,7 +449,7 @@
         
         addLog(`--- Round ${gameState.round} Resolution ---`);
 
-        // Process Costs first (Rezone/Sabotage happen regardless of bid outcome)
+        // Process Costs
         if(p1Move.type !== 'bid') { gameState.p1.cash -= p1Move.val; }
         if(p2Move.type !== 'bid') { gameState.p2.cash -= p2Move.val; }
 
@@ -417,9 +457,11 @@
         [p1Move, p2Move].forEach(m => {
             if(m.type === 'rezone') {
                 const t = gameState.grid[m.targetId];
-                const oldType = t.type;
-                t.type = oldType === 'industrial' ? 'downtown' : 'waterfront';
-                addLog(`${m.player.toUpperCase()} rezoned ${t.coords} from ${oldType} to ${t.type}.`);
+                if (t) {
+                    const oldType = t.type;
+                    t.type = oldType === 'industrial' ? 'downtown' : 'waterfront';
+                    addLog(`${m.player.toUpperCase()} rezoned ${t.coords} from ${oldType} to ${t.type}.`);
+                }
             }
         });
 
@@ -441,9 +483,8 @@
             auctionTile.owner = winner;
             addLog(`${winner.toUpperCase()} won auction for ${auctionTile.coords} for $${cost.toLocaleString()}.`);
 
-            // Check Sabotage application
-            const opponent = winner === 'p1' ? 'p2' : 'p1';
             const opponentMove = winner === 'p1' ? p2Move : p1Move;
+            const opponent = winner === 'p1' ? 'p2' : 'p1';
             if(opponentMove.type === 'sabotage') {
                 auctionTile.frozenTurns = FREEZE_DURATION;
                 addLog(`BUT! ${opponent.toUpperCase()} sabotaged the lot! It is frozen for ${FREEZE_DURATION} turns.`);
@@ -456,7 +497,6 @@
         gameState.p1CommitHash = null;
         gameState.p2EncryptedMove = null;
         
-        // Process frozen tiles
         gameState.grid.forEach(t => { if(t.frozenTurns > 0) t.frozenTurns--; });
 
         gameState.round++;
@@ -469,15 +509,9 @@
 
     // --- Helper Functions & UI Updates ---
     function getCoords(index) {
-        const col = String.fromCharCode(65 + (index % GRID_SIZE)); // A, B, C...
-        const row = Math.floor(index / GRID_SIZE) + 1; // 1, 2, 3...
+        const col = String.fromCharCode(65 + (index % GRID_SIZE)); 
+        const row = Math.floor(index / GRID_SIZE) + 1; 
         return `${col}-${row}`;
-    }
-
-    function getCurrentActivePlayer() {
-        if(gameState.phase === 'start' || gameState.phase === 'p1_moving') return 'p1';
-        if(gameState.phase === 'p2_moving_reply') return 'p2';
-        return null;
     }
 
     function getAdjacentOwned(playerKey, targetIdx) {
@@ -485,8 +519,8 @@
         const row = Math.floor(targetIdx / GRID_SIZE);
         const col = targetIdx % GRID_SIZE;
         const candidates = [
-            {r: row-1, c: col}, {r: row+1, c: col}, // Up, Down
-            {r: row, c: col-1}, {r: row, c: col+1}  // Left, Right
+            {r: row-1, c: col}, {r: row+1, c: col}, 
+            {r: row, c: col-1}, {r: row, c: col+1}
         ];
 
         candidates.forEach(coord => {
@@ -506,8 +540,8 @@
         document.getElementById('rezone-input-ui').style.display = action === 'rezone' ? 'block' : 'none';
 
         if(action === 'rezone') {
-            const currentPlayer = getCurrentActivePlayer();
-            const targets = getAdjacentOwned(currentPlayer, gameState.auctionTileIdx);
+            const playerKey = (gameState.phase === 'start' || gameState.phase === 'p1_moving') ? 'p1' : 'p2';
+            const targets = getAdjacentOwned(playerKey, gameState.auctionTileIdx);
             const select = document.getElementById('rezone-target');
             select.innerHTML = '';
             if(targets.length === 0) {
@@ -536,6 +570,8 @@
     }
 
     function updateUI() {
+        if (!localRole) return; // Don't update if role not selected yet
+
         document.getElementById('round-indicator').innerText = `Round ${gameState.round} / ${MAX_ROUNDS}`;
         
         // Update Grid
@@ -559,7 +595,6 @@
         document.getElementById('p1-value').innerText = '$' + (p1Stats.value / 1000000).toFixed(1) + 'M';
         document.getElementById('p2-value').innerText = '$' + (p2Stats.value / 1000000).toFixed(1) + 'M';
 
-        // Update Controls Visibility & Buttons
         const controls = document.getElementById('controls-area');
         const importBtn = document.getElementById('btn-import');
         const exportBtn = document.getElementById('btn-export');
@@ -572,48 +607,64 @@
             return;
         }
 
-        // Logic to show controls based on phase
+        // --- CORE LOGIC: WHAT IS VISIBLE BASED ON PHASE AND ROLE ---
         let showControls = false;
         importBtn.disabled = false;
         exportBtn.disabled = true;
         fileInstr.innerText = "Waiting for file import...";
 
         if (gameState.phase === 'start') {
-            setStatus("Player 1: It's your turn. Please make your move.");
-            showControls = true;
-            gameState.phase = 'p1_moving'; // Auto-transition
-        } else if (gameState.phase === 'p1_moving') {
-             showControls = true;
+            if (localRole === 'p1') {
+                setStatus("Player 1: It's your turn. Make your move.");
+                showControls = true;
+                fileInstr.innerText = "Action required: Use controls below.";
+                importBtn.disabled = true; // P1 doesn't import at start of round
+            } else {
+                setStatus("Waiting for Player 1 to make their move...");
+                showControls = false;
+                importBtn.disabled = false; // P2 waiting for P1's hash
+            }
+
         } else if (gameState.phase === 'p2_moving_reply') {
-             // If I am P1, I should be exporting. If I am P2, I should be moving.
-             // The UI doesn't know who "I" am until I interact.
-             // The logic here assumes the correct person opened the correct file state.
-             if(gameState.p1CommitHash && !gameState.p2EncryptedMove) {
-                 // P1 just locked. P2 needs to move.
+             // P1 has locked. Now P2 must move.
+             if (localRole === 'p2') {
+                 // Check if P2 has imported the P1 Hash? (We assume if phase is this, state is loaded)
+                 setStatus("Player 1 Locked. Player 2: Make your move.");
                  showControls = true;
-                 importBtn.disabled = true; // Don't import over current state
-                 exportBtn.disabled = false; // Allow P1 to export the hash file
-                 fileInstr.innerText = "P1 has locked. P2 must move, or P1 must export.";
+                 importBtn.disabled = true; // Don't overwrite now
+                 fileInstr.innerText = "Action required: Use controls below.";
+             } else {
+                 // I am P1. I just exported.
+                 setStatus("Waiting for Player 2 to reply...");
+                 showControls = false;
+                 importBtn.disabled = false; // Waiting for P2's file
+                 exportBtn.disabled = false; // Allow re-export if needed
              }
+
         } else if (gameState.phase === 'p1_resolving') {
-             // P2 has moved. P1 needs to import to resolve.
-             showControls = false;
-             importBtn.disabled = false;
-             exportBtn.disabled = false; // P2 can export their move file
-             fileInstr.innerText = "P2 has finalized. P1 import to resolve.";
-             // If P1 is viewing this immediately after P2 sent file, auto-resolve
-             if(localStorage.getItem('zw_p1_secret')) {
-                 resolveRound();
-                 return; // Exit updateUI so resolveRound can trigger a fresh update
+             if (localRole === 'p1') {
+                 setStatus("Player 2 Finalized. Import their file to resolve round.");
+                 showControls = false;
+                 importBtn.disabled = false;
+                 fileInstr.innerText = "Import Player 2's file to see who won.";
+                 // If I just imported, run resolve
+                 if(localStorage.getItem('zw_p1_secret') && gameState.p2EncryptedMove) {
+                    resolveRound();
+                    return; 
+                 }
+             } else {
+                 // I am P2. I just exported.
+                 setStatus("Waiting for Player 1 to resolve results...");
+                 showControls = false;
+                 exportBtn.disabled = false; // Allow re-export
              }
         }
 
         controls.style.display = showControls ? 'flex' : 'none';
         if(showControls && gameState.auctionTileIdx !== null) {
             document.getElementById('target-tile-name').innerText = gameState.grid[gameState.auctionTileIdx].coords;
-            const activePlayer = getCurrentActivePlayer();
-            document.getElementById('btn-commit').innerText = activePlayer === 'p1' ? "🔒 LOCK MOVE (Step 1)" : "✅ FINALIZE ROUND (Step 2)";
-            document.getElementById('btn-commit').className = activePlayer === 'p1' ? "btn-action btn-p1" : "btn-action btn-p2";
+            document.getElementById('btn-commit').innerText = localRole === 'p1' ? "🔒 LOCK MOVE (Step 1)" : "✅ FINALIZE ROUND (Step 2)";
+            document.getElementById('btn-commit').className = localRole === 'p1' ? "btn-action btn-p1" : "btn-action btn-p2";
             updateActionUI();
         }
     }
@@ -675,7 +726,7 @@
             }
         };
         reader.readAsText(file);
-        document.getElementById('fileInput').value = ''; // Reset input
+        document.getElementById('fileInput').value = ''; 
     }
 
     // --- UI Toggles & End Game ---
@@ -685,9 +736,9 @@
     }
 
     function resetGame() {
-        if(confirm("Are you sure you want to start a new game? Current progress will be lost.")) {
+        if(confirm("Are you sure you want to start a new game?")) {
             localStorage.clear();
-            initGame();
+            location.reload();
         }
     }
 
@@ -700,9 +751,10 @@
         const p1Stats = calculateStats('p1');
         const p2Stats = calculateStats('p2');
         
+        // Fixed the Syntax Error below (1000000 instead of 1m)
         let summary = `Game finished after ${MAX_ROUNDS} rounds.\n`;
-        summary += `Player 1 (Blue): ${p1Stats.count} assets. Cash remaining: $${(gameState.p1.cash/1m).toFixed(2)}M.\n`;
-        summary += `Player 2 (Red): ${p2Stats.count} assets. Cash remaining: $${(gameState.p2.cash/1m).toFixed(2)}M.\n`;
+        summary += `Player 1 (Blue): ${p1Stats.count} assets. Cash remaining: $${(gameState.p1.cash/1000000).toFixed(2)}M.\n`;
+        summary += `Player 2 (Red): ${p2Stats.count} assets. Cash remaining: $${(gameState.p2.cash/1000000).toFixed(2)}M.\n`;
         summary += `\nASSET MANIFEST:\n`;
         
         let p1Assets = []; let p2Assets = [];
@@ -731,20 +783,19 @@ TASK:
 
         document.getElementById('ai-judge-section').style.display = 'block';
         document.getElementById('ai-prompt-output').value = prompt;
-        // Scroll to bottom
         window.scrollTo(0, document.body.scrollHeight);
     }
 
     function copyAiPrompt() {
         const copyText = document.getElementById("ai-prompt-output");
         copyText.select();
-        copyText.setSelectionRange(0, 99999); /* For mobile devices */
+        copyText.setSelectionRange(0, 99999);
         navigator.clipboard.writeText(copyText.value);
         alert("Prompt copied! Paste this into ChatGPT, Bard, or Claude to find out who won.");
     }
 
     // Start game on load
-    initGame();
+    window.onload = initGame;
 
 </script>
 </body>

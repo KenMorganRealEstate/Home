@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NEON CIRCUIT: Asynchronous Racer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+        body {
+            margin: 0;
+            background-color: #050510;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* UI Overlay */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        header {
+            text-align: center;
+            text-shadow: 0 0 20px #00d2ff;
+            pointer-events: auto;
+        }
+
+        h1 { margin: 0; font-size: 3rem; letter-spacing: 5px; background: linear-gradient(to right, #00d2ff, #ff0055); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        #game-status {
+            font-size: 1.5rem;
+            color: #fff;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 30px;
+            border-radius: 30px;
+            border: 1px solid #333;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        /* Control Panel */
+        #controls {
+            pointer-events: auto;
+            background: rgba(10, 10, 20, 0.9);
+            border-top: 2px solid #00d2ff;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 0 auto;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 -10px 50px rgba(0, 210, 255, 0.2);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00d2ff, #0055ff);
+            border: none;
+            padding: 15px 40px;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 50px;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px #00d2ff;
+            transition: all 0.2s;
+        }
+        .btn:hover:not(:disabled) { transform: scale(1.1); box-shadow: 0 0 30px #00d2ff; }
+        .btn:disabled { background: #333; color: #777; box-shadow: none; cursor: not-allowed; }
+        .btn-red { background: linear-gradient(135deg, #ff0055, #ff0000); box-shadow: 0 0 15px #ff0055; }
+        .btn-green { background: linear-gradient(135deg, #00ff88, #00aa55); box-shadow: 0 0 15px #00ff88; }
+
+        /* Inventory / Stats */
+        .player-card {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            width: 200px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .p1-card { border-left: 5px solid #00d2ff; }
+        .p2-card { border-left: 5px solid #ff0055; }
+
+        /* Canvas */
+        #game-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            z-index: -1;
+            background: radial-gradient(circle at center, #1a1a2e 0%, #000000 100%);
+        }
+
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="ui-layer">
+        <header>
+            <h1>NEON CIRCUIT</h1>
+            <div id="game-status">Initialize Game...</div>
+        </header>
+
+        <div id="controls">
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                <button class="btn btn-green" id="btn-import" onclick="document.getElementById('fileInput').click()">📂 Load File</button>
+                <input type="file" id="fileInput" accept=".json" onchange="handleFile(this.files)">
+                <button class="btn btn-red" id="btn-export" disabled onclick="exportGame()">💾 Save & Send</button>
+            </div>
+
+            <div class="player-card p1-card">
+                <div style="color:#00d2ff">PLAYER 1</div>
+                <div id="p1-score">Pos: 0</div>
+                <div id="p1-power">⚡ NO ITEM</div>
+            </div>
+            
+            <div style="text-align: center;">
+                <div id="dice-display" style="font-size: 3rem; margin-bottom: 10px; min-height: 60px;">🎲</div>
+                <button class="btn" id="btn-roll" disabled onclick="playTurn()">ROLL DICE</button>
+            </div>
+
+            <div class="player-card p2-card">
+                <div style="color:#ff0055">PLAYER 2</div>
+                <div id="p2-score">Pos: 0</div>
+                <div id="p2-power">⚡ NO ITEM</div>
+            </div>
+            
+             <div style="display:flex; flex-direction:column; gap:10px;">
+                <button class="btn" onclick="startNewGame()">🔄 Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="game-canvas"></canvas>
+
+<script>
+    /** * AUDIO ENGINE (Synth) 
+     * Generates sounds without external files
+     */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'roll') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'move') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, now);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'powerup') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.linearRampToValueAtTime(1200, now + 0.3);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+    }
+
+    /**
+     * GAME LOGIC
+     */
+    const TOTAL_TILES = 50;
+    const CANVAS = document.getElementById('game-canvas');
+    const CTX = CANVAS.getContext('2d');
+    
+    // Game State
+    let state = {
+        turn: 1,
+        currentPlayer: 1, // 1 or 2
+        p1: { pos: 0, item: null, color: '#00d2ff' },
+        p2: { pos: 0, item: null, color: '#ff0055' },
+        lastActionLog: "New Game Started.",
+        winner: null
+    };
+
+    let particles = [];
+    let boardPath = []; // Array of {x, y}
+    let animating = false;
+
+    // --- SETUP & LOOP ---
+    function resize() {
+        CANVAS.width = window.innerWidth;
+        CANVAS.height = window.innerHeight;
+        generateBoardPath();
+    }
+    window.addEventListener('resize', resize);
+
+    function generateBoardPath() {
+        boardPath = [];
+        const w = CANVAS.width;
+        const h = CANVAS.height;
+        const cols = 10;
+        const rows = 5;
+        const padX = w / (cols + 2);
+        const padY = h / (rows + 2);
+
+        // Create a snake pattern
+        for (let i = 0; i < TOTAL_TILES; i++) {
+            let row = Math.floor(i / cols);
+            let col = i % cols;
+            // Snake Logic: even rows L->R, odd rows R->L
+            if (row % 2 === 1) col = (cols - 1) - col;
+
+            boardPath.push({
+                x: padX + (col * padX) + (padX/2),
+                y: padY + (row * padY) + (padY/2)
+            });
+        }
+    }
+
+    // --- RENDERING ---
+    function draw() {
+        // Clear background with trail effect
+        CTX.fillStyle = 'rgba(5, 5, 16, 0.2)';
+        CTX.fillRect(0, 0, CANVAS.width, CANVAS.height);
+
+        // Draw Track Connections
+        CTX.beginPath();
+        CTX.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        CTX.lineWidth = 10;
+        if(boardPath.length > 0) {
+            CTX.moveTo(boardPath[0].x, boardPath[0].y);
+            for(let i=1; i<boardPath.length; i++) {
+                CTX.lineTo(boardPath[i].x, boardPath[i].y);
+            }
+            CTX.stroke();
+        }
+
+        // Draw Tiles
+        boardPath.forEach((pos, index) => {
+            const isSpecial = index % 5 === 0 && index !== 0;
+            CTX.beginPath();
+            CTX.arc(pos.x, pos.y, isSpecial ? 15 : 8, 0, Math.PI * 2);
+            CTX.fillStyle = isSpecial ? '#ffcc00' : '#2a2a40';
+            CTX.shadowBlur = 10;
+            CTX.shadowColor = isSpecial ? '#ffcc00' : '#00d2ff';
+            CTX.fill();
+            CTX.shadowBlur = 0;
+            
+            // Tile Number
+            CTX.fillStyle = 'rgba(255,255,255,0.3)';
+            CTX.font = '10px Arial';
+            CTX.fillText(index, pos.x - 5, pos.y + 20);
+        });
+
+        // Draw Players
+        drawPlayer(state.p1, 1);
+        drawPlayer(state.p2, 2);
+
+        // Draw Particles
+        updateParticles();
+
+        requestAnimationFrame(draw);
+    }
+
+    function drawPlayer(p, id) {
+        if(p.pos >= boardPath.length) return; // Finished
+        const pos = boardPath[p.pos];
+        
+        CTX.beginPath();
+        CTX.arc(pos.x, pos.y - 10, 15, 0, Math.PI * 2);
+        CTX.fillStyle = p.color;
+        CTX.shadowBlur = 20;
+        CTX.shadowColor = p.color;
+        CTX.fill();
+        CTX.shadowBlur = 0;
+
+        // Player Label
+        CTX.fillStyle = '#fff';
+        CTX.font = 'bold 12px Arial';
+        CTX.fillText(`P${id}`, pos.x - 6, pos.y - 8);
+    }
+
+    function spawnParticles(x, y, color) {
+        for(let i=0; i<20; i++) {
+            particles.push({
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * 5,
+                vy: (Math.random() - 0.5) * 5,
+                life: 1.0,
+                color: color
+            });
+        }
+    }
+
+    function updateParticles() {
+        particles.forEach((p, index) => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.02;
+            CTX.fillStyle = p.color;
+            CTX.globalAlpha = p.life;
+            CTX.fillRect(p.x, p.y, 3, 3);
+            CTX.globalAlpha = 1.0;
+            if(p.life <= 0) particles.splice(index, 1);
+        });
+    }
+
+    // --- GAMEPLAY MECHANICS ---
+
+    function startNewGame() {
+        if(!confirm("Reset everything?")) return;
+        state = {
+            turn: 1,
+            currentPlayer: 1,
+            p1: { pos: 0, item: null, color: '#00d2ff' },
+            p2: { pos: 0, item: null, color: '#ff0055' },
+            lastActionLog: "New Game Started.",
+            winner: null
+        };
+        updateUI("New Game. Player 1 start.");
+        enableControlsFor(1);
+    }
+
+    function enableControlsFor(playerNum) {
+        // Simple logic: If it's my turn, enable Roll. If not, enable Export/Import logic.
+        // For local play simulation:
+        const rollBtn = document.getElementById('btn-roll');
+        const exportBtn = document.getElementById('btn-export');
+        const importBtn = document.getElementById('btn-import');
+
+        if(state.winner) {
+            rollBtn.disabled = true;
+            exportBtn.disabled = true;
+            importBtn.disabled = true;
+            return;
+        }
+
+        // Logic check: To know "Who am I", we usually rely on state. 
+        // In this file-based system, we assume if you just imported a file where it's P2's turn, YOU are P2.
+        
+        rollBtn.disabled = false;
+        exportBtn.disabled = true; // Can't export until moved
+        
+        document.getElementById('game-status').innerText = `Player ${state.currentPlayer}'s Turn`;
+        document.getElementById('game-status').style.borderColor = state.currentPlayer === 1 ? '#00d2ff' : '#ff0055';
+    }
+
+    async function playTurn() {
+        if(animating) return;
+        animating = true;
+        document.getElementById('btn-roll').disabled = true;
+
+        // 1. Roll Dice Animation
+        const roll = await animateDiceRoll();
+        
+        // 2. Logic
+        let activeP = state.currentPlayer === 1 ? state.p1 : state.p2;
+        let startPos = activeP.pos;
+        let endPos = startPos + roll;
+        if(endPos >= TOTAL_TILES - 1) {
+            endPos = TOTAL_TILES - 1;
+            state.winner = state.currentPlayer;
+        }
+
+        // 3. Move Animation
+        await animateMovement(activeP, startPos, endPos);
+        activeP.pos = endPos;
+
+        // 4. Tile Effect (Powerups)
+        if(endPos % 5 === 0 && endPos !== 0 && !state.winner) {
+            playSound('powerup');
+            const items = ["🚀 Missile", "🛡️ Shield", "⏩ Boost"];
+            const item = items[Math.floor(Math.random() * items.length)];
+            activeP.item = item;
+            spawnParticles(boardPath[endPos].x, boardPath[endPos].y, '#ffcc00');
+            alert(`Player ${state.currentPlayer} picked up: ${item}!`);
+            
+            // Immediate effect for Boost
+            if(item === "⏩ Boost") {
+                activeP.item = null;
+                await animateMovement(activeP, endPos, Math.min(endPos+3, TOTAL_TILES-1));
+                activeP.pos = Math.min(endPos+3, TOTAL_TILES-1);
+            }
+        }
+
+        // 5. Update State
+        state.lastActionLog = `Player ${state.currentPlayer} rolled ${roll} and moved to tile ${endPos}.`;
+        
+        if(state.winner) {
+            alert(`PLAYER ${state.winner} WINS!`);
+            state.lastActionLog = `PLAYER ${state.winner} WON THE GAME!`;
+        } else {
+            // Switch Turn
+            state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
+        }
+
+        animating = false;
+        updateUI("Turn Complete. Please Export File.");
+        document.getElementById('btn-export').disabled = false;
+        document.getElementById('btn-import').disabled = true; // Can't import until we send
+    }
+
+    function animateDiceRoll() {
+        return new Promise(resolve => {
+            let count = 0;
+            const el = document.getElementById('dice-display');
+            const interval = setInterval(() => {
+                const r = Math.floor(Math.random() * 6) + 1;
+                el.innerText = r;
+                playSound('roll');
+                count++;
+                if(count > 10) {
+                    clearInterval(interval);
+                    resolve(r);
+                }
+            }, 100);
+        });
+    }
+
+    function animateMovement(playerObj, from, to) {
+        return new Promise(resolve => {
+            let current = from;
+            const step = () => {
+                if(current < to) {
+                    current++;
+                    // Update visual position temporarily for smooth slide could be added here
+                    // For now, we jump hop by hop
+                    playSound('move');
+                    playerObj.pos = current; // Update internal for draw loop to catch
+                    setTimeout(step, 200);
+                } else {
+                    resolve();
+                }
+            };
+            step();
+        });
+    }
+
+    function updateUI(statusMsg) {
+        document.getElementById('p1-score').innerText = `Pos: ${state.p1.pos}`;
+        document.getElementById('p1-power').innerText = state.p1.item || "NO ITEM";
+        
+        document.getElementById('p2-score').innerText = `Pos: ${state.p2.pos}`;
+        document.getElementById('p2-power').innerText = state.p2.item || "NO ITEM";
+
+        if(statusMsg) document.getElementById('game-status').innerText = statusMsg;
+    }
+
+    // --- FILE I/O ---
+
+    function exportGame() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+        const dlAnchorElem = document.createElement('a');
+        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.setAttribute("download", `NeonCircuit_Turn${state.turn}_${new Date().getTime()}.json`);
+        document.body.appendChild(dlAnchorElem);
+        dlAnchorElem.click();
+        dlAnchorElem.remove();
+        state.turn++; // Increment turn counter after export
+        alert("File saved! Text this to your brother.");
+    }
+
+    function handleFile(files) {
+        if (!files.length) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const newState = JSON.parse(e.target.result);
+                
+                // REPLAY LOGIC
+                // Before we apply the new state, let's see what changed
+                const oldP1 = state.p1.pos;
+                const oldP2 = state.p2.pos;
+                
+                // Apply State
+                state = newState;
+                
+                // Determine who just moved (the other player)
+                const mover = state.currentPlayer === 1 ? 2 : 1; 
+                // Wait... if currentPlayer is 1, it means P2 just finished and handed it to P1.
+                
+                alert(`File Loaded. Replaying Player ${mover}'s move...`);
+                updateUI(`Watching Replay...`);
+                
+                // Force a redraw to snap to new positions (Animation skipped for import simplicity in this version, 
+                // but standard draw loop will update immediately)
+                
+                enableControlsFor(state.currentPlayer);
+                document.getElementById('fileInput').value = ""; // clear input
+                
+            } catch(err) {
+                alert("Invalid Save File");
+            }
+        };
+        reader.readAsText(files[0]);
+    }
+
+    // Boot
+    resize();
+    generateBoardPath();
+    draw();
+    startNewGame();
+
+</script>
+</body>
+</html>

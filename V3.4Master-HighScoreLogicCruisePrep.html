@@ -1252,40 +1252,68 @@
         function updatePerformanceStats(entries, m, wEntries) {
             const card = document.getElementById('perf-card');
             
-            const partsStart = m.start.split('-');
-            const mStart = new Date(partsStart[0], partsStart[1]-1, partsStart[2]);
+            // 1. Determine the "Reference Start" based on the Filter
+            // If we have filtered data, use the first entry of the filter as the baseline.
+            // If no data in filter, fall back to Mission Start.
+            let refStartW = m.startW;
+            let refStartDate = new Date(m.start.split('-'));
+            
+            if (wEntries.length > 0) {
+                // Use the first filtered entry with a weight as the "Start" of this period
+                const first = wEntries[0];
+                refStartW = first.weight;
+                const fParts = first.date.split('-');
+                refStartDate = new Date(fParts[0], fParts[1]-1, fParts[2]);
+            }
+
+            // 2. Setup End Date & Today
             const partsEnd = m.end.split('-');
             const mEnd = new Date(partsEnd[0], partsEnd[1]-1, partsEnd[2]);
-            
             const today = new Date();
             const msPerDay = 86400000;
-            const daysLeft = Math.ceil((mEnd - today) / msPerDay);
             
+            // 3. Calculate Rate specific to this window
+            // Days elapsed since the "Reference Start" (e.g., since Jan 1)
+            const daysElapsed = Math.max(1, (today - refStartDate) / msPerDay);
+            
+            // Current Weight (Latest in filter)
             const currW = wEntries.length ? wEntries[wEntries.length-1].weight : m.startW;
             
-            const daysSinceStart = Math.max(1, Math.floor((today - mStart) / msPerDay));
-            const totalLost = m.startW - currW;
-            const ratePerDay = totalLost / daysSinceStart;
+            // Loss during this specific window
+            const periodLoss = refStartW - currW;
+            
+            // Rate per day (during this window)
+            const ratePerDay = periodLoss / daysElapsed;
 
+            // 4. Update UI
             document.getElementById('perf-curr-weight').innerText = currW;
             document.getElementById('perf-goal-weight').innerText = m.goalW;
             
-            if(ratePerDay <= 0) {
-                document.getElementById('perf-rate-display').innerText = "RATE: GAINING/STAGNANT";
+            // Handle "No Loss" or "Gain" scenarios
+            if (ratePerDay <= 0 && periodLoss <= 0) {
+                document.getElementById('perf-rate-display').innerText = "RATE: STAGNANT/GAIN";
                 document.getElementById('perf-forecast-weight').innerText = "N/A";
-                document.getElementById('perf-result-text').innerText = "CRITICAL WARNING";
-                document.getElementById('perf-result-text').className = "text-xl font-black text-missionRed animate-pulse";
-                document.getElementById('perf-result-diff').innerText = "NO WEIGHT LOSS DETECTED";
+                
+                const elResText = document.getElementById('perf-result-text');
+                elResText.innerText = "TRAJECTORY NEGATIVE";
+                elResText.className = "text-xl font-black text-missionRed animate-pulse";
+                
+                document.getElementById('perf-result-diff').innerText = "NO WEIGHT LOSS DETECTED IN PERIOD";
                 
                 card.classList.remove('border-missionTeal', 'border-missionRed');
                 card.classList.add('border-missionRed');
-                document.getElementById('perf-urgent-msg').innerText = "TRAJECTORY FAILURE. IMMEDIATE DIETARY INTERVENTION REQUIRED.";
+                
+                document.getElementById('perf-urgent-msg').innerText = "ADJUST PROTOCOLS. CURRENT PACE IS INSUFFICIENT.";
                 document.getElementById('perf-urgent-msg').className = "mt-4 text-center text-[10px] font-bold tracking-[0.2em] uppercase text-missionRed animate-pulse";
             } else {
+                // 5. Project Forward
+                const daysLeft = Math.ceil((mEnd - today) / msPerDay);
                 document.getElementById('perf-rate-display').innerText = `RATE: -${ratePerDay.toFixed(2)} LBS/DAY`;
                 
+                // Forecast = Current Weight - (Current Rate * Days Left)
                 const projectedLossRemaining = ratePerDay * daysLeft;
                 const forecastEndW = (currW - projectedLossRemaining).toFixed(1);
+                
                 document.getElementById('perf-forecast-weight').innerText = forecastEndW;
                 
                 const gap = (forecastEndW - m.goalW).toFixed(1);
@@ -1294,26 +1322,28 @@
                 const elUrg = document.getElementById('perf-urgent-msg');
 
                 if (parseFloat(forecastEndW) <= m.goalW) {
+                    // Success Path
                     card.classList.remove('border-missionRed');
                     card.classList.add('border-missionTeal');
                     
-                    elResText.innerText = "SUCCESS FORECASTED";
+                    elResText.innerText = "VICTORY FORECASTED";
                     elResText.className = "text-xl font-black text-missionTeal";
                     elResDiff.innerText = `PROJECTED TO BEAT GOAL BY ${Math.abs(gap)} LBS`;
                     elResDiff.className = "text-sm font-mono font-bold mt-1 text-missionTeal";
                     
-                    elUrg.innerText = "MISSION TRAJECTORY OPTIMAL. MAINTAIN VELOCITY.";
+                    elUrg.innerText = "CURRENT VELOCITY IS LETHAL. MAINTAIN COURSE.";
                     elUrg.className = "mt-4 text-center text-[10px] font-bold tracking-[0.2em] uppercase text-missionTeal";
                 } else {
+                    // Failure Path (But closer)
                     card.classList.remove('border-missionTeal');
                     card.classList.add('border-missionRed');
                     
-                    elResText.innerText = "FAILURE IMMINENT";
-                    elResText.className = "text-xl font-black text-missionRed animate-pulse";
-                    elResDiff.innerText = `PROJECTED TO MISS GOAL BY ${gap} LBS`;
+                    elResText.innerText = "DEFICIT GAP DETECTED";
+                    elResText.className = "text-xl font-black text-missionRed";
+                    elResDiff.innerText = `ON TRACK TO MISS BY ${gap} LBS`;
                     elResDiff.className = "text-sm font-mono font-bold mt-1 text-missionRed";
                     
-                    elUrg.innerText = "COURSE CORRECTION REQUIRED. INCREASE INTENSITY.";
+                    elUrg.innerText = "INCREASE INTENSITY. PACE IS GOOD BUT NOT ENOUGH.";
                     elUrg.className = "mt-4 text-center text-[10px] font-bold tracking-[0.2em] uppercase text-missionRed animate-pulse";
                 }
             }

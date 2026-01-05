@@ -1489,27 +1489,39 @@
 
         // --- EXPORT ---
         function syncGoogle() {
-            const e = appState.currentEntry; const m = getActiveMission();
+            // 1. FORCE A SAVE (Captures current inputs immediately)
+            saveEntry();
+
+            // 2. Read Fresh Data
+            const e = appState.currentEntry; 
+            const m = getActiveMission();
+            
+            // 3. Grab Visual Values (Double-check against DOM)
             const w = document.getElementById('inpWeight').value || "N/A";
             const steps = document.getElementById('inpSteps').value || 0;
             const km = (steps/1250).toFixed(2);
             const cals = document.getElementById('inpCals').value || 0;
             const mood = e.mood || 5;
-            const parts = m.end.split('-'); const end = new Date(parts[0], parts[1]-1, parts[2]);
+            
+            // 4. Calculate Time Remaining
+            const parts = m.end.split('-'); 
+            const end = new Date(parts[0], parts[1]-1, parts[2]);
             const selectedDate = new Date(document.getElementById('inpDate').value);
             const daysLeft = Math.floor((end - selectedDate) / (1000 * 60 * 60 * 24));
             const left = (parseFloat(w) - m.goalW).toFixed(1);
 
+            // 5. Construct Title & Description
             const t = encodeURIComponent(`🚢 ${m.name}: ${w} lbs (${left} lbs to go | ${daysLeft} Days Left)`);
             const muscles = (e.muscles || []).join(", ").toUpperCase();
             
-            // Added Exercises to Description
             let descStr = `Steps: ${steps} (${km}km)\nCalories In: ${cals}\nWork: ${muscles} (${e.intensity || 0}/5)\n`;
             descStr += `Pushups: ${e.pushups||0} | Situps: ${e.situps||0} | Pullups: ${e.pullups||0} | Squats: ${e.squats||0}\n`;
             descStr += `Vibe: ${mood}/10\n🥩MEAT ${e.carnivore?'✅':'❌'} 🚫NO-ALC ${e.alcohol?'✅':'❌'}\nNotes: ${document.getElementById('inpNotes').value}`;
             
             const d = encodeURIComponent(descStr);
             const dt = document.getElementById('inpDate').value.replace(/-/g,'');
+            
+            // 6. Launch Google Calendar
             window.open(`https://calendar.google.com/calendar/r/eventedit?text=${t}&details=${d}&dates=${dt}/${dt}`,'_blank');
         }
 

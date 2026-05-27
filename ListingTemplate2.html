@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>18-1750 Creek Way Drive, Burlington - Ken Morgan Real Estate</title>
+    
+    <!-- Google Fonts: Playfair Display (Serif) & Inter (Sans-Serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration for custom fonts and CASORA branding -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        serif: ['"Playfair Display"', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            navy: '#002A5C', // CASORA Deep Navy
+                            lime: '#A4C214', // CASORA Bright Lime
+                            limeHover: '#b5d41b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Smooth scrolling for anchor links */
+        html { scroll-behavior: smooth; overflow-x: hidden; }
+        
+        /* Gallery Styles */
+        .gallery-image-container img { transition: opacity 0.3s ease-in-out, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+        .gallery-item:hover .gallery-image-container img { transform: scale(1.05); }
+        .gallery-nav { opacity: 0; transition: opacity 0.3s ease-in-out; }
+        #modal-image-container:hover .gallery-nav { opacity: 1; }
+        #modal-image { transition: opacity 0.3s ease-in-out; }
+
+        /* UPGRADE 4: Advanced Intersection Animations (Scale Down Fade) */
+        .reveal-element {
+            opacity: 0;
+            transform: translateY(40px) scale(1.03);
+            transition: all 1s cubic-bezier(0.22, 1, 0.36, 1);
+            will-change: transform, opacity;
+        }
+        .reveal-element.is-visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* UPGRADE 2: Ambient 3D Glow (Arif Style) */
+        @keyframes ambientPulse {
+            0% { transform: scale(1) translate(0, 0); opacity: 0.15; }
+            50% { transform: scale(1.1) translate(2%, 2%); opacity: 0.25; }
+            100% { transform: scale(1) translate(0, 0); opacity: 0.15; }
+        }
+        .ambient-glow {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(closest-side, rgba(164, 194, 20, 0.35), transparent);
+            filter: blur(50px);
+            animation: ambientPulse 12s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .ambient-glow-white {
+            background: radial-gradient(closest-side, rgba(255, 255, 255, 0.15), transparent);
+            animation-duration: 15s;
+            animation-direction: alternate-reverse;
+        }
+        
+        /* Typography enhancements */
+        .editorial-line {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,42,92,0.2), transparent);
+        }
+        .editorial-line-light {
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-stone-50 font-sans text-slate-800 pb-16 md:pb-0">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-stone-200">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20 md:h-24">
+                <!-- Left Logo - Ken Morgan -->
+                <div class="flex-shrink-0 flex items-center z-10">
+                    <a href="https://www.kenmorgan.ca" target="_blank" rel="noopener noreferrer">
+                        <img 
+                            src="https://github.com/KenMorganRealEstate/Home/blob/main/KenMorganLogoBestOneTransparent.png?raw=true" 
+                            alt="Ken Morgan Real Estate" 
+                            class="h-12 md:h-16 w-auto object-contain transition-transform duration-500 hover:scale-105"
+                        />
+                    </a>
+                </div>
+                
+                <!-- Center Website Link -->
+                <div class="hidden md:flex flex-1 justify-center absolute left-0 right-0">
+                    <a href="https://www.kenmorgan.ca" target="_blank" rel="noopener noreferrer" class="text-stone-400 hover:text-brand-navy font-semibold tracking-[0.2em] uppercase text-xs transition-colors flex items-center gap-2">
+                        <i data-lucide="globe" class="w-3.5 h-3.5 text-brand-lime"></i> www.kenmorgan.ca
+                    </a>
+                </div>
+
+                <!-- Right Logo - CASORA -->
+                <div class="flex-shrink-0 flex items-center z-10">
+                    <a href="https://www.kenmorgan.ca" target="_blank" rel="noopener noreferrer">
+                        <img 
+                            src="https://github.com/KenMorganRealEstate/Home/blob/main/CASORA%20PRIMARY%20LOGO_blue.png?raw=true" 
+                            alt="CASORA Brokerage" 
+                            class="h-8 md:h-10 w-auto object-contain opacity-90 transition-transform duration-500 hover:scale-105"
+                        />
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO SECTION with Ambient Glow -->
+    <div class="relative h-[75vh] min-h-[550px] w-full bg-brand-navy flex items-end pb-12 overflow-hidden reveal-element is-visible">
+        
+        <!-- Ambient Glow Elements -->
+        <div class="ambient-glow w-[50rem] h-[50rem] top-[-20rem] left-[-10rem]"></div>
+        <div class="ambient-glow ambient-glow-white w-[40rem] h-[40rem] bottom-[-10rem] right-[-10rem]"></div>
+
+        <!-- Background Video (MP4) -->
+        <video 
+            src="https://raw.githubusercontent.com/KenMorganRealEstate/1750/main/Listing%201750-18%20Creek%20Way,%20Burlington.mp4" 
+            class="absolute inset-0 w-full h-full object-cover opacity-70 pointer-events-none"
+            autoplay 
+            loop 
+            muted 
+            playsinline
+        ></video>
+        <div class="absolute inset-0 bg-gradient-to-t from-brand-navy via-brand-navy/40 to-transparent"></div>
+        
+        <!-- Hero Property Info -->
+        <div class="relative z-10 w-full">
+            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 text-white">
+                    <div class="max-w-3xl">
+                        <!-- UPGRADE 3: Editorial Typography -->
+                        <span class="inline-block tracking-[0.3em] text-brand-lime text-xs font-semibold uppercase mb-6 border-b border-brand-lime/30 pb-2">
+                            Signature Collection
+                        </span>
+                        <h1 class="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light mb-4 tracking-tight leading-tight">
+                            18-1750 <i class="text-brand-lime/90 font-serif">Creek Way</i> Drive
+                        </h1>
+                        <p class="text-lg md:text-xl text-stone-300 font-light tracking-wide flex items-center gap-3">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-brand-lime"></i> Burlington, Ontario
+                        </p>
+                    </div>
+                    <div class="md:text-right flex flex-col items-start md:items-end">
+                        <p class="text-3xl sm:text-4xl md:text-5xl font-serif font-light text-white mb-6">
+                            $750,000
+                        </p>
+                        <a href="https://www.kenmorgan.ca/node/add/contactSite" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-3 bg-white/10 hover:bg-brand-lime text-white hover:text-brand-navy border border-white/30 hover:border-brand-lime px-8 py-4 text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-500 backdrop-blur-md">
+                            Book Private Viewing
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK ACTION BUTTONS -->
+    <div class="bg-[#001e42] relative z-20">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 reveal-element">
+            <div class="flex flex-wrap justify-center gap-6 md:gap-16">
+                <a href="#gallery" class="flex items-center gap-3 text-stone-400 hover:text-white transition-colors group">
+                    <i data-lucide="camera" class="w-5 h-5 text-brand-lime group-hover:scale-110 transition-transform duration-300"></i>
+                    <span class="text-xs font-medium uppercase tracking-[0.15em]">Photo Gallery</span>
+                </a>
+                <span class="text-stone-600">|</span>
+                <a href="#video-tour" class="flex items-center gap-3 text-stone-400 hover:text-white transition-colors group">
+                    <i data-lucide="video" class="w-5 h-5 text-brand-lime group-hover:scale-110 transition-transform duration-300"></i>
+                    <span class="text-xs font-medium uppercase tracking-[0.15em]">Cinematic Tour</span>
+                </a>
+                <span class="text-stone-600">|</span>
+                <a href="#location" class="flex items-center gap-3 text-stone-400 hover:text-white transition-colors group">
+                    <i data-lucide="map" class="w-5 h-5 text-brand-lime group-hover:scale-110 transition-transform duration-300"></i>
+                    <span class="text-xs font-medium uppercase tracking-[0.15em]">Location</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <main class="w-full bg-white">
+        
+        <!-- PROPERTY INTRO & STATS -->
+        <section class="max-w-4xl mx-auto px-4 sm:px-6 py-24 text-center reveal-element">
+            <span class="block text-brand-lime text-xs font-semibold tracking-[0.25em] uppercase mb-4">Property Overview</span>
+            <h2 class="text-4xl md:text-5xl font-serif text-brand-navy font-light mb-10 leading-snug">
+                Perfect for first-time buyers <br>or empty nesters.
+            </h2>
+            
+            <div class="editorial-line w-32 mx-auto mb-10"></div>
+            
+            <div class="flex flex-wrap items-center justify-center gap-8 md:gap-12 text-stone-800 mb-10">
+                <div class="flex flex-col items-center">
+                    <span class="text-3xl font-serif mb-1">3</span>
+                    <span class="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-semibold">Bedrooms</span>
+                </div>
+                <div class="w-px h-10 bg-stone-200"></div>
+                <div class="flex flex-col items-center">
+                    <span class="text-3xl font-serif mb-1">3</span>
+                    <span class="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-semibold">Bathrooms</span>
+                </div>
+                <div class="w-px h-10 bg-stone-200"></div>
+                <div class="flex flex-col items-center">
+                    <span class="text-3xl font-serif mb-1">1,385</span>
+                    <span class="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-semibold">Square Feet</span>
+                </div>
+            </div>
+            
+            <p class="text-stone-500 leading-relaxed text-lg font-light">
+                This nearly fully furnished beautiful corner unit is ideally located in a quiet cul-de-sac of private town homes. Close to restaurants, shopping, schools and parks. Open foyer with 2 piece bath and convenient inside garage entry. Bright open concept Great Room overlooks the huge eat in kitchen with lots of cupboard and counter space.
+            </p>
+        </section>
+
+        <!-- UPGRADE 1: LUXURY PARALLAX VIDEO TOUR SECTION -->
+        <section id="video-tour" class="relative w-full h-[60vh] min-h-[500px] flex items-center justify-center bg-fixed bg-center bg-cover reveal-element" style="background-image: url('https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07421-HDR-Edit.jpg');">
+            <!-- Dark Overlay for contrast -->
+            <div class="absolute inset-0 bg-[#001e42]/60 transition-colors duration-700 hover:bg-[#001e42]/40"></div>
+            
+            <div class="relative z-10 text-center flex flex-col items-center">
+                <!-- Floating Play Button -->
+                <button id="open-cinematic-video" class="group flex items-center justify-center w-24 h-24 rounded-full border border-white/50 bg-white/5 backdrop-blur-sm hover:bg-white hover:border-white transition-all duration-700 shadow-[0_0_40px_rgba(0,0,0,0.3)] hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50">
+                    <i data-lucide="play" class="w-8 h-8 text-white group-hover:text-brand-navy ml-1 transition-colors duration-700"></i>
+                </button>
+                <h3 class="mt-8 text-white font-serif text-3xl font-light tracking-wider drop-shadow-lg">Cinematic Tour</h3>
+                <span class="block mt-3 text-stone-300 text-xs tracking-[0.2em] uppercase font-semibold">Watch the Film</span>
+            </div>
+        </section>
+
+        <!-- INTERACTIVE GALLERY SECTION -->
+        <section id="gallery" class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-24 reveal-element">
+            <div class="text-center mb-16">
+                <span class="block text-brand-lime text-xs font-semibold tracking-[0.25em] uppercase mb-4">Visual Tour</span>
+                <h2 class="text-4xl md:text-5xl font-serif text-brand-navy font-light mb-6">Interactive Gallery</h2>
+                <p class="text-stone-500 text-lg font-light max-w-2xl mx-auto">
+                    Visualize the potential. Toggle between <i class="font-serif">Staged</i> and <i class="font-serif">Empty</i> views to transform the space.
+                </p>
+                <div class="editorial-line w-24 mx-auto mt-8"></div>
+            </div>
+
+            <!-- Dynamic JavaScript Grid Injected Here -->
+            <div id="gallery-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
+                <!-- Content generated by JS -->
+            </div>
+        </section>
+
+        <!-- COMPREHENSIVE PROPERTY DETAILS -->
+        <section class="bg-stone-50 py-24 reveal-element">
+            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <!-- Listing Description -->
+                <div class="max-w-4xl mx-auto mb-20 text-center">
+                    <h3 class="text-3xl font-serif text-brand-navy font-light mb-8">The Residence</h3>
+                    <p class="text-stone-500 leading-relaxed text-lg font-light text-left md:text-center mb-8">
+                        This nearly fully furnished beautiful corner unit is ideally located in a quiet cul-de-sac of private town homes. Close to restaurants, shopping, schools and parks. Open foyer with 2 piece bath and convenient inside garage entry. Bright open concept Great Room overlooks the huge eat in kitchen with lots of cupboard and counter space with beautiful stone backsplash. Garden door provides walkout to fully fenced private deck and stone patio. Master bedroom features a huge walk-in closet and oversized en-suite bathroom. In addition to 3 spacious bedrooms, the upper level also has laundry facilities, a full 4 piece bathroom and a large open office area! The unspoiled lower level is equipped with roughed in plumbing, ready to finish to individual taste. Roof re-shingled in 2017. Perfect for first time buyers or empty nesters!
+                    </p>
+                    <span class="inline-block text-xs font-semibold tracking-[0.2em] uppercase text-brand-navy border-b border-brand-navy pb-1">
+                        Location: Corporate Neighbourhood, Burlington
+                    </span>
+                </div>
+
+                <!-- PREMIUM UPGRADES CHECKLIST (With Glow) -->
+                <div class="bg-brand-navy p-10 md:p-16 rounded-none text-white relative overflow-hidden reveal-element mb-20">
+                    <div class="ambient-glow w-[30rem] h-[30rem] top-[-10rem] right-[-5rem]"></div>
+                    <div class="ambient-glow ambient-glow-white w-[20rem] h-[20rem] bottom-[-5rem] left-[-5rem]"></div>
+                    
+                    <div class="relative z-10 max-w-5xl mx-auto">
+                        <div class="text-center mb-12">
+                            <span class="block text-brand-lime text-xs font-semibold tracking-[0.25em] uppercase mb-4">Exceptional Details</span>
+                            <h3 class="text-4xl font-serif font-light text-white">Premium Finishes</h3>
+                            <div class="editorial-line-light w-24 mx-auto mt-6"></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+                            <div class="flex items-start gap-4 border-b border-white/10 pb-4">
+                                <i data-lucide="check" class="w-5 h-5 text-brand-lime shrink-0 mt-1"></i>
+                                <p class="text-stone-300 font-light tracking-wide">Highly desirable corner unit setting</p>
+                            </div>
+                            <div class="flex items-start gap-4 border-b border-white/10 pb-4">
+                                <i data-lucide="check" class="w-5 h-5 text-brand-lime shrink-0 mt-1"></i>
+                                <p class="text-stone-300 font-light tracking-wide">Nearly fully furnished property</p>
+                            </div>
+                            <div class="flex items-start gap-4 border-b border-white/10 pb-4">
+                                <i data-lucide="check" class="w-5 h-5 text-brand-lime shrink-0 mt-1"></i>
+                                <p class="text-stone-300 font-light tracking-wide">Smart Home: Nest Thermostat, Smoke/CO & Cameras</p>
+                            </div>
+                            <div class="flex items-start gap-4 border-b border-white/10 pb-4">
+                                <i data-lucide="check" class="w-5 h-5 text-brand-lime shrink-0 mt-1"></i>
+                                <p class="text-stone-300 font-light tracking-wide">Huge eat-in kitchen with stone backsplash</p>
+                            </div>
+                            <div class="flex items-start gap-4 border-b border-white/10 pb-4">
+                                <i data-lucide="check" class="w-5 h-5 text-brand-lime shrink-0 mt-1"></i>
+                                <p class="text-stone-300 font-light tracking-wide">Primary suite with huge W/I closet & en-suite</p>
+                            </div>
+                            <div class="flex items-start gap-4 border-b border-white/10 pb-4">
+                                <i data-lucide="check" class="w-5 h-5 text-brand-lime shrink-0 mt-1"></i>
+                                <p class="text-stone-300 font-light tracking-wide">Bonus upper-level open office area & laundry</p>
+                            </div>
+                            <div class="flex items-start gap-4 border-b border-white/10 pb-4">
+                                <i data-lucide="check" class="w-5 h-5 text-brand-lime shrink-0 mt-1"></i>
+                                <p class="text-stone-300 font-light tracking-wide">Walkout to fully fenced private deck and stone patio</p>
+                            </div>
+                            <div class="flex items-start gap-4 border-b border-white/10 pb-4">
+                                <i data-lucide="check" class="w-5 h-5 text-brand-lime shrink-0 mt-1"></i>
+                                <p class="text-stone-300 font-light tracking-wide">Roof recently re-shingled (2017)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Deep Dive Specs -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10 reveal-element">
+                    <!-- Property Summary -->
+                    <div class="bg-white p-10 border border-stone-200">
+                        <h4 class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-navy mb-8 border-b border-stone-100 pb-4">
+                            Summary
+                        </h4>
+                        <ul class="space-y-5 text-sm text-stone-500 font-light">
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Property Type</span> <span>Condo Townhouse</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Title</span> <span>Condominium</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Storeys</span> <span>2</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Square Footage</span> <span>1,385 sqft</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Community</span> <span>Corporate</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Age</span> <span>6 to 15 years</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Annual Taxes</span> <span>$3,001.39</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Condo Fees</span> <span>$102.80 / mo</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- Interior & Building Features -->
+                    <div class="bg-white p-10 border border-stone-200">
+                        <h4 class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-navy mb-8 border-b border-stone-100 pb-4">
+                            Interior
+                        </h4>
+                        <ul class="space-y-5 text-sm text-stone-500 font-light">
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Bedrooms</span> <span>3</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Bathrooms</span> <span>3</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Basement</span> <span class="text-right">Full, Unfinished</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Foundation</span> <span class="text-right">Poured Concrete</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Style</span> <span>2 Storey</span></li>
+                            <li class="flex flex-col gap-1 mt-2">
+                                <span class="text-stone-800 font-medium">Features</span>
+                                <span class="text-right">Inside Entry, En-Suite Bathroom</span>
+                            </li>
+                            <li class="flex flex-col gap-1 mt-2">
+                                <span class="text-stone-800 font-medium">Heating & Cooling</span>
+                                <span class="text-right">Forced Air (Gas), Central AC</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Exterior & Land -->
+                    <div class="bg-white p-10 border border-stone-200">
+                        <h4 class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-navy mb-8 border-b border-stone-100 pb-4">
+                            Exterior
+                        </h4>
+                        <ul class="space-y-5 text-sm text-stone-500 font-light">
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Lot Frontage</span> <span>54.43 FT</span></li>
+                            <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Lot Shape</span> <span>Irregular</span></li>
+                            <li class="flex justify-between items-center mt-2"><span class="text-stone-800 font-medium">Parking</span> <span class="text-right">Attached Garage, Private</span></li>
+                            <li class="flex justify-between items-center mt-2"><span class="text-stone-800 font-medium">Total Spaces</span> <span>2 Spaces</span></li>
+                            <li class="flex flex-col gap-1 mt-2">
+                                <span class="text-stone-800 font-medium">Exterior Finish</span>
+                                <span class="text-right">Brick, Stucco</span>
+                            </li>
+                            <li class="flex flex-col gap-1 mt-2">
+                                <span class="text-stone-800 font-medium">Roof</span>
+                                <span class="text-right">Asphalt Shingle (2017)</span>
+                            </li>
+                            <li class="flex flex-col gap-1 mt-2">
+                                <span class="text-stone-800 font-medium">Utilities</span>
+                                <span class="text-right">Municipal Water, Sewer</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Room Measurements & Appliances -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-10 reveal-element">
+                    <!-- Included Features & Appliances -->
+                    <div class="bg-white p-10 border border-stone-200">
+                        <h4 class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-navy mb-8 border-b border-stone-100 pb-4">
+                            Included Features & Appliances
+                        </h4>
+                        <div class="flex flex-wrap gap-3 text-sm text-stone-500 font-light mb-8">
+                            <span class="px-4 py-2 border border-stone-200 rounded-sm bg-stone-50">Existing Furniture*</span>
+                            <span class="px-4 py-2 border border-stone-200 rounded-sm bg-stone-50">Fridge</span>
+                            <span class="px-4 py-2 border border-stone-200 rounded-sm bg-stone-50">Stove</span>
+                            <span class="px-4 py-2 border border-stone-200 rounded-sm bg-stone-50">B/I Dishwasher</span>
+                            <span class="px-4 py-2 border border-stone-200 rounded-sm bg-stone-50">Washer & Dryer</span>
+                            <span class="px-4 py-2 border border-stone-200 rounded-sm bg-stone-50">Electrical Light Fixtures</span>
+                            <span class="px-4 py-2 border border-stone-200 rounded-sm bg-stone-50">Window Coverings</span>
+                            <span class="px-4 py-2 border border-stone-200 rounded-sm bg-stone-50">Security Camera System</span>
+                            <span class="px-4 py-2 border border-stone-200 rounded-sm bg-stone-50">Nest Thermostat</span>
+                            <span class="px-4 py-2 border border-stone-200 rounded-sm bg-stone-50">Nest Smoke/CO Detector</span>
+                            <span class="px-4 py-2 border border-stone-200 rounded-sm bg-stone-50">Garage Door Opener & Remotes</span>
+                        </div>
+                        <p class="text-xs text-stone-400 mb-8 italic">*Excludes bed in bedroom #2</p>
+
+                        <h5 class="text-xs font-semibold tracking-[0.15em] uppercase text-brand-navy mb-4">Rental Equipment:</h5>
+                        <div class="flex flex-wrap gap-2 text-sm text-stone-500 font-light">
+                            <span class="bg-brand-navy text-white px-5 py-2.5 rounded-sm tracking-[0.1em] font-semibold text-xs">Water Heater</span>
+                        </div>
+                    </div>
+
+                    <!-- Measurements -->
+                    <div class="bg-white p-10 border border-stone-200">
+                        <h4 class="text-sm font-semibold uppercase tracking-[0.2em] text-brand-navy mb-8 border-b border-stone-100 pb-4">
+                            Room Measurements
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10 text-sm text-stone-500 font-light">
+                            <!-- Main Level -->
+                            <div>
+                                <h5 class="text-xs font-semibold tracking-[0.15em] uppercase text-brand-navy mb-5">Main Level</h5>
+                                <ul class="space-y-4">
+                                    <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Great Room</span> <span>21'3" x 10'2"</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Kitchen</span> <span>16'0" x 8'5"</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Bathroom</span> <span>2-Piece</span></li>
+                                </ul>
+                            </div>
+                            <!-- Second Level -->
+                            <div>
+                                <h5 class="text-xs font-semibold tracking-[0.15em] uppercase text-brand-navy mb-5">Second Level</h5>
+                                <ul class="space-y-4">
+                                    <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Primary Bedroom</span> <span>13'10" x 10'6"</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Bedroom 2</span> <span>14'10" x 8'8"</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Bedroom 3</span> <span>11'4" x 9'11"</span></li>
+                                    <li class="flex justify-between items-center"><span class="text-stone-800 font-medium">Office</span> <span>11'7" x 9'11"</span></li>
+                                </ul>
+                            </div>
+                            <!-- Basement -->
+                            <div class="sm:col-span-2">
+                                <h5 class="text-xs font-semibold tracking-[0.15em] uppercase text-brand-navy mb-5">Basement</h5>
+                                <ul class="space-y-4">
+                                    <li class="flex justify-between items-center sm:w-[calc(50%-1rem)]"><span class="text-stone-800 font-medium">Lower Level</span> <span>Unfinished</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+
+        <!-- FINANCING CTA (With glow) -->
+        <section class="py-24 reveal-element">
+            <div class="max-w-[1600px] mx-auto px-4 sm:px-6">
+                <div class="bg-brand-navy p-12 md:p-20 text-center relative overflow-hidden">
+                    <div class="ambient-glow w-[40rem] h-[40rem] top-[-20rem] right-[-10rem]"></div>
+                    <div class="relative z-10 max-w-2xl mx-auto">
+                        <span class="block text-brand-lime text-xs font-semibold tracking-[0.25em] uppercase mb-4">Financial Services</span>
+                        <h2 class="text-4xl font-serif font-light text-white mb-6">Need a Mortgage?</h2>
+                        <p class="text-stone-300 text-lg font-light mb-10">
+                            Connect with our preferred lending partners to get pre-approved or discuss financing options tailored to this property.
+                        </p>
+                        <a href="https://www.kenmorgan.ca/node/add/contactSite" target="_blank" rel="noopener noreferrer" class="inline-block bg-transparent hover:bg-brand-lime text-white hover:text-brand-navy border border-brand-lime px-10 py-4 text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-300">
+                            Explore Financing
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- LOCAL RESOURCES -->
+        <section class="py-16 reveal-element">
+            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <span class="block text-brand-lime text-xs font-semibold tracking-[0.25em] uppercase mb-4">Discover</span>
+                    <h2 class="text-4xl font-serif text-brand-navy font-light mb-6">Property Resources</h2>
+                    <div class="editorial-line w-24 mx-auto mt-6"></div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-px bg-stone-200 border border-stone-200">
+                    <!-- City Link -->
+                    <a href="https://www.burlington.ca/" target="_blank" rel="noopener noreferrer" class="group block bg-white relative overflow-hidden">
+                        <div class="aspect-[4/3] overflow-hidden relative bg-stone-100">
+                            <img src="https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07421-HDR-Edit.jpg" alt="City of Burlington" class="w-full h-full object-cover group-hover:scale-105 transition duration-700 opacity-90 group-hover:opacity-100" />
+                            <div class="absolute inset-0 bg-brand-navy/20 group-hover:bg-transparent transition duration-500"></div>
+                        </div>
+                        <div class="p-8 text-center bg-white relative z-10 -mt-10 mx-6 border border-stone-100 transition-transform duration-500 group-hover:-translate-y-2">
+                            <h3 class="text-sm font-semibold tracking-[0.2em] uppercase text-brand-navy mb-2">About Burlington</h3>
+                            <p class="text-stone-500 font-light text-sm italic">Visit the official city homepage.</p>
+                        </div>
+                    </a>
+                    
+                    <!-- Demographics Link -->
+                    <a href="https://drive.google.com/file/d/1h7rYPrrBzmm6w-HwaUdBUSI480H86Cd6/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="group block bg-white relative overflow-hidden">
+                        <div class="aspect-[4/3] overflow-hidden relative bg-stone-100">
+                            <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Demographics" class="w-full h-full object-cover group-hover:scale-105 transition duration-700 opacity-90 group-hover:opacity-100" />
+                            <div class="absolute inset-0 bg-brand-navy/20 group-hover:bg-transparent transition duration-500"></div>
+                        </div>
+                        <div class="p-8 text-center bg-white relative z-10 -mt-10 mx-6 border border-stone-100 transition-transform duration-500 group-hover:-translate-y-2">
+                            <h3 class="text-sm font-semibold tracking-[0.2em] uppercase text-brand-navy mb-2">Neighbourhood Stats</h3>
+                            <p class="text-stone-500 font-light text-sm italic">View neighbourhood statistics PDF.</p>
+                        </div>
+                    </a>
+                    
+                    <!-- Financing Guide Link -->
+                    <a href="https://drive.google.com/file/d/14Sdv9NEtcZm2o91IruXPlLhz8FYa9ZKP/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="group block bg-white relative overflow-hidden">
+                        <div class="aspect-[4/3] overflow-hidden relative bg-stone-100">
+                            <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Financing Guide" class="w-full h-full object-cover group-hover:scale-105 transition duration-700 opacity-90 group-hover:opacity-100" />
+                            <div class="absolute inset-0 bg-brand-navy/20 group-hover:bg-transparent transition duration-500"></div>
+                        </div>
+                        <div class="p-8 text-center bg-white relative z-10 -mt-10 mx-6 border border-stone-100 transition-transform duration-500 group-hover:-translate-y-2">
+                            <h3 class="text-sm font-semibold tracking-[0.2em] uppercase text-brand-navy mb-2">Financing Guide</h3>
+                            <p class="text-stone-500 font-light text-sm italic">Download affordability options.</p>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- LOCATION SECTION -->
+        <section id="location" class="py-24 bg-stone-50 reveal-element">
+            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <span class="block text-brand-lime text-xs font-semibold tracking-[0.25em] uppercase mb-4">Geography</span>
+                    <h2 class="text-4xl font-serif text-brand-navy font-light mb-6">Map & Street View</h2>
+                    <div class="editorial-line w-24 mx-auto mt-6"></div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-px bg-stone-200 border border-stone-200">
+                    <div class="w-full h-[500px] bg-stone-100 relative">
+                        <iframe 
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2896.34!2d-79.7834517!3d43.3933439!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882b60def1605f57%3A0x4dac00ec76b3c247!2s1750%20Creek%20Way%2C%20Burlington%2C%20ON%20L7L%207E2!5e0!3m2!1sen!2sca!4v1610000000000!5m2!1sen!2sca" 
+                            width="100%" height="100%" style="border:0" allowfullscreen="" loading="lazy" class="absolute inset-0 grayscale hover:grayscale-0 transition-all duration-500"
+                        ></iframe>
+                    </div>
+                    <div class="w-full h-[500px] bg-stone-100 relative">
+                        <iframe 
+                            src="https://www.google.com/maps/embed?pb=!4v1680000000000!6m8!1m7!1sFYv0TYSx4eYzjrM2hnUFiQ!2m2!1d43.3940735!2d-79.7804196!3f210.59!4f-3.68!5f0.78" 
+                            width="100%" height="100%" style="border:0" allowfullscreen="" loading="lazy" class="absolute inset-0"
+                        ></iframe>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SELLING CTA -->
+        <section class="py-24 text-center reveal-element">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6">
+                <span class="block text-brand-lime text-xs font-semibold tracking-[0.25em] uppercase mb-6">Elevate Your Listing</span>
+                <h2 class="text-3xl md:text-5xl font-serif text-brand-navy font-light mb-10 leading-tight">
+                    Interested in selling your home <br>with this level of marketing?
+                </h2>
+                <a href="https://www.kenmorgan.ca/node/add/contactSite" target="_blank" rel="noopener noreferrer" class="inline-block bg-brand-navy text-white hover:bg-brand-lime hover:text-brand-navy px-12 py-5 text-xs font-semibold uppercase tracking-[0.2em] transition-colors duration-500">
+                    Contact Us
+                </a>
+
+                <div class="mt-20 pt-12 border-t border-stone-200">
+                    <p class="text-stone-400 mb-6 font-semibold uppercase tracking-[0.2em] text-xs">Still searching?</p>
+                    <a href="https://www.kenmorgan.ca/mapsearchapp/search/..." target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-3 text-brand-navy font-serif text-xl italic hover:text-brand-lime transition-colors duration-300 group">
+                        View Similar Properties in Burlington 
+                        <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- DARK FOOTER (With Glow) -->
+    <footer class="relative bg-[#050505] text-stone-400 py-24 overflow-hidden border-t-4 border-brand-lime">
+        <div class="ambient-glow w-[50rem] h-[50rem] top-[-25rem] left-1/2 -translate-x-1/2"></div>
+        
+        <!-- Background Video -->
+        <video 
+            src="https://raw.githubusercontent.com/KenMorganRealEstate/Home/main/backgroundvideoforweb.mp4" 
+            class="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none mix-blend-screen"
+            autoplay loop muted playsinline
+        ></video>
+        
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-16 items-center border-b border-white/10 pb-16 mb-12">
+                
+                <div class="flex justify-center md:justify-start">
+                    <a href="https://www.kenmorgan.ca" target="_blank" rel="noopener noreferrer">
+                        <img src="https://github.com/KenMorganRealEstate/Home/blob/main/KenMorganLogoBestOneTransparent.png?raw=true" alt="Ken Morgan Logo" class="h-16 w-auto opacity-70 hover:opacity-100 transition-opacity duration-500 grayscale hover:grayscale-0" />
+                    </a>
+                </div>
+                
+                <div class="text-center flex flex-col items-center">
+                    <h4 class="text-white font-serif text-2xl font-light mb-6 tracking-wide">Ken Morgan</h4>
+                    <div class="flex flex-col gap-4 text-xs font-medium tracking-[0.15em] uppercase">
+                        <a href="tel:9056301225" class="hover:text-white transition-colors">905 630 1225</a>
+                        <a href="mailto:ken@kenmorgan.ca" class="hover:text-white transition-colors">ken@kenmorgan.ca</a>
+                        <a href="https://www.kenmorgan.ca" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">www.kenmorgan.ca</a>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center md:justify-end">
+                    <a href="https://www.kenmorgan.ca" target="_blank" rel="noopener noreferrer">
+                        <img src="https://github.com/KenMorganRealEstate/Home/blob/main/CASORA%20PRIMARY%20LOGO_blue.png?raw=true" alt="CASORA Logo" class="h-10 w-auto opacity-50 hover:opacity-100 transition-opacity duration-500 grayscale hover:grayscale-0" />
+                    </a>
+                </div>
+            </div>
+            
+            <div class="text-xs text-center max-w-2xl mx-auto text-stone-600 tracking-wider font-light">
+                <p class="mb-3 uppercase" id="copyright-year">© 2024 Ken Morgan Real Estate. All rights reserved.</p>
+                <p>Not intended to solicit buyers or sellers currently under contract with a brokerage. Details deemed reliable but not guaranteed.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCROLL TO TOP BUTTON -->
+    <button id="scrollToTopBtn" class="fixed bottom-24 md:bottom-10 right-6 md:right-10 bg-white/10 backdrop-blur-md border border-brand-navy hover:bg-brand-navy hover:text-white text-brand-navy p-4 rounded-none shadow-2xl z-40 opacity-0 pointer-events-none transition-all duration-500 hover:-translate-y-2 focus:outline-none">
+        <i data-lucide="arrow-up" class="w-5 h-5"></i>
+    </button>
+
+    <!-- MOBILE STICKY CTA -->
+    <div class="md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-stone-200 p-4 flex gap-4 z-50 shadow-[0_-10px_30px_rgba(0,0,0,0.05)] reveal-element is-visible">
+        <a href="tel:9056301225" class="flex-1 flex justify-center items-center gap-2 bg-transparent text-brand-navy border border-brand-navy py-3.5 text-xs font-semibold uppercase tracking-[0.15em] transition-colors">
+            Call
+        </a>
+        <a href="https://www.kenmorgan.ca/node/add/contactSite" target="_blank" rel="noopener noreferrer" class="flex-1 flex justify-center items-center gap-2 bg-brand-navy text-white py-3.5 text-xs font-semibold uppercase tracking-[0.15em] transition-colors shadow-lg">
+            Inquire
+        </a>
+    </div>
+
+    <!-- UPGRADE 1: CINEMATIC VIDEO MODAL -->
+    <div id="video-modal" class="fixed inset-0 bg-[#050505]/95 backdrop-blur-xl flex-col opacity-0 pointer-events-none transition-opacity duration-500 z-[100] flex items-center justify-center p-4 md:p-12">
+        <button id="close-video-modal" class="absolute top-6 right-6 md:top-10 md:right-10 text-white/50 hover:text-white transition-colors duration-300 focus:outline-none z-50">
+            <i data-lucide="x" class="w-8 h-8 md:w-10 md:h-10"></i>
+        </button>
+        <div class="w-full max-w-6xl aspect-video bg-black shadow-2xl border border-white/10 relative rounded-sm overflow-hidden">
+            <!-- Video injected via JS to prevent background playing -->
+            <div id="video-container" class="absolute inset-0 w-full h-full"></div>
+        </div>
+    </div>
+
+    <!-- LIGHTBOX IMAGE MODAL -->
+    <div id="modal" class="fixed inset-0 bg-white/95 flex-col opacity-0 pointer-events-none transition-opacity duration-500 z-[90] flex items-center justify-center p-4 md:p-10 backdrop-blur-xl">
+        <div class="w-full max-w-7xl flex flex-col relative h-full">
+            
+            <button id="modal-close" class="absolute -top-2 right-0 md:top-0 md:-right-12 text-stone-400 hover:text-brand-navy transition-colors duration-300 z-50 focus:outline-none">
+                <i data-lucide="x" class="w-8 h-8"></i>
+            </button>
+            
+            <div id="modal-image-container" class="relative w-full flex-1 flex items-center justify-center min-h-0 bg-stone-100 shadow-2xl">
+                <img id="modal-image" src="" alt="Property View" class="w-auto h-auto max-w-full max-h-full object-contain mix-blend-multiply">
+                
+                <button id="modal-prev-prop" class="gallery-nav absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-brand-navy text-brand-navy hover:text-white border border-stone-200 p-4 transition-all duration-300 shadow-lg z-10 focus:outline-none">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </button>
+                <button id="modal-next-prop" class="gallery-nav absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-brand-navy text-brand-navy hover:text-white border border-stone-200 p-4 transition-all duration-300 shadow-lg z-10 focus:outline-none">
+                    <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <!-- Controls Area (Real/Staged) -->
+            <div id="modal-buttons" class="flex justify-center p-6 mt-4 gap-4 shrink-0">
+                <!-- Dynamic Buttons -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Scripts -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        document.getElementById('copyright-year').innerText = `© ${new Date().getFullYear()} Ken Morgan Real Estate. All rights reserved.`;
+
+        // ==========================================
+        // UPGRADE 1: VIDEO MODAL LOGIC
+        // ==========================================
+        const videoModal = document.getElementById('video-modal');
+        const openVideoBtn = document.getElementById('open-cinematic-video');
+        const closeVideoBtn = document.getElementById('close-video-modal');
+        const videoContainer = document.getElementById('video-container');
+        const videoURL = "https://raw.githubusercontent.com/KenMorganRealEstate/1750/main/Listing%201750-18%20Creek%20Way,%20Burlington.mp4";
+
+        function openCinematicVideo() {
+            videoModal.classList.remove('opacity-0', 'pointer-events-none');
+            document.body.style.overflow = 'hidden';
+            // Inject video HTML
+            videoContainer.innerHTML = `
+                <video class="w-full h-full object-cover outline-none" controls autoplay playsinline>
+                    <source src="${videoURL}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            `;
+        }
+
+        function closeCinematicVideo() {
+            videoModal.classList.add('opacity-0', 'pointer-events-none');
+            document.body.style.overflow = '';
+            // Remove video HTML to stop playing
+            setTimeout(() => { videoContainer.innerHTML = ''; }, 500);
+        }
+
+        if (openVideoBtn) openVideoBtn.addEventListener('click', openCinematicVideo);
+        if (closeVideoBtn) closeVideoBtn.addEventListener('click', closeCinematicVideo);
+        if (videoModal) {
+            videoModal.addEventListener('click', (e) => {
+                if (e.target === videoModal) closeCinematicVideo();
+            });
+        }
+
+
+        // ==========================================
+        // SCROLL TO TOP LOGIC
+        // ==========================================
+        const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+        if (scrollToTopBtn) {
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 600) {
+                    scrollToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+                    scrollToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
+                } else {
+                    scrollToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+                    scrollToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
+                }
+            });
+
+            scrollToTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // ==========================================
+        // UPGRADE 4: SCROLL ANIMATIONS
+        // ==========================================
+        document.addEventListener("DOMContentLoaded", function() {
+            const revealElements = document.querySelectorAll('.reveal-element');
+            
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.15
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target); 
+                    }
+                });
+            }, observerOptions);
+
+            revealElements.forEach(el => {
+                if(!el.classList.contains('is-visible')){
+                    observer.observe(el);
+                }
+            });
+        });
+
+        // ==========================================
+        // DYNAMIC GALLERY LOGIC
+        // ==========================================
+        const properties = [
+            {
+                "id": "item-1757936962498",
+                "type": "interactive",
+                "name": "Living Room HDR",
+                "images": {
+                    "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07431-HDR.jpg"],
+                    "staged": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07426-HDR.jpg"],
+                    "empty": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07426-HDR-Edit.jpg"]
+                },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07431-HDR.jpg"
+            },
+            {
+                "id": "item-1757936966458",
+                "type": "standard",
+                "name": "Kitchen",
+                "images": { "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07396-HDR.jpg"] },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07396-HDR.jpg"
+            },
+            {
+                "id": "item-1757936957708",
+                "type": "interactive",
+                "name": "Dining Area",
+                "images": {
+                    "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07401-HDR.jpg"],
+                    "staged": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07391-HDR.jpg"],
+                    "empty": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07396-HDR.jpg"]
+                },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07401-HDR.jpg"
+            },
+            {
+                "id": "item-1757936971879",
+                "type": "standard",
+                "name": "Bedroom 1",
+                "images": { "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07366-HDR.jpg"] },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07366-HDR.jpg"
+            },
+            {
+                "id": "item-1757936975932",
+                "type": "standard",
+                "name": "Bedroom 2",
+                "images": { "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07381-HDR.jpg"] },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07381-HDR.jpg"
+            },
+            {
+                "id": "item-1757937079020",
+                "type": "interactive",
+                "name": "Basement Area",
+                "images": {
+                    "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07266-HDR.jpg"],
+                    "staged": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07251-HDR.jpg"],
+                    "empty": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07261-HDR.jpg"]
+                },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07266-HDR.jpg"
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryContainer = document.getElementById('gallery-grid');
+            const modal = document.getElementById('modal');
+            const modalImage = document.getElementById('modal-image');
+            const modalButtonsContainer = document.getElementById('modal-buttons');
+            const closeModalBtn = document.getElementById('modal-close');
+            const modalPrevPropBtn = document.getElementById('modal-prev-prop');
+            const modalNextPropBtn = document.getElementById('modal-next-prop');
+            
+            let currentProperty = null; 
+            let currentPropertyIndex = 0; 
+            let currentView = 'real';
+
+            function renderGallery() {
+                galleryContainer.innerHTML = '';
+                properties.forEach(prop => {
+                    const div = document.createElement('div');
+                    div.className = 'gallery-item relative group cursor-pointer overflow-hidden bg-stone-100';
+                    
+                    let buttonsHtml = '';
+                    if (prop.type === 'interactive') {
+                        buttonsHtml = `
+                        <div class="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                            <div class="flex justify-center space-x-1" data-prop-id="${prop.id}">
+                                <button class="view-btn bg-white text-brand-navy text-[10px] font-bold py-2 px-4 shadow transition-colors uppercase tracking-[0.15em]" data-view="real">Real</button>
+                                <button class="view-btn bg-white/50 hover:bg-white text-white hover:text-brand-navy backdrop-blur-md text-[10px] font-bold py-2 px-4 shadow transition-colors uppercase tracking-[0.15em]" data-view="staged">Staged</button>
+                                <button class="view-btn bg-white/50 hover:bg-white text-white hover:text-brand-navy backdrop-blur-md text-[10px] font-bold py-2 px-4 shadow transition-colors uppercase tracking-[0.15em]" data-view="empty">Empty</button>
+                            </div>
+                        </div>`;
+                    }
+                    
+                    div.innerHTML = `
+                        <div class="gallery-image-container w-full aspect-[4/3] bg-stone-100 overflow-hidden">
+                            <img id="img-${prop.id}" src="${prop.thumbnail}" alt="${prop.name}" class="w-full h-full object-cover opacity-90 group-hover:opacity-100">
+                        </div>
+                        ${buttonsHtml}
+                    `;
+                    galleryContainer.appendChild(div);
+                });
+            }
+
+            function openModal(prop) {
+                currentProperty = prop;
+                currentPropertyIndex = properties.findIndex(p => p.id === prop.id);
+                currentView = 'real';
+                
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = 'hidden';
+                
+                updateModalContent();
+            }
+
+            function closeModal() {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = '';
+            }
+
+            function updateModalContent() {
+                modalImage.style.opacity = '0';
+                let imageUrl = '';
+                
+                if (currentProperty.type === 'interactive') {
+                    if (!currentProperty.images[currentView]) {
+                        currentView = 'real';
+                    }
+                    imageUrl = currentProperty.images[currentView][0];
+                    modalButtonsContainer.style.display = 'flex';
+                } else {
+                    imageUrl = currentProperty.images.real[0];
+                    modalButtonsContainer.style.display = 'none';
+                }
+                
+                setTimeout(() => { 
+                    modalImage.src = imageUrl; 
+                    modalImage.style.opacity = '1'; 
+                }, 300);
+                
+                modalButtonsContainer.innerHTML = '';
+                
+                if (currentProperty.type === 'interactive') {
+                    ['real', 'staged', 'empty'].forEach(view => {
+                        const button = document.createElement('button');
+                        button.textContent = view;
+                        
+                        const isActive = currentView === view;
+                        const baseClasses = "px-8 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition-all duration-500 border";
+                        const activeClasses = "bg-brand-navy text-white border-brand-navy shadow-xl scale-105";
+                        const inactiveClasses = "bg-white text-stone-500 hover:text-brand-navy border-stone-200 hover:border-brand-navy";
+                        
+                        button.className = `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
+                        button.onclick = (e) => { 
+                            e.stopPropagation(); 
+                            currentView = view; 
+                            updateModalContent(); 
+                        };
+                        modalButtonsContainer.appendChild(button);
+                    });
+                }
+            }
+
+            // Event Delegation for Gallery Grid
+            galleryContainer.addEventListener('click', (e) => {
+                const buttonGroup = e.target.closest('[data-prop-id]');
+                const view = e.target.dataset.view;
+                const galleryItem = e.target.closest('.gallery-item');
+                
+                if (view && buttonGroup) {
+                    e.stopPropagation(); 
+                    
+                    const propId = buttonGroup.dataset.propId;
+                    const prop = properties.find(p => p.id === propId);
+                    const mainImage = document.getElementById(`img-${propId}`);
+                    const allButtonsInGroup = buttonGroup.querySelectorAll('.view-btn');
+                    
+                    allButtonsInGroup.forEach(btn => {
+                        btn.className = "view-btn bg-white/50 hover:bg-white text-white hover:text-brand-navy backdrop-blur-md text-[10px] font-bold py-2 px-4 shadow transition-colors uppercase tracking-[0.15em]";
+                    });
+                    
+                    e.target.className = "view-btn bg-white text-brand-navy text-[10px] font-bold py-2 px-4 shadow transition-colors uppercase tracking-[0.15em]";
+                    
+                    mainImage.style.opacity = '0.5';
+                    mainImage.style.transform = 'scale(1.02)';
+                    setTimeout(() => { 
+                        mainImage.src = prop.images[view][0]; 
+                        mainImage.style.opacity = '1'; 
+                        mainImage.style.transform = 'scale(1.05)';
+                    }, 300);
+                } 
+                else if (galleryItem) {
+                    const img = galleryItem.querySelector('img');
+                    if (!img) return;
+                    const id = img.id.replace('img-', '');
+                    const prop = properties.find(p => p.id === id);
+                    openModal(prop);
+                }
+            });
+
+            function navigateModal(direction) {
+                currentPropertyIndex = (currentPropertyIndex + direction + properties.length) % properties.length;
+                openModal(properties[currentPropertyIndex]);
+            }
+
+            if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+            if (modal) {
+                modal.addEventListener('click', (e) => { 
+                    if (e.target === modal) closeModal(); 
+                });
+            }
+            
+            if (modalNextPropBtn) modalNextPropBtn.addEventListener('click', () => navigateModal(1));
+            if (modalPrevPropBtn) modalPrevPropBtn.addEventListener('click', () => navigateModal(-1));
+            
+            if (properties.length > 0) { renderGallery(); }
+        });
+    </script>
+</body>
+</html>

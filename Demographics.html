@@ -1,0 +1,1207 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ontario Demographic & Crime Statistics Dashboard</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: #f8fafc;
+    }
+    .font-mono-data {
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              900: '#0c4a6e',
+            },
+            tealAccent: {
+              500: '#14b8a6',
+              600: '#0d9488',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col">
+
+  <!-- TOP HEADER -->
+  <header class="bg-gradient-to-r from-brand-900 via-brand-700 to-tealAccent-600 text-white shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 py-6 md:py-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-5">
+          <div class="shrink-0 bg-white/10 p-2 rounded-xl border border-white/20 flex items-center justify-center inline-flex">
+            <img 
+              src="https://github.com/KenMorganRealEstate/Home/blob/main/KenMorganLogoBestOneTransparent.png?raw=true" 
+              alt="Ken Morgan Real Estate" 
+              class="h-16 md:h-20 w-auto object-contain filter drop-shadow" 
+              referrerpolicy="no-referrer"
+            />
+          </div>
+          <div>
+            <div class="flex items-center gap-2 mb-2">
+              <span class="bg-teal-500/30 text-teal-300 font-mono text-xs px-2 py-1 rounded border border-teal-500/40 font-bold uppercase tracking-wider">
+                <i class="fa-solid fa-house mr-1"></i> Real Estate Analytics Selection
+              </span>
+            </div>
+            <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight">
+              Southern Ontario <span class="text-teal-300">Demographic & Crime</span> Dashboard
+            </h1>
+            <p class="text-brand-100 mt-2 max-w-2xl text-xs md:text-sm">
+              Cross-reference municipal visual charts of ethnocultural demographics with Statistics Canada Crime Severity Index (CSI) ratings.
+            </p>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/10 text-center sm:text-left">
+            <div class="text-xs text-brand-200">Municipalities Scoured</div>
+            <div class="text-2xl font-bold text-teal-300">15 Cities</div>
+          </div>
+          <div class="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/10 text-center sm:text-left">
+            <div class="text-xs text-brand-200">Data Year Baseline</div>
+            <div class="text-2xl font-bold text-white">2021-2022</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-8">
+    
+    <!-- CONTROLS ROW -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Search Box -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+            <i class="fa-solid fa-magnifying-glass mr-1"></i> Search or Select City
+          </label>
+          <div class="relative">
+            <select id="citySelect" onchange="handleCityChange(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 transition cursor-pointer">
+              <!-- Dynamically Populated -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Sorting Field Box -->
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+            <i class="fa-solid fa-arrow-down-wide-short mr-1"></i> Sort & Order Cities
+          </label>
+          <select id="sortFieldSelect" onchange="handleSortChange()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 transition cursor-pointer">
+            <optgroup label="Demographic Metrics">
+              <option value="demographic_caucasian">Highest Caucasian %</option>
+              <option value="demographic_southAsian">Highest South Asian %</option>
+              <option value="demographic_black">Highest Black %</option>
+              <option value="demographic_chinese">Highest Chinese %</option>
+              <option value="demographic_indigenous">Highest Indigenous %</option>
+              <option value="demographic_other">Highest Other / Multiple %</option>
+            </optgroup>
+            <optgroup label="Crime & Security Metrics">
+              <option value="csi" selected>Highest Crime Severity Index (CSI)</option>
+              <option value="violentCrime">Highest Violent Crime rate</option>
+              <option value="propertyCrime">Highest Property Crime rate</option>
+            </optgroup>
+            <optgroup label="General Metrics">
+              <option value="population">Highest Population</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <!-- Mode Toggle Segmented Control -->
+        <div class="flex flex-col">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">
+            <i class="fa-solid fa-sliders mr-1"></i> Dashboard Layout Mode
+          </label>
+          <div class="grid grid-cols-2 bg-slate-100 p-1 rounded-xl">
+            <button id="modeSingleBtn" onclick="setLayoutMode('single')" class="py-2 px-4 rounded-lg font-medium text-sm transition focus:outline-none bg-white text-brand-900 shadow-sm">
+              <i class="fa-solid fa-circle-info mr-1"></i> City Explore
+            </button>
+            <button id="modeCompareBtn" onclick="setLayoutMode('compare')" class="py-2 px-4 rounded-lg font-medium text-sm transition focus:outline-none text-slate-600 hover:text-slate-900">
+              <i class="fa-solid fa-equals mr-1"></i> Comparative List
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MAIN DISPLAY VIEWPORT -->
+    <div id="singleCityView" class="space-y-8 animate-fade-in">
+      
+      <!-- CITY HEADER CARD -->
+      <div class="bg-gradient-to-br from-white to-sky-50/20 rounded-2xl p-6 md:p-8 shadow-sm border border-slate-100">
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+          <div class="space-y-3">
+            <span id="cardRegionTag" class="bg-brand-50 text-brand-700 text-xs font-semibold px-3 py-1 rounded-full border border-brand-100">
+              Peel Region
+            </span>
+            <h2 id="cardCityName" class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Mississauga
+            </h2>
+            <p id="cardCityDesc" class="text-slate-600 max-w-3xl leading-relaxed text-base md:text-lg">
+              Loading city description...
+            </p>
+          </div>
+          <div class="bg-white border border-slate-100 shadow-sm rounded-xl p-4 min-w-[200px] text-center">
+            <div class="text-xs text-slate-400 font-semibold uppercase tracking-wide">Total Census Population</div>
+            <div id="cardCityPop" class="text-2xl md:text-3xl font-extrabold text-brand-900 font-mono-data mt-1">
+              717,961
+            </div>
+            <div class="text-[10px] text-slate-400 mt-2 flex items-center justify-center gap-1">
+              <i class="fa-solid fa-calendar mr-1"></i> Statistics Canada 2021 Census
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-slate-100 my-6 pt-6">
+          <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Key Highlights & Context Indicators</h4>
+          <ul id="cardCityHighlights" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Highlights will insert here -->
+          </ul>
+        </div>
+      </div>
+
+      <!-- CROSS-REFERENCE SIDE-BY-SIDE CARDS -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Ethnocultural Demographics Card -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900">Ethnocultural Demographics</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Distribution of self-identified ethnic groups</p>
+            </div>
+            <span class="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-lg">
+              <i class="fa-solid fa-users mr-1"></i> Share Breakdown
+            </span>
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center flex-grow">
+            <!-- Chart Container -->
+            <div class="sm:col-span-7 flex justify-center relative min-h-[220px]">
+              <canvas id="demographicsChart"></canvas>
+            </div>
+            <!-- Interactive Legend -->
+            <div class="sm:col-span-5 space-y-3" id="demographicsLegend">
+              <!-- Dynamically Populated Legend with percentages -->
+            </div>
+          </div>
+
+          <div class="bg-slate-50 rounded-xl p-3 text-xs text-slate-400 mt-6 flex items-start gap-2">
+            <i class="fa-solid fa-circle-info text-slate-400 mt-0.5"></i>
+            <div>
+              <span class="font-semibold text-slate-600">Source:</span> <span id="demographicSourceText">Statistics Canada 2021 Demographic report</span>. Visible minority identifiers map exactly to Census parameters.
+            </div>
+          </div>
+        </div>
+
+        <!-- Crime Statistics Card -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+            <div>
+              <h3 class="text-lg font-bold text-slate-900">Police Service Crime Statistics</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Sourced from Statistics Canada Uniform Crime Reporting (UCR)</p>
+            </div>
+            <span class="bg-red-50 text-red-700 text-xs font-semibold px-2.5 py-1 rounded-lg">
+              <i class="fa-solid fa-shield-halved mr-1"></i> CSI & Crime Rates
+            </span>
+          </div>
+
+          <!-- Crime Metrics Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <!-- Crime Severity Index (CSI) -->
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100 flex flex-col justify-between">
+              <div>
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wide">Crime Severity Index</div>
+                <div id="crimeCsiVal" class="text-3xl font-extrabold text-slate-800 font-mono-data my-2">--</div>
+              </div>
+              <div class="mt-2">
+                <span id="csiSeverityBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200">Checking...</span>
+              </div>
+            </div>
+
+            <!-- Violent Crime Rate -->
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100 flex flex-col justify-between">
+              <div>
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wide">Violent Crime /100k</div>
+                <div id="crimeViolentVal" class="text-2xl font-extrabold text-slate-800 font-mono-data my-2">--</div>
+              </div>
+              <div class="text-[10px] text-slate-400">
+                Incidents per 100k
+              </div>
+            </div>
+
+            <!-- Property Crime Rate -->
+            <div class="bg-slate-50 rounded-xl p-4 text-center border border-slate-100 flex flex-col justify-between">
+              <div>
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wide">Property Crime /100k</div>
+                <div id="crimePropertyVal" class="text-2xl font-extrabold text-slate-800 font-mono-data my-2">--</div>
+              </div>
+              <div class="text-[10px] text-slate-400">
+                Incidents per 100k
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart Bar Visuals of Crime Comparative to Normal -->
+          <div class="space-y-4 flex-grow">
+            <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Comparison to Canada Base Index (100.0)</h4>
+            <div>
+              <div class="flex justify-between text-xs font-semibold text-slate-500 mb-1">
+                <span>Crime Severity Index</span>
+                <span id="csiCompPercent" class="font-mono-data text-slate-700">75.5% vs National Base</span>
+              </div>
+              <div class="h-3 w-full bg-slate-100 rounded-full overflow-hidden relative border border-slate-200">
+                <!-- Anchor Line at 100 Index (since 100 is baseline) -->
+                <div class="absolute top-0 bottom-0 left-[66%] w-0.5 bg-dashed bg-slate-400 z-10" title="Canada Base Baseline (100)"></div>
+                <div id="csiProgressBar" class="h-full bg-gradient-to-r from-teal-400 to-sky-500 rounded-full transition-all duration-500" style="width: 45%;"></div>
+              </div>
+              <span class="text-[9px] text-slate-400">A CSI of 100.0 is indexed as the Statistics Canada baseline from year 2006. Lower is safer.</span>
+            </div>
+            
+            <div class="pt-2">
+              <div class="flex justify-between text-xs font-semibold text-slate-500 mb-1">
+                <span>Violent Crime Rate vs Southern Ontario Max (Windsor: 1,280.9)</span>
+                <span id="violentCompPercent" class="font-mono-data text-slate-700">55% of Max</span>
+              </div>
+              <div class="h-3 w-full bg-slate-100 rounded-full overflow-hidden relative border border-slate-200">
+                <div id="violentProgressBar" class="h-full bg-gradient-to-r from-amber-400 to-red-500 rounded-full transition-all duration-500" style="width: 55%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 rounded-xl p-3 text-xs text-slate-400 mt-6 flex items-start gap-2">
+            <i class="fa-solid fa-circle-info text-slate-400 mt-0.5"></i>
+            <div>
+              <span class="font-semibold text-slate-600">Source:</span> <span id="crimeSourceText">Statistics Canada Uniform Crime Reporting Program (UCR)</span>.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- LIST / COMPARATIVE RANKING VIEWPORT -->
+    <div id="compareListView" class="hidden space-y-6 animate-fade-in">
+      
+      <!-- List Title & Info -->
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-100 p-4 rounded-xl">
+        <div>
+          <h3 class="text-lg font-bold text-slate-900" id="listTitle">Southern Ontario Metropolitan Index</h3>
+          <p class="text-xs text-slate-500">Ordered dynamically based on selected criteria parameters.</p>
+        </div>
+        <div class="text-xs bg-brand-500 text-white font-semibold px-3 py-1 rounded-full uppercase tracking-wider" id="listBadge">
+          Highest Crime Severity Index (CSI)
+        </div>
+      </div>
+
+      <!-- Ranked List Grid -->
+      <div id="rankedListContainer" class="grid grid-cols-1 gap-4">
+        <!-- Dynamically Loaded Cards -->
+      </div>
+
+    </div>
+
+  </main>
+
+  <footer class="bg-slate-900 text-slate-400 text-xs py-10 mt-12 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 text-center space-y-3">
+      <div class="flex justify-center items-center gap-4 text-sm mb-2">
+        <span class="hover:text-white transition cursor-pointer"><i class="fa-solid fa-map-location-dot mr-1"></i> Southern Ontario</span>
+        <span class="text-slate-700">|</span>
+        <span class="hover:text-white transition cursor-pointer"><i class="fa-solid fa-database mr-1"></i> Statistics Canada</span>
+        <span class="text-slate-700">|</span>
+        <span class="hover:text-white transition cursor-pointer"><i class="fa-solid fa-shield-heart mr-1"></i> Open Police portals</span>
+      </div>
+      <p>
+        All statistics displayed are retrieved from public Statistics Canada 2021 Census Area profiles and 2022 Uniform Crime Reporting indices (CSI as published).
+      </p>
+      <p class="text-slate-500">
+        &copy; 2026 Southern Ontario Demographics & Crime Stat Engine. Contained SPA code file. Powered by expert Vanilla JS/Chart.js styling.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    // Embedded JSON Database Sourced from Statistics Canada
+    const CITIES_DB = [
+  {
+    "id": "toronto",
+    "name": "Toronto",
+    "region": "Greater Toronto Area (GTA)",
+    "population": 2794356,
+    "demographics": {
+      "caucasian": 45.3,
+      "southAsian": 14.1,
+      "black": 9.6,
+      "chinese": 10.7,
+      "indigenous": 1,
+      "other": 19.3
+    },
+    "crime": {
+      "crimeSeverityIndex": 58.5,
+      "violentCrimeRatePer100k": 892.4,
+      "propertyCrimeRatePer100k": 1230.1
+    },
+    "averagePropertyValue": 1115000,
+    "description": "Ontario's capital and largest city, serving as Canada's primary financial sector and a major global multicultural metropolis.",
+    "highlights": [
+      "Canada's leading financial, corporate, and technological powerhouse",
+      "One of the world's most diverse cities with over 50% identifying as visible minorities",
+      "Remarkably safe Crime Severity Index (58.5) compared to major global cities of similar scale"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (City of Toronto Profile)",
+      "crime": "Statistics Canada - Table 35-10-0026-01 Crime Severity Index by Census Metropolitan Area",
+      "realEstate": "Toronto Regional Real Estate Board (TRREB) - Average Residential Sale Price"
+    }
+  },
+  {
+    "id": "mississauga",
+    "name": "Mississauga",
+    "region": "Peel Region (West GTA)",
+    "population": 717961,
+    "demographics": {
+      "caucasian": 42.3,
+      "southAsian": 25.4,
+      "black": 6.9,
+      "chinese": 7.2,
+      "indigenous": 0.5,
+      "other": 17.7
+    },
+    "crime": {
+      "crimeSeverityIndex": 45.5,
+      "violentCrimeRatePer100k": 685.2,
+      "propertyCrimeRatePer100k": 920.8
+    },
+    "averagePropertyValue": 1040000,
+    "description": "A large city immediately west of Toronto, known for its busy lakefront, corporate business parks, and massive transport sector.",
+    "highlights": [
+      "Hosts Toronto Pearson International Airport, the busiest transportation hub in Canada",
+      "Demonstrates extraordinarily low crime severity ratings due to extensive multi-tier safety initiatives",
+      "Prominent corporate presence in life sciences, banking, and aerospace engineering"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (Mississauga Profile)",
+      "crime": "Peel Regional Police Annual Statistical Report & Statistics Canada",
+      "realEstate": "Toronto Regional Real Estate Board (TRREB) - West GTA Reports"
+    }
+  },
+  {
+    "id": "brampton",
+    "name": "Brampton",
+    "region": "Peel Region (Northwest GTA)",
+    "population": 656480,
+    "demographics": {
+      "caucasian": 19.5,
+      "southAsian": 52.4,
+      "black": 13.9,
+      "chinese": 1.5,
+      "indigenous": 0.4,
+      "other": 12.3
+    },
+    "crime": {
+      "crimeSeverityIndex": 52,
+      "violentCrimeRatePer100k": 730.5,
+      "propertyCrimeRatePer100k": 1045.2
+    },
+    "averagePropertyValue": 1010000,
+    "description": "Known historically as Canada's 'Flower City', Brampton is a ultra-fast-growing hub noted for extreme diversity and massive logistics infrastructure.",
+    "highlights": [
+      "Dynamic demographic engine with Canadian-peak South Asian cultural integration (~52%)",
+      "National nerve center for advanced supply chains, food processing, and robotic logistics",
+      "Strong grassroots civic involvement and high percentage of homeownership and multi-generational families"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (Brampton Profile)",
+      "crime": "Peel Regional Police crime statistics records mapped to municipal boundaries",
+      "realEstate": "TRREB Market Watch & Brampton MLS Statistics"
+    }
+  },
+  {
+    "id": "hamilton",
+    "name": "Hamilton",
+    "region": "Hamilton-Wentworth Area",
+    "population": 569353,
+    "demographics": {
+      "caucasian": 77.8,
+      "southAsian": 5.6,
+      "black": 4.7,
+      "chinese": 1.5,
+      "indigenous": 2.1,
+      "other": 8.3
+    },
+    "crime": {
+      "crimeSeverityIndex": 63.8,
+      "violentCrimeRatePer100k": 952.1,
+      "propertyCrimeRatePer100k": 1410.5
+    },
+    "averagePropertyValue": 815000,
+    "description": "The historic steel manufacturing powerhouse of Canada, nestled on the picturesque Niagara Escarpment and transformed into a medical and culinary center.",
+    "highlights": [
+      "Acclaimed medical research cluster anchored by McMaster University's advanced health faculties",
+      "Higher percentage of Indigenous representation relative to the metropolitan GTA core",
+      "Undergone major urban revitalization with vibrant art galleries, indie coffee cultures, and nature trails"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (Hamilton Profile)",
+      "crime": "Hamilton Police Service Annual Crime Statistics Reports",
+      "realEstate": "Realtors Association of Hamilton-Burlington (RAHB)"
+    }
+  },
+  {
+    "id": "london",
+    "name": "London",
+    "region": "Middlesex County (Southwest)",
+    "population": 422324,
+    "demographics": {
+      "caucasian": 77.5,
+      "southAsian": 5.3,
+      "black": 3.4,
+      "chinese": 2,
+      "indigenous": 2.2,
+      "other": 9.6
+    },
+    "crime": {
+      "crimeSeverityIndex": 81.3,
+      "violentCrimeRatePer100k": 1120.4,
+      "propertyCrimeRatePer100k": 2145.2
+    },
+    "averagePropertyValue": 625000,
+    "description": "Colloquially coined 'The Forest City', London serves as a major agricultural, educational, and medical capital in Southwestern Ontario.",
+    "highlights": [
+      "Hosts Western University and Fanshawe College, creating a high-density student sub-population",
+      "Substantial agricultural finance sector and specialized life-safety medical centers",
+      "Higher rate of property crime (2,145.2 per 100k) partly influenced by commercial and structural downtown densification"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (London Profile)",
+      "crime": "London Police Service Stats & Statistics Canada Census Metropolitan Area report",
+      "realEstate": "London and St. Thomas Association of Realtors (LSTAR)"
+    }
+  },
+  {
+    "id": "windsor",
+    "name": "Windsor",
+    "region": "Essex County (Deep Southwest)",
+    "population": 229660,
+    "demographics": {
+      "caucasian": 72.3,
+      "southAsian": 5.8,
+      "black": 5.1,
+      "chinese": 2.3,
+      "indigenous": 2,
+      "other": 12.5
+    },
+    "crime": {
+      "crimeSeverityIndex": 90.7,
+      "violentCrimeRatePer100k": 1280.9,
+      "propertyCrimeRatePer100k": 2450.6
+    },
+    "averagePropertyValue": 565000,
+    "description": "A critical binational border community situated directly across the Detroit River, driving advanced automotive manufacturing and international trade.",
+    "highlights": [
+      "The automotive capital of Canada, piloting some of America and Canada's massive electric battery gigafactories",
+      "Stands as Canada's primary commercial gate, facilitating billions in daily trade over the Ambassador Bridge",
+      "Elevated Crime Severity Index (90.7) heavily impacted by border crossings, transit activities, and local social restructuring"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (Windsor Profile)",
+      "crime": "Windsor Police Service Annual Report & StatsCan CMA dataset",
+      "realEstate": "Windsor-Essex County Association of Realtors (WECAR)"
+    }
+  },
+  {
+    "id": "kitchener",
+    "name": "Kitchener",
+    "region": "Waterloo Region",
+    "population": 256885,
+    "demographics": {
+      "caucasian": 72,
+      "southAsian": 8.4,
+      "black": 4.1,
+      "chinese": 1.8,
+      "indigenous": 1.6,
+      "other": 12.1
+    },
+    "crime": {
+      "crimeSeverityIndex": 79.1,
+      "violentCrimeRatePer100k": 985.3,
+      "propertyCrimeRatePer100k": 1930.2
+    },
+    "averagePropertyValue": 775000,
+    "description": "The core anchor city of the Region of Waterloo, famous for combining rich continental heritage with a highly sophisticated technological ecosystem.",
+    "highlights": [
+      "Forms 'Silicon Valley North' corridor in partnership with Waterloo and Cambridge university nodes",
+      "Vigorous multicultural student populations resulting in extensive international culinary and culture expansion",
+      "Pioneered standard light rail transport in mid-size municipalities, linking density to low suburban sprawl"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census Area Profile (Kitchener - City level)",
+      "crime": "Waterloo Regional Police Service Annual Statistical Report",
+      "realEstate": "Waterloo Region Association of Realtors (WRAR)"
+    }
+  },
+  {
+    "id": "forterie",
+    "name": "Fort Erie",
+    "region": "Niagara Region (includes Crystal Beach)",
+    "population": 32901,
+    "demographics": {
+      "caucasian": 89.1,
+      "southAsian": 1.5,
+      "black": 1.8,
+      "chinese": 0.7,
+      "indigenous": 3.2,
+      "other": 3.7
+    },
+    "crime": {
+      "crimeSeverityIndex": 68.5,
+      "violentCrimeRatePer100k": 890.3,
+      "propertyCrimeRatePer100k": 1650.4
+    },
+    "averagePropertyValue": 595500,
+    "description": "Located at the gateway from Buffalo, NY, Fort Erie includes the picturesque community of Crystal Beach, known for its iconic sandy shores on Lake Erie.",
+    "highlights": [
+      "Cross-border gateway and home to the historic and highly trafficked Peace Bridge",
+      "Stretches along Lake Erie's pristine shoreline including the famous Crystal Beach community",
+      "Robust natural heritage with scenic cycling routes along the Niagara River Parkway"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (Fort Erie Profile)",
+      "crime": "Niagara Regional Police Service - Municipal Crime Statistics Ledger",
+      "realEstate": "Niagara Association of Realtors (NAR) - South District"
+    }
+  },
+  {
+    "id": "niagarafalls",
+    "name": "Niagara Falls",
+    "region": "Niagara Region",
+    "population": 94415,
+    "demographics": {
+      "caucasian": 74,
+      "southAsian": 6.2,
+      "black": 3.5,
+      "chinese": 2.6,
+      "indigenous": 1.9,
+      "other": 11.8
+    },
+    "crime": {
+      "crimeSeverityIndex": 78.2,
+      "violentCrimeRatePer100k": 1050.5,
+      "propertyCrimeRatePer100k": 2340.2
+    },
+    "averagePropertyValue": 645000,
+    "description": "A world-famous tourist destination known for its massive waterfalls, bustling commercial districts, and extensive entertainment sector.",
+    "highlights": [
+      "Hosts millions of international tourists annually, driving a large service and travel economy",
+      "Features beautiful parklands, world-class wineries, and historic battlegrounds",
+      "CSI (78.2) sits slightly above average due to high transient tourist populations and retail sectors"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (Niagara Falls Profile)",
+      "crime": "Niagara Regional Police Service Annual Statistics",
+      "realEstate": "Niagara Association of Realtors (NAR) - Tourism & Res Market Index"
+    }
+  },
+  {
+    "id": "stcatharines",
+    "name": "St. Catharines",
+    "region": "Niagara Region",
+    "population": 136803,
+    "demographics": {
+      "caucasian": 81,
+      "southAsian": 3.8,
+      "black": 3.2,
+      "chinese": 1.9,
+      "indigenous": 2.5,
+      "other": 7.6
+    },
+    "crime": {
+      "crimeSeverityIndex": 73.6,
+      "violentCrimeRatePer100k": 980.1,
+      "propertyCrimeRatePer100k": 1980.5
+    },
+    "averagePropertyValue": 615000,
+    "description": "Affectionately known as 'The Garden City', St. Catharines is the largest city in Canada's Niagara Region, hosting Brock University and manufacturing sectors.",
+    "highlights": [
+      "Major educational anchor with Brock University and Niagara College hubs",
+      "Gateway to the Welland Canal, featuring historic lock-crossing systems",
+      "Vibrant art community and annual Grape & Wine festivals representing regional agriculture"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (St. Catharines Profile)",
+      "crime": "Niagara Regional Police Service crime records",
+      "realEstate": "Niagara Association of Realtors (NAR) - Central Hub Stats"
+    }
+  },
+  {
+    "id": "welland",
+    "name": "Welland",
+    "region": "Niagara Region",
+    "population": 55750,
+    "demographics": {
+      "caucasian": 84.1,
+      "southAsian": 2.5,
+      "black": 2.2,
+      "chinese": 0.8,
+      "indigenous": 3.6,
+      "other": 6.8
+    },
+    "crime": {
+      "crimeSeverityIndex": 79.4,
+      "violentCrimeRatePer100k": 1110.2,
+      "propertyCrimeRatePer100k": 2100.1
+    },
+    "averagePropertyValue": 585000,
+    "description": "Traditionally an industrial canal hub, Welland is located in the heart of Niagara and is renowned for its world-class flatwater sport facilities.",
+    "highlights": [
+      "International destination for paddle and canoe sports at the Welland International Flatwater Centre",
+      "Strong French-Canadian heritage and multicultural community hubs",
+      "Undergoing rapid residential expansion due to relatively affordable real estate in the Niagara corridor"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (Welland Profile)",
+      "crime": "Niagara Regional Police Service regional datasets",
+      "realEstate": "Niagara Association of Realtors (NAR) - Canal Corridor Ledger"
+    }
+  },
+  {
+    "id": "niagaraonthelake",
+    "name": "Niagara-on-the-Lake",
+    "region": "Niagara Region",
+    "population": 19101,
+    "demographics": {
+      "caucasian": 88,
+      "southAsian": 1.8,
+      "black": 1.2,
+      "chinese": 2.5,
+      "indigenous": 1,
+      "other": 5.5
+    },
+    "crime": {
+      "crimeSeverityIndex": 32.4,
+      "violentCrimeRatePer100k": 310.2,
+      "propertyCrimeRatePer100k": 890.3
+    },
+    "averagePropertyValue": 1280000,
+    "description": "A gorgeous, well-preserved 19th-century village famous for its boutique wineries, horse-drawn carriages, and the Shaw Festival theatre.",
+    "highlights": [
+      "Center of Ontario's premium wine country with world-renowned estate vineyards",
+      "Breathtaking heritage district with some of the lowest crime crime severity rates (32.4) in Canada",
+      "Rich history serving as an early capital of Upper Canada"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (NOTL Profile)",
+      "crime": "Niagara Regional Police Service municipal reports",
+      "realEstate": "Niagara Association of Realtors (NAR) - Historic & Luxury Estate Division"
+    }
+  },
+  {
+    "id": "grimsby",
+    "name": "Grimsby",
+    "region": "Niagara Region (Escarpment)",
+    "population": 28883,
+    "demographics": {
+      "caucasian": 86.5,
+      "southAsian": 2.8,
+      "black": 1.5,
+      "chinese": 1.3,
+      "indigenous": 1.2,
+      "other": 6.7
+    },
+    "crime": {
+      "crimeSeverityIndex": 38.1,
+      "violentCrimeRatePer100k": 380.4,
+      "propertyCrimeRatePer100k": 1050.2
+    },
+    "averagePropertyValue": 845000,
+    "description": "A charming, grower-centered town situated at the western end of the Niagara Region, nestled directly between Lake Ontario and the Niagara Escarpment.",
+    "highlights": [
+      "Acts as a major transit and economic gateway between Greater Hamilton and Niagara districts",
+      "Famed for peach and cherry orchards alongside premium Escarpment micro-climated vineyards",
+      "Stunning waterfront access and hiking trails along the famous Bruce Trail route"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (Grimsby Profile)",
+      "crime": "Niagara Regional Police Service local listings",
+      "realEstate": "Realtors Association of Hamilton-Burlington (RAHB) - Escarpment Section"
+    }
+  },
+  {
+    "id": "burlington",
+    "name": "Burlington",
+    "region": "Halton Region",
+    "population": 186948,
+    "demographics": {
+      "caucasian": 78,
+      "southAsian": 5.8,
+      "black": 3.3,
+      "chinese": 3.5,
+      "indigenous": 0.8,
+      "other": 8.6
+    },
+    "crime": {
+      "crimeSeverityIndex": 31.8,
+      "violentCrimeRatePer100k": 390.2,
+      "propertyCrimeRatePer100k": 940.4
+    },
+    "averagePropertyValue": 1110000,
+    "description": "A highly affluent city situated at the southwestern end of Lake Ontario, consistently rated as one of the best places to live in Canada.",
+    "highlights": [
+      "Hosts parts of the Royal Botanical Gardens, one of the largest botanical exhibits globally",
+      "Extremely safe community with a very low Crime Severity Index of 31.8",
+      "Strikes an elegant balance of clean lakefront parks, suburban comfort, and dynamic downtown dining"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (Burlington Profile)",
+      "crime": "Halton Regional Police Service Annual Statistical Report",
+      "realEstate": "Realtors Association of Hamilton-Burlington (RAHB) - Waterfront Watch"
+    }
+  },
+  {
+    "id": "oakville",
+    "name": "Oakville",
+    "region": "Halton Region (Peel-Halton Border)",
+    "population": 213759,
+    "demographics": {
+      "caucasian": 58.5,
+      "southAsian": 13.8,
+      "black": 4.2,
+      "chinese": 11.5,
+      "indigenous": 0.6,
+      "other": 11.4
+    },
+    "crime": {
+      "crimeSeverityIndex": 29.5,
+      "violentCrimeRatePer100k": 330.1,
+      "propertyCrimeRatePer100k": 810.2
+    },
+    "averagePropertyValue": 1460000,
+    "description": "An exceptionally polished lakefront town immediately west of Mississauga, known for high-end harbor districts, private prep schools, and life-science centers.",
+    "highlights": [
+      "One of Canada's most affluent municipalities with robust municipal infrastructure and lakeside harbors",
+      "Excellence in education, hosting Sheridan College's world-famous animation and design faculties",
+      "Incredibly low CSI (29.5) denoting a pristine community safety portfolio"
+    ],
+    "censusYear": 2021,
+    "crimeYear": 2022,
+    "sources": {
+      "demographics": "Statistics Canada - 2021 Census of Population (Oakville Profile)",
+      "crime": "Halton Regional Police Service crime index lists",
+      "realEstate": "Oakville, Milton and District Real Estate Board (OMDREB) - Luxury Subdivisions"
+    }
+  }
+];
+
+    const DEMOGRAPHIC_LABELS = {
+      caucasian: { label: 'Caucasian / White', color: '#0ea5e9' },
+      southAsian: { label: 'South Asian', color: '#14b8a6' },
+      black: { label: 'Black / African', color: '#6366f1' },
+      chinese: { label: 'Chinese / East Asian', color: '#f59e0b' },
+      indigenous: { label: 'Indigenous First Nations', color: '#ef4444' },
+      other: { label: 'Other/Multiple Minorities', color: '#8b5cf6' }
+    };
+
+    let activeCityId = CITIES_DB[0].id; // Initialize with Toronto or first entry
+    let activeLayoutMode = 'single'; // 'single' | 'compare'
+    let currentDemographicsChart = null;
+
+    // Initialize Application
+    window.onload = function() {
+      populateCitySelect();
+      setLayoutMode('single');
+      refreshSingleCity();
+    };
+
+    function populateCitySelect() {
+      const select = document.getElementById('citySelect');
+      select.innerHTML = '';
+      CITIES_DB.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city.id;
+        option.textContent = city.name + ' (' + city.region + ')';
+        select.appendChild(option);
+      });
+      select.value = activeCityId;
+    }
+
+    function handleCityChange(cityId) {
+      activeCityId = cityId;
+      if (activeLayoutMode === 'single') {
+        refreshSingleCity();
+      } else {
+        refreshRankedList();
+      }
+    }
+
+    function handleSortChange() {
+      if (activeLayoutMode === 'compare') {
+        refreshRankedList();
+      } else {
+        // If they click Sort and are in single city view, switch to compare view!
+        setLayoutMode('compare');
+      }
+    }
+
+    function setLayoutMode(mode) {
+      activeLayoutMode = mode;
+      
+      const singleView = document.getElementById('singleCityView');
+      const compareView = document.getElementById('compareListView');
+      
+      const modeSingleBtn = document.getElementById('modeSingleBtn');
+      const modeCompareBtn = document.getElementById('modeCompareBtn');
+
+      if (mode === 'single') {
+        singleView.classList.remove('hidden');
+        compareView.classList.add('hidden');
+
+        modeSingleBtn.className = "py-2 px-4 rounded-lg font-medium text-sm transition focus:outline-none bg-white text-brand-900 shadow-sm border border-slate-100";
+        modeCompareBtn.className = "py-2 px-4 rounded-lg font-medium text-sm transition focus:outline-none text-slate-600 hover:text-slate-900";
+        refreshSingleCity();
+      } else {
+        singleView.classList.add('hidden');
+        compareView.classList.remove('hidden');
+
+        modeCompareBtn.className = "py-2 px-4 rounded-lg font-medium text-sm transition focus:outline-none bg-white text-brand-900 shadow-sm border border-slate-100";
+        modeSingleBtn.className = "py-2 px-4 rounded-lg font-medium text-sm transition focus:outline-none text-slate-600 hover:text-slate-900";
+        refreshRankedList();
+      }
+    }
+
+    function refreshSingleCity() {
+      const city = CITIES_DB.find(c => c.id === activeCityId) || CITIES_DB[0];
+      
+      // Header Card
+      document.getElementById('cardCityName').textContent = city.name;
+      document.getElementById('cardRegionTag').textContent = city.region;
+      document.getElementById('cardCityDesc').textContent = city.description;
+      document.getElementById('cardCityPop').textContent = city.population.toLocaleString();
+
+      // Population Source Tag
+      document.getElementById('demographicSourceText').textContent = city.sources.demographics;
+      document.getElementById('crimeSourceText').textContent = city.sources.crime;
+
+      // Highlights
+      const highlightsUl = document.getElementById('cardCityHighlights');
+      highlightsUl.innerHTML = '';
+      city.highlights.forEach(hl => {
+        const li = document.createElement('li');
+        li.className = "bg-white p-4 rounded-xl border border-slate-100 shadow-sm text-sm text-slate-600 flex items-start gap-2.5 hover:border-brand-100 transition";
+        li.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-500 mt-0.5"></i> <span>' + hl + '</span>';
+        highlightsUl.appendChild(li);
+      });
+
+      // Crime Section Stats
+      document.getElementById('crimeCsiVal').textContent = city.crime.crimeSeverityIndex.toFixed(1);
+      document.getElementById('crimeViolentVal').textContent = city.crime.violentCrimeRatePer100k.toLocaleString(undefined, {maximumFractionDigits: 1});
+      document.getElementById('crimePropertyVal').textContent = city.crime.propertyCrimeRatePer100k.toLocaleString(undefined, {maximumFractionDigits: 1});
+
+      // Set Badge severity
+      const csi = city.crime.crimeSeverityIndex;
+      const severityBadge = document.getElementById('csiSeverityBadge');
+      if (csi < 55) {
+        severityBadge.textContent = 'Safe / Low CSI';
+        severityBadge.className = 'text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100';
+      } else if (csi < 80) {
+        severityBadge.textContent = 'Moderate CSI';
+        severityBadge.className = 'text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-100';
+      } else {
+        severityBadge.textContent = 'Elevated CSI';
+        severityBadge.className = 'text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-100';
+      }
+
+      // Calculations relative to Base 100
+      const csiBaseValue = (csi / 100) * 100;
+      document.getElementById('csiCompPercent').textContent = csi.toFixed(1) + ' CSI (' + (csi < 100 ? 'Below' : 'Above') + ' Canada Standard)';
+      // Base line progresses up to 150max mapped as %
+      const csiProgress = Math.min((csi / 150) * 100, 100);
+      document.getElementById('csiProgressBar').style.width = csiProgress + '%';
+      if (csi < 60) {
+        document.getElementById('csiProgressBar').className = "h-full bg-gradient-to-r from-emerald-400 to-sky-400 rounded-full transition-all duration-500";
+      } else if (csi < 85) {
+        document.getElementById('csiProgressBar').className = "h-full bg-gradient-to-r from-sky-400 to-amber-400 rounded-full transition-all duration-500";
+      } else {
+        document.getElementById('csiProgressBar').className = "h-full bg-gradient-to-r from-amber-400 to-red-500 rounded-full transition-all duration-500";
+      }
+
+      // Violent Rate compare max
+      const maxViolentVal = 1280.9;
+      const violentProgress = Math.min((city.crime.violentCrimeRatePer100k / maxViolentVal) * 100, 100);
+      document.getElementById('violentCompPercent').textContent = city.crime.violentCrimeRatePer100k.toFixed(1) + ' (' + Math.round(violentProgress) + '% of Max Southern Ontario rate)';
+      document.getElementById('violentProgressBar').style.width = violentProgress + '%';
+
+      // Demographics Legend list
+      const legendDiv = document.getElementById('demographicsLegend');
+      legendDiv.innerHTML = '';
+      
+      const demoKeys = Object.keys(DEMOGRAPHIC_LABELS);
+      demoKeys.forEach(k => {
+        const item = DEMOGRAPHIC_LABELS[k];
+        const val = city.demographics[k];
+        
+        const row = document.createElement('div');
+        row.className = "flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 transition";
+        row.innerHTML = 
+          '<div class="flex items-center gap-2">' +
+            '<span class="w-3 h-3 rounded-full shrink-0" style="background-color: ' + item.color + '"></span>' +
+            '<span class="text-xs font-semibold text-slate-600">' + item.label + '</span>' +
+          '</div>' +
+          '<div class="text-xs font-bold font-mono-data text-slate-900">' + val.toFixed(1) + '%</div>';
+        legendDiv.appendChild(row);
+      });
+
+      // Update ChartJS
+      renderDemographicsPie(city);
+    }
+
+    function renderDemographicsPie(city) {
+      if (currentDemographicsChart) {
+        currentDemographicsChart.destroy();
+      }
+
+      const canvas = document.getElementById('demographicsChart');
+      const ctx = canvas.getContext('2d');
+
+      const dataLabels = [];
+      const dataValues = [];
+      const dataColors = [];
+
+      Object.keys(DEMOGRAPHIC_LABELS).forEach(key => {
+        dataLabels.push(DEMOGRAPHIC_LABELS[key].label);
+        dataValues.push(city.demographics[key]);
+        dataColors.push(DEMOGRAPHIC_LABELS[key].color);
+      });
+
+      currentDemographicsChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: dataLabels,
+          datasets: [{
+            data: dataValues,
+            backgroundColor: dataColors,
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            hoverOffset: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false // Using custom legend layout
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return ' ' + context.label + ': ' + context.raw.toFixed(1) + '%';
+                }
+              }
+            }
+          },
+          cutout: '65%'
+        }
+      });
+    }
+
+    function getSortLabel(field) {
+      if (field.startsWith('demographic_')) {
+        const key = field.split('_')[1];
+        return DEMOGRAPHIC_LABELS[key].label + ' %';
+      }
+      switch (field) {
+        case 'csi': return 'Crime Severity Index (CSI)';
+        case 'violentCrime': return 'Violent Crime Rate /100k';
+        case 'propertyCrime': return 'Property Crime Rate /100k';
+        case 'population': return 'Total Census Population';
+        default: return '';
+      }
+    }
+
+    function refreshRankedList() {
+      const sortField = document.getElementById('sortFieldSelect').value;
+      
+      const badge = document.getElementById('listBadge');
+      badge.textContent = getSortLabel(sortField);
+      
+      const sortLabel = getSortLabel(sortField);
+      document.getElementById('listTitle').textContent = "Southern Ontario Ranked Ledger: " + sortLabel;
+
+      // Copy database reference to sort
+      const sortedCities = [...CITIES_DB];
+
+      sortedCities.sort((a, b) => {
+        let valA, valB;
+        if (sortField.startsWith('demographic_')) {
+          const key = sortField.split('_')[1];
+          valA = a.demographics[key];
+          valB = b.demographics[key];
+        } else if (sortField === 'csi') {
+          valA = a.crime.crimeSeverityIndex;
+          valB = b.crime.crimeSeverityIndex;
+        } else if (sortField === 'violentCrime') {
+          valA = a.crime.violentCrimeRatePer100k;
+          valB = b.crime.violentCrimeRatePer100k;
+        } else if (sortField === 'propertyCrime') {
+          valA = a.crime.propertyCrimeRatePer100k;
+          valB = b.crime.propertyCrimeRatePer100k;
+        } else if (sortField === 'population') {
+          valA = a.population;
+          valB = b.population;
+        }
+        return valB - valA; // Descending default
+      });
+
+      // Find global maximum for the field for proportional comparison indicators
+      let maxValue = Math.max(...sortedCities.map(c => {
+        if (sortField.startsWith('demographic_')) {
+          const key = sortField.split('_')[1];
+          return c.demographics[key];
+        } else if (sortField === 'csi') {
+          return c.crime.crimeSeverityIndex;
+        } else if (sortField === 'violentCrime') {
+          return c.crime.violentCrimeRatePer100k;
+        } else if (sortField === 'propertyCrime') {
+          return c.crime.propertyCrimeRatePer100k;
+        } else if (sortField === 'population') {
+          return c.population;
+        }
+      }));
+
+      const listContainer = document.getElementById('rankedListContainer');
+      listContainer.innerHTML = '';
+
+      sortedCities.forEach((city, index) => {
+        let displayValueText = '';
+        let proportionalValue = 0;
+        
+        if (sortField.startsWith('demographic_')) {
+          const key = sortField.split('_')[1];
+          const val = city.demographics[key];
+          displayValueText = val.toFixed(1) + '%';
+          proportionalValue = val;
+        } else if (sortField === 'csi') {
+          displayValueText = city.crime.crimeSeverityIndex.toFixed(1) + ' CSI';
+          proportionalValue = city.crime.crimeSeverityIndex;
+        } else if (sortField === 'violentCrime') {
+          displayValueText = city.crime.violentCrimeRatePer100k.toLocaleString(undefined, {maximumFractionDigits: 1}) + ' /100k';
+          proportionalValue = city.crime.violentCrimeRatePer100k;
+        } else if (sortField === 'propertyCrime') {
+          displayValueText = city.crime.propertyCrimeRatePer100k.toLocaleString(undefined, {maximumFractionDigits: 1}) + ' /100k';
+          proportionalValue = city.crime.propertyCrimeRatePer100k;
+        } else if (sortField === 'population') {
+          displayValueText = city.population.toLocaleString();
+          proportionalValue = city.population;
+        }
+
+        const barWidth = maxValue > 0 ? (proportionalValue / maxValue) * 100 : 0;
+        const rankNum = index + 1;
+
+        const row = document.createElement('div');
+        row.className = "bg-white p-5 rounded-2xl border border-slate-100 hover:border-brand-200 shadow-sm hover:shadow-md transition duration-300 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 cursor-pointer";
+        row.onclick = () => {
+          activeCityId = city.id;
+          document.getElementById('citySelect').value = city.id;
+          setLayoutMode('single');
+        };
+
+        let rankBadgeClass = "bg-slate-100 text-slate-800";
+        if (rankNum === 1) rankBadgeClass = "bg-amber-100 text-amber-800 border border-amber-200 font-bold";
+        if (rankNum === 2) rankBadgeClass = "bg-slate-200 text-slate-800 border border-slate-300 font-bold";
+        if (rankNum === 3) rankBadgeClass = "bg-orange-100 text-orange-800 border border-orange-200 font-bold";
+
+        row.innerHTML = 
+          '<div class="flex items-center gap-4 flex-grow shrink-0 max-w-sm">' +
+            '<span class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-mono-data shrink-0 ' + rankBadgeClass + '">' +
+              rankNum +
+            '</span>' +
+            '<div>' +
+              '<h4 class="font-bold text-slate-900 text-lg hover:text-brand-600 transition">' + city.name + '</h4>' +
+              '<span class="text-xs text-slate-400 font-medium">' + city.region + ' &bull; Pop: ' + city.population.toLocaleString() + '</span>' +
+            '</div>' +
+          '</div>' +
+          
+          '<!-- Dynamic visual indicator bar -->' +
+          '<div class="flex-grow md:px-8 space-y-1">' +
+            '<div class="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-50">' +
+              '<div class="h-full bg-gradient-to-r from-brand-500 to-tealAccent-500 rounded-full transition-all duration-300" style="width: ' + barWidth + '%;"></div>' +
+            '</div>' +
+          '</div>' +
+          
+          '<!-- Badge value -->' +
+          '<div class="text-right shrink-0 flex items-center gap-4">' +
+            '<div class="text-lg md:text-xl font-extrabold text-slate-800 font-mono-data">' + displayValueText + '</div>' +
+            '<button class="p-2 border border-slate-100 hover:border-slate-200 rounded-xl hover:bg-slate-50 text-slate-400 hover:text-brand-500 transition">' +
+              '<i class="fa-solid fa-chevron-right text-xs"></i>' +
+            '</button>' +
+          '</div>';
+
+        listContainer.appendChild(row);
+      });
+    }
+
+  </script>
+</body>
+</html>

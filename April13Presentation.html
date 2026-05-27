@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ken Morgan | Professionally Marketing Your Home</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <!-- Updated to unpkg CDN for better reliability -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            900: '#061325', // Deep Casora Navy
+                            800: '#0a1d38',
+                            700: '#112b4e',
+                        },
+                        chartreuse: {
+                            400: '#bfff00', // Vibrant Chartreuse Green
+                            500: '#a6e600',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; }
+        .slide {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 10;
+        }
+        .bg-overlay {
+            background: linear-gradient(135deg, rgba(6, 19, 37, 0.92) 0%, rgba(6, 19, 37, 0.75) 100%);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Progress Bar */
+        #progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-white font-sans antialiased h-screen w-screen relative">
+
+    <!-- Global Header (Logos) -->
+    <div class="absolute top-6 left-8 right-8 z-50 flex justify-between items-start pointer-events-none">
+        <img src="https://github.com/KenMorganRealEstate/Home/blob/main/CASORA%20PRIMARY%20LOGO_blue.png?raw=true" alt="Casora Logo" class="h-10 bg-white/90 p-2 rounded shadow-lg backdrop-blur-sm">
+        <img src="https://github.com/KenMorganRealEstate/Home/blob/main/KenMorganLogoBestOneTransparent.png?raw=true" alt="Ken Morgan Logo" class="h-12 drop-shadow-2xl brightness-0 invert">
+    </div>
+
+    <!-- Presentation Container -->
+    <div id="presentation" class="w-full h-full relative">
+
+        <!-- Slide 1: Title -->
+        <div class="slide active" style="background-image: url('https://github.com/KenMorganRealEstate/Home/blob/main/slide1(1).png?raw=true'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay flex flex-col items-center justify-center text-center p-12">
+                <div class="mb-4 text-chartreuse-400 tracking-[0.3em] uppercase text-sm font-semibold">Strategic Market Blueprint</div>
+                <h1 class="text-6xl md:text-8xl font-bold mb-6 leading-tight drop-shadow-xl">Professionally<br>Marketing Your Home</h1>
+                <p class="text-xl md:text-2xl text-gray-300 max-w-3xl font-light border-l-4 border-chartreuse-400 pl-6 text-left">
+                    A Proactive, Data-Driven Plan.<br>
+                    <span class="text-white font-semibold">A Promise of Proven Results.</span>
+                </p>
+                
+                <div class="absolute bottom-12 left-12 text-left">
+                    <p class="text-sm tracking-widest text-gray-400 uppercase">Presented By</p>
+                    <p class="text-2xl font-bold text-white">Ken Morgan</p>
+                    <p class="text-chartreuse-400 font-semibold">Your Tech-Forward Realtor®</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: The Foundation -->
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex flex-col justify-center">
+                <div class="max-w-5xl mx-auto w-full">
+                    <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2">01 / The Foundation</h2>
+                    <h3 class="text-5xl font-bold mb-10">Your Goals Are My Priority</h3>
+                    <p class="text-xl text-gray-300 font-light mb-12 max-w-3xl">Selling a home isn't just about a transaction; it is a gateway to your next chapter. Before we deploy a single marketing tactic, we establish your True North.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="glass-panel p-8 rounded-xl border-t-4 border-t-chartreuse-400">
+                            <i data-lucide="compass" class="text-chartreuse-400 w-10 h-10 mb-4"></i>
+                            <h4 class="text-2xl font-semibold mb-3">The Catalyst</h4>
+                            <p class="text-gray-400 leading-relaxed">Why are you moving now? Understanding your "why" dictates our aggression in the market.</p>
+                        </div>
+                        <div class="glass-panel p-8 rounded-xl border-t-4 border-t-chartreuse-400">
+                            <i data-lucide="clock" class="text-chartreuse-400 w-10 h-10 mb-4"></i>
+                            <h4 class="text-2xl font-semibold mb-3">The Timeline</h4>
+                            <p class="text-gray-400 leading-relaxed">Are we sprinting or jogging? Your deadlines inform our precise pricing and launch strategy.</p>
+                        </div>
+                        <div class="glass-panel p-8 rounded-xl border-t-4 border-t-chartreuse-400">
+                            <i data-lucide="target" class="text-chartreuse-400 w-10 h-10 mb-4"></i>
+                            <h4 class="text-2xl font-semibold mb-3">The Outcome</h4>
+                            <p class="text-gray-400 leading-relaxed">Beyond just price—what does a perfect transition look like for your family's future?</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Philosophy -->
+        <div class="slide" style="background-image: url('https://github.com/KenMorganRealEstate/Home/blob/main/slide2(2).png?raw=true'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex flex-col justify-center">
+                <div class="max-w-6xl mx-auto w-full">
+                    <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2">02 / The Philosophy</h2>
+                    <h3 class="text-5xl font-bold mb-12">The Difference is Proactive Action</h3>
+                    
+                    <div class="flex flex-col md:flex-row gap-12">
+                        <div class="flex-1 glass-panel p-10 rounded-xl relative overflow-hidden">
+                            <div class="absolute top-0 right-0 bg-red-500/20 text-red-400 px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-bl-lg">Status Quo</div>
+                            <h4 class="text-3xl font-serif text-gray-400 mb-6 italic">The Passive Agent</h4>
+                            <ul class="space-y-6 text-xl text-gray-500 font-light">
+                                <li class="flex items-center gap-4"><i data-lucide="x-circle" class="text-red-500 w-6 h-6"></i> Put it on the MLS.</li>
+                                <li class="flex items-center gap-4"><i data-lucide="x-circle" class="text-red-500 w-6 h-6"></i> Put up a sign.</li>
+                                <li class="flex items-center gap-4"><i data-lucide="x-circle" class="text-red-500 w-6 h-6"></i> Pray that it sells.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="flex-1 glass-panel p-10 rounded-xl border border-chartreuse-400/50 shadow-[0_0_30px_rgba(191,255,0,0.1)] relative">
+                            <div class="absolute top-0 right-0 bg-chartreuse-400 text-navy-900 px-4 py-1 text-xs font-bold uppercase tracking-wider rounded-bl-lg">The Casora Way</div>
+                            <h4 class="text-3xl font-bold text-white mb-6">The Active Hunter</h4>
+                            <p class="text-xl text-gray-300 font-light leading-relaxed mb-6">High-Stakes Campaign Management. I don't wait for buyers to stumble upon your listing;</p>
+                            <p class="text-2xl font-semibold text-chartreuse-400 leading-snug">We engineer demand and actively hunt them down using advanced data targeting.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: The Asset -->
+        <div class="slide" style="background-image: url('https://github.com/KenMorganRealEstate/Home/blob/main/slideimage.jpeg?raw=true'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex items-center">
+                <div class="max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    <div>
+                        <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2">03 / The Asset</h2>
+                        <h3 class="text-5xl font-bold mb-6">Asset Profile: Your Property</h3>
+                        <p class="text-xl text-gray-300 font-light mb-8 leading-relaxed">Powered by exclusive proprietary tools, my tech-forward platform streamlines the real estate process to analyze your home as a high-stakes asset.</p>
+                        
+                        <ul class="space-y-8">
+                            <li class="flex items-start gap-4">
+                                <div class="bg-chartreuse-400/20 p-2 rounded text-chartreuse-400 mt-1"><i data-lucide="gem"></i></div>
+                                <div>
+                                    <h5 class="text-xl font-bold text-white">The "Hard Assets"</h5>
+                                    <p class="text-gray-400">Premium materials, architectural upgrades, and lot features require targeted marketing to command a premium.</p>
+                                </div>
+                            </li>
+                            <li class="flex items-start gap-4">
+                                <div class="bg-chartreuse-400/20 p-2 rounded text-chartreuse-400 mt-1"><i data-lucide="crosshair"></i></div>
+                                <div>
+                                    <h5 class="text-xl font-bold text-white">The Key Differentiator</h5>
+                                    <p class="text-gray-400">We identify your home's unique selling proposition and weaponize it in our advertising.</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="glass-panel p-2 rounded-2xl">
+                        <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" class="rounded-xl w-full h-auto object-cover" alt="Luxury Interior">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Integrated Strategy -->
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex flex-col justify-center text-center">
+                <div class="max-w-6xl mx-auto w-full">
+                    <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2">04 / The Execution</h2>
+                    <h3 class="text-5xl font-bold mb-6">The Integrated Strategy</h3>
+                    <p class="text-xl text-gray-300 font-light mb-16 max-w-4xl mx-auto">Rather than relying on disparate tactics, my framework functions as a synchronized system, strategically aligned to penetrate the market from all angles.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="glass-panel p-10 rounded-xl hover:border-chartreuse-400 transition-colors duration-300">
+                            <i data-lucide="cloud-lightning" class="text-chartreuse-400 w-12 h-12 mx-auto mb-6"></i>
+                            <h4 class="text-3xl font-bold mb-4">The Cloud</h4>
+                            <p class="text-gray-400">Reverse Prospecting the MLS backend to find hidden, high-intent buyers.</p>
+                        </div>
+                        <div class="glass-panel p-10 rounded-xl hover:border-chartreuse-400 transition-colors duration-300">
+                            <i data-lucide="network" class="text-chartreuse-400 w-12 h-12 mx-auto mb-6"></i>
+                            <h4 class="text-3xl font-bold mb-4">The Network</h4>
+                            <p class="text-gray-400">Direct-to-Agent aggressive outreach targeting the top-producing professionals.</p>
+                        </div>
+                        <div class="glass-panel p-10 rounded-xl hover:border-chartreuse-400 transition-colors duration-300">
+                            <i data-lucide="map-pin" class="text-chartreuse-400 w-12 h-12 mx-auto mb-6"></i>
+                            <h4 class="text-3xl font-bold mb-4">The Street</h4>
+                            <p class="text-gray-400">Tactical canvassing and proactive neighborhood buzz generation.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: The Cloud -->
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1550751827-4bd374c3f58b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex items-center">
+                <div class="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-16">
+                    <div>
+                        <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2">Strategy 01 / The Cloud</h2>
+                        <h3 class="text-5xl font-bold mb-6">Reverse Prospecting</h3>
+                        <p class="text-2xl font-light text-white mb-8">We don't rely on a "Closed Loop Graveyard" of old leads. We strike based on real-time MLS backend surveillance.</p>
+                        
+                        <div class="space-y-6">
+                            <div class="glass-panel p-6 rounded-lg border-l-4 border-l-chartreuse-400">
+                                <h4 class="text-xl font-bold text-chartreuse-400 mb-2">The MLS 'Back Door'</h4>
+                                <p class="text-gray-300 text-sm md:text-base">I use deep data to see exactly which agents have active buyers with search criteria matching your home.</p>
+                            </div>
+                            <div class="glass-panel p-6 rounded-lg border-l-4 border-l-chartreuse-400">
+                                <h4 class="text-xl font-bold text-chartreuse-400 mb-2">Manufacturing FOMO</h4>
+                                <p class="text-gray-300 text-sm md:text-base">I hunt those agents down and tell them, 'I have the perfect house, but you must bring a flawless offer the minute we go live.'</p>
+                            </div>
+                            <div class="glass-panel p-6 rounded-lg border-l-4 border-l-chartreuse-400">
+                                <h4 class="text-xl font-bold text-chartreuse-400 mb-2">Engineering Demand</h4>
+                                <p class="text-gray-300 text-sm md:text-base">We find the agents whose buyers missed out on a home yesterday, creating pent-up anxiety before we even hit the market.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: The Network -->
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1544197150-b99a580bb7a8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex items-center justify-end">
+                <div class="max-w-3xl w-full">
+                    <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2 text-right">Strategy 02 / The Network</h2>
+                    <h3 class="text-5xl font-bold mb-6 text-right">Direct-to-Agent Outreach</h3>
+                    <p class="text-2xl font-light text-white mb-10 text-right">Statistically, 7% of the agents in our marketplace sell 90% of the homes. <span class="text-chartreuse-400 font-semibold">I don't wait for them to stumble across your listing.</span></p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex gap-6 items-center justify-end text-right">
+                            <div>
+                                <h4 class="text-xl font-bold text-white">The VIP Velvet Rope</h4>
+                                <p class="text-gray-400 mt-1">I identify the top Mega Agents who are actively moving inventory in your specific pocket.</p>
+                            </div>
+                            <div class="bg-navy-800 p-4 rounded-full border border-chartreuse-400 text-chartreuse-400 shrink-0"><i data-lucide="award"></i></div>
+                        </div>
+                        <div class="flex gap-6 items-center justify-end text-right">
+                            <div>
+                                <h4 class="text-xl font-bold text-white">The Pre-Heat 'Whisper'</h4>
+                                <p class="text-gray-400 mt-1">I call them directly to their cell phones to pitch your home before it hits the peak of the market.</p>
+                            </div>
+                            <div class="bg-navy-800 p-4 rounded-full border border-chartreuse-400 text-chartreuse-400 shrink-0"><i data-lucide="phone-outgoing"></i></div>
+                        </div>
+                        <div class="flex gap-6 items-center justify-end text-right">
+                            <div>
+                                <h4 class="text-xl font-bold text-white">The Advantage</h4>
+                                <p class="text-gray-400 mt-1">We bypass the noise and go straight to the professionals who hold the qualified, fully-funded buyers.</p>
+                            </div>
+                            <div class="bg-navy-800 p-4 rounded-full border border-chartreuse-400 text-chartreuse-400 shrink-0"><i data-lucide="zap"></i></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: The Street -->
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex items-center">
+                <div class="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    <div>
+                        <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2">Strategy 03 / The Street</h2>
+                        <h3 class="text-5xl font-bold mb-6">Tactical Canvassing</h3>
+                        <blockquote class="text-2xl font-serif italic text-gray-300 mb-8 border-l-4 border-chartreuse-400 pl-6">
+                            "The doorstep is the truth; the social media feed is a lie. Handshakes sign contracts; hashtags don't."
+                        </blockquote>
+                        
+                        <div class="glass-panel p-8 rounded-xl mb-6">
+                            <h4 class="text-2xl font-bold text-chartreuse-400 mb-3 flex items-center gap-3"><i data-lucide="footprints"></i> Boots on the Ground</h4>
+                            <p class="text-gray-300">I personally door-knock your neighborhood. Neighbors often have the best idea of who wants to move into the area.</p>
+                        </div>
+                        
+                        <div class="glass-panel p-8 rounded-xl">
+                            <h4 class="text-2xl font-bold text-chartreuse-400 mb-3 flex items-center gap-3"><i data-lucide="users"></i> The Unpaid Sales Force</h4>
+                            <p class="text-gray-300">By delivering Asymmetric Data to your neighbors, we turn them into an unpaid sales force for your property.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 9: Gladiator Arena -->
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1587825140062-712544155ab2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex flex-col justify-center text-center">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-4">Weaponized Conflict</h2>
+                    <h3 class="text-6xl font-bold mb-10 uppercase tracking-wide text-white drop-shadow-lg">The Gladiator Arena</h3>
+                    
+                    <p class="text-3xl font-light text-gray-200 mb-10 leading-snug">
+                        "A passive agent wants to quietly matchmake a buyer and a seller over a cup of tea. <br><span class="text-chartreuse-400 font-bold">I want to build a Colosseum.</span>"
+                    </p>
+                    
+                    <p class="text-xl text-gray-400 font-light mb-8 max-w-3xl mx-auto">
+                        If you want a polite, quiet sale, you will get a polite, average price. To extract the absolute maximum yield from the market, we must engineer demand.
+                    </p>
+                    
+                    <div class="inline-block glass-panel px-10 py-6 rounded-lg border border-chartreuse-400/50 shadow-[0_0_40px_rgba(191,255,0,0.15)]">
+                        <p class="text-lg text-white">By pitting agents holding desperate buyers against each other, <strong>I act as a mercenary for your equity.</strong> We force their absolute highest and best offer immediately.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 10: Digital Showcasing -->
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex items-center">
+                <div class="max-w-6xl mx-auto w-full">
+                    <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2">Online Presence</h2>
+                    <h3 class="text-5xl font-bold mb-6">Advanced Digital Showcasing</h3>
+                    <p class="text-xl font-light text-gray-300 mb-12">Online, your home has exactly 3 seconds to capture attention. We use high-end tech to bridge the 'Imagination Gap.'</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="glass-panel p-8 rounded-xl border-t-4 border-t-white group hover:border-t-chartreuse-400 transition-colors">
+                            <i data-lucide="video" class="text-white group-hover:text-chartreuse-400 w-10 h-10 mb-4 transition-colors"></i>
+                            <h4 class="text-2xl font-bold mb-3">Cinematic Video & Tours</h4>
+                            <p class="text-gray-400">Not just slideshows. We create lifestyle videos and virtual tours that build an emotional hook before a buyer steps through the door.</p>
+                        </div>
+                        <div class="glass-panel p-8 rounded-xl border-t-4 border-t-white group hover:border-t-chartreuse-400 transition-colors">
+                            <i data-lucide="monitor" class="text-white group-hover:text-chartreuse-400 w-10 h-10 mb-4 transition-colors"></i>
+                            <h4 class="text-2xl font-bold mb-3">Virtual Staging</h4>
+                            <p class="text-gray-400">We don't just show an empty room; we show the lifestyle, utilizing digital tools to enhance the property's absolute potential.</p>
+                        </div>
+                        <div class="glass-panel p-8 rounded-xl border-t-4 border-t-white group hover:border-t-chartreuse-400 transition-colors">
+                            <i data-lucide="globe" class="text-white group-hover:text-chartreuse-400 w-10 h-10 mb-4 transition-colors"></i>
+                            <h4 class="text-2xl font-bold mb-3">Massive Syndication</h4>
+                            <p class="text-gray-400">Broadcast across multiple digital platforms, premium portals, and thousands of websites within my network of competing realtors.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 11: The Valuation 5-5-5 -->
+        <div class="slide" style="background-image: url('https://github.com/KenMorganRealEstate/Home/blob/main/slide12.png?raw=true'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex flex-col justify-center text-center">
+                <div class="max-w-6xl mx-auto w-full">
+                    <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2">The Valuation</h2>
+                    <h3 class="text-5xl font-bold mb-4">The Science of Pricing: 5-5-5</h3>
+                    <p class="text-2xl font-light text-gray-300 mb-16">We don't guess. <span class="text-chartreuse-400 font-semibold border-b border-chartreuse-400">We triangulate.</span></p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                        <div class="flex flex-col items-center">
+                            <div class="text-7xl font-bold text-white mb-2 shadow-lg bg-white/10 w-32 h-32 rounded-full flex items-center justify-center border border-white/20">5</div>
+                            <h4 class="text-2xl font-bold text-chartreuse-400 mb-4 tracking-widest uppercase">Active</h4>
+                            <p class="text-gray-300 font-light px-4">Your direct competition right now. Who are we fighting against for the buyer's attention?</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="text-7xl font-bold text-white mb-2 shadow-lg bg-white/10 w-32 h-32 rounded-full flex items-center justify-center border border-white/20">5</div>
+                            <h4 class="text-2xl font-bold text-yellow-400 mb-4 tracking-widest uppercase">Pending</h4>
+                            <p class="text-gray-300 font-light px-4">The current market speed. What is the market actively absorbing this exact week?</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <div class="text-7xl font-bold text-white mb-2 shadow-lg bg-white/10 w-32 h-32 rounded-full flex items-center justify-center border border-chartreuse-400 shadow-[0_0_20px_rgba(191,255,0,0.3)]">5</div>
+                            <h4 class="text-2xl font-bold text-red-400 mb-4 tracking-widest uppercase">Sold</h4>
+                            <p class="text-gray-300 font-light px-4">The proven value. What have buyers recently proven they are willing to pay?</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 12: Historical Proof -->
+        <div class="slide" style="background-image: url('https://raw.githubusercontent.com/KenMorganRealEstate/Home/e5b199c5d91f00c35761e7204cfbbc983924e8d2/listvssolddata.png'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex items-center">
+                <div class="max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-16">
+                    <div>
+                        <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2">Historical Proof</h2>
+                        <h3 class="text-5xl font-bold mb-6">Sold Reality</h3>
+                        <p class="text-xl font-light text-gray-300 mb-8 border-l-4 border-chartreuse-400 pl-6">
+                            "Fantasy Land" is what homeowners list properties for. "Reality" is what fully-funded buyers actually pay. We look at hard data to prove value.
+                        </p>
+                        
+                        <div class="grid grid-cols-2 gap-6">
+                            <div class="glass-panel p-6 rounded-lg">
+                                <h4 class="text-lg font-bold text-white mb-1">Recent Sales</h4>
+                                <p class="text-chartreuse-400 text-sm font-semibold uppercase tracking-wider">Establishing Baseline</p>
+                            </div>
+                            <div class="glass-panel p-6 rounded-lg">
+                                <h4 class="text-lg font-bold text-white mb-1">Price Per Sq.Ft.</h4>
+                                <p class="text-chartreuse-400 text-sm font-semibold uppercase tracking-wider">Calculating Premium</p>
+                            </div>
+                            <div class="glass-panel p-6 rounded-lg">
+                                <h4 class="text-lg font-bold text-white mb-1">Sale-to-List Ratio</h4>
+                                <p class="text-chartreuse-400 text-sm font-semibold uppercase tracking-wider">Negotiation Barometer</p>
+                            </div>
+                            <div class="glass-panel p-6 rounded-lg">
+                                <h4 class="text-lg font-bold text-white mb-1">Days on Market</h4>
+                                <p class="text-chartreuse-400 text-sm font-semibold uppercase tracking-wider">Pacing the Hunt</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 13: Precision Adjustments -->
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex items-center justify-end">
+                <div class="max-w-4xl w-full">
+                    <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2 text-right">The Analytical Engine</h2>
+                    <h3 class="text-5xl font-bold mb-6 text-right">Precision Adjustments</h3>
+                    <p class="text-xl font-light text-gray-300 mb-10 text-right">Most agents just look at averages. My Deep Data CMA makes precise adjustments for dozens of variables so we approach pricing with data, not drama.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 justify-end">
+                            <p class="text-lg text-gray-300 text-right"><strong class="text-white">Structural:</strong> Precise adjustments for square footage and lot size.</p>
+                            <i data-lucide="check-circle" class="text-chartreuse-400 w-6 h-6 shrink-0"></i>
+                        </div>
+                        <div class="flex items-center gap-4 justify-end">
+                            <p class="text-lg text-gray-300 text-right"><strong class="text-white">Layout & Utility:</strong> Value calculated per bedroom, bathroom, and basement finish.</p>
+                            <i data-lucide="check-circle" class="text-chartreuse-400 w-6 h-6 shrink-0"></i>
+                        </div>
+                        <div class="flex items-center gap-4 justify-end">
+                            <p class="text-lg text-gray-300 text-right"><strong class="text-white">Premium Finishes:</strong> Adding direct value for high-end materials & custom upgrades.</p>
+                            <i data-lucide="check-circle" class="text-chartreuse-400 w-6 h-6 shrink-0"></i>
+                        </div>
+                        <div class="flex items-center gap-4 justify-end">
+                            <p class="text-lg text-gray-300 text-right"><strong class="text-white">Risk Mitigation:</strong> Accounting for recent major updates like roofing, HVAC, etc.</p>
+                            <i data-lucide="check-circle" class="text-chartreuse-400 w-6 h-6 shrink-0"></i>
+                        </div>
+                        <div class="flex items-center gap-4 justify-end">
+                            <p class="text-lg text-gray-300 text-right"><strong class="text-white">Location Nuances:</strong> Evaluating the premium of your specific street or view.</p>
+                            <i data-lucide="check-circle" class="text-chartreuse-400 w-6 h-6 shrink-0"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 14: Target Price -->
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex flex-col justify-center text-center">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-4">The Master Move</h2>
+                    <h3 class="text-6xl font-bold mb-8">The Target Price</h3>
+                    
+                    <p class="text-xl text-gray-300 font-light mb-12">
+                        We position you at the top of the value range, signaling confidence in your upgrades. We don't start low; we start strong to create a magnetic effect on the portals and dominate the active market.
+                    </p>
+                    
+                    <div class="glass-panel p-12 rounded-2xl border border-chartreuse-400/50 shadow-[0_0_50px_rgba(191,255,0,0.15)] inline-block min-w-[500px]">
+                        <p class="text-gray-400 uppercase tracking-widest text-sm font-semibold mb-2">Recommended List Price</p>
+                        <h4 class="text-5xl font-bold text-chartreuse-400 mb-2">The Strategic Premium</h4>
+                        <div class="w-full h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent my-6"></div>
+                        <p class="text-3xl font-light text-white italic">"Positioned to Hunt."</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 15: Intelligent Defense -->
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex items-center">
+                <div class="max-w-6xl mx-auto w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    <div>
+                        <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2">Intelligent Defense</h2>
+                        <h3 class="text-5xl font-bold mb-6">Data-Driven Negotiation</h3>
+                        <blockquote class="text-2xl font-serif italic text-chartreuse-400 mb-8">
+                            "I anticipate their moves before they make them."
+                        </blockquote>
+                        
+                        <div class="space-y-6">
+                            <div class="glass-panel p-6 rounded-lg">
+                                <h4 class="text-xl font-bold text-white mb-2 flex items-center gap-2"><i data-lucide="brain" class="text-chartreuse-400 w-5 h-5"></i> Predictive Intelligence</h4>
+                                <p class="text-gray-400">Utilizing deep market metrics, we accurately predict the buyer's negotiation points before they even draft the offer.</p>
+                            </div>
+                            <div class="glass-panel p-6 rounded-lg">
+                                <h4 class="text-xl font-bold text-white mb-2 flex items-center gap-2"><i data-lucide="scale" class="text-chartreuse-400 w-5 h-5"></i> Information Asymmetry</h4>
+                                <p class="text-gray-400">When we sit at the negotiating table, I am armed with a higher volume of verified market data than the opposing agent.</p>
+                            </div>
+                            <div class="glass-panel p-6 rounded-lg border border-chartreuse-400/30">
+                                <h4 class="text-xl font-bold text-chartreuse-400 mb-2 flex items-center gap-2"><i data-lucide="shield-check" class="text-chartreuse-400 w-5 h-5"></i> Equity Protection</h4>
+                                <p class="text-gray-300">We do not react to lowball offers. We defend your price and terms with cold, irrefutable logic to ensure zero money is left on the table.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 16: Launch Sequence -->
+        <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80'); background-size: cover; background-position: center;">
+            <div class="absolute inset-0 bg-overlay p-16 flex flex-col justify-center text-center">
+                <div class="max-w-6xl mx-auto w-full">
+                    <h2 class="text-chartreuse-400 tracking-[0.2em] uppercase text-sm font-semibold mb-2">Execution Protocol</h2>
+                    <h3 class="text-5xl font-bold mb-12">The Launch Sequence</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
+                        <div class="glass-panel p-8 rounded-xl relative overflow-hidden">
+                            <div class="text-8xl font-black text-white/5 absolute -top-4 -right-4">1</div>
+                            <h4 class="text-2xl font-bold text-chartreuse-400 mb-3 relative z-10">Authorize</h4>
+                            <p class="text-gray-300 relative z-10">Review and sign the agreement to establish our partnership.</p>
+                        </div>
+                        <div class="glass-panel p-8 rounded-xl relative overflow-hidden">
+                            <div class="text-8xl font-black text-white/5 absolute -top-4 -right-4">2</div>
+                            <h4 class="text-2xl font-bold text-chartreuse-400 mb-3 relative z-10">Prep</h4>
+                            <p class="text-gray-300 relative z-10">Deploy staging, visualization team, and asset preparation.</p>
+                        </div>
+                        <div class="glass-panel p-8 rounded-xl relative overflow-hidden">
+                            <div class="text-8xl font-black text-white/5 absolute -top-4 -right-4">3</div>
+                            <h4 class="text-2xl font-bold text-chartreuse-400 mb-3 relative z-10">Media</h4>
+                            <p class="text-gray-300 relative z-10">Cinematic video, floor plans, and photography shoot.</p>
+                        </div>
+                        <div class="bg-chartreuse-400 p-8 rounded-xl relative overflow-hidden text-navy-900 shadow-[0_0_30px_rgba(191,255,0,0.3)] transform scale-105">
+                            <div class="text-8xl font-black text-navy-900/10 absolute -top-4 -right-4">4</div>
+                            <h4 class="text-2xl font-bold mb-3 relative z-10 uppercase tracking-widest">Launch</h4>
+                            <p class="font-medium relative z-10">Activate the Active Hunter Campaign and initiate the strike.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <h3 class="text-4xl font-bold text-white mb-4">Ready to Make Your Move?</h3>
+                        <p class="text-xl text-gray-400 max-w-3xl mx-auto font-light">The blueprint is laid out. I am confident that with my proactive system and Casora! Realty's innovative support, we will achieve an outstanding result for your home.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Presentation Controls & Progress -->
+    <div class="fixed bottom-0 left-0 w-full z-50">
+        <!-- Progress Bar -->
+        <div class="h-1 bg-white/10 w-full">
+            <div id="progress-bar" class="h-full bg-chartreuse-400 w-0"></div>
+        </div>
+        
+        <!-- Controls Footer -->
+        <div class="px-8 py-4 flex justify-between items-center bg-gradient-to-t from-black/80 to-transparent">
+            <div class="text-gray-400 text-sm tracking-widest uppercase flex items-center gap-4">
+                <button id="btn-fullscreen" class="hover:text-white transition-colors" title="Toggle Fullscreen"><i data-lucide="maximize" class="w-4 h-4"></i></button>
+                <span id="slide-counter">01 / 16</span>
+            </div>
+            
+            <div class="flex gap-4">
+                <button id="btn-prev" class="p-2 rounded-full bg-white/10 hover:bg-chartreuse-400 hover:text-navy-900 transition-colors text-white disabled:opacity-30 disabled:hover:bg-white/10 disabled:hover:text-white" disabled>
+                    <i data-lucide="chevron-left"></i>
+                </button>
+                <button id="btn-next" class="p-2 rounded-full bg-white/10 hover:bg-chartreuse-400 hover:text-navy-900 transition-colors text-white">
+                    <i data-lucide="chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Presentation Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Initialize Lucide Icons safely
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            } else {
+                console.error("Lucide icons library could not be loaded. Check your internet connection or CDN.");
+            }
+
+            const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+            let currentSlide = 0;
+            
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            const slideCounter = document.getElementById('slide-counter');
+            const progressBar = document.getElementById('progress-bar');
+            const btnFullscreen = document.getElementById('btn-fullscreen');
+
+            function updatePresentation() {
+                // Update Classes
+                slides.forEach((slide, index) => {
+                    if(index === currentSlide) {
+                        slide.classList.add('active');
+                    } else {
+                        slide.classList.remove('active');
+                    }
+                });
+
+                // Update UI Controls
+                if(btnPrev) btnPrev.disabled = currentSlide === 0;
+                if(btnNext) btnNext.disabled = currentSlide === totalSlides - 1;
+                
+                // Update Counter & Progress
+                const slideNumStr = String(currentSlide + 1).padStart(2, '0');
+                const totalStr = String(totalSlides).padStart(2, '0');
+                if(slideCounter) slideCounter.textContent = `${slideNumStr} / ${totalStr}`;
+                
+                if(progressBar) {
+                    const progressPct = ((currentSlide) / (totalSlides - 1)) * 100;
+                    progressBar.style.width = `${progressPct}%`;
+                }
+            }
+
+            function nextSlide() {
+                if (currentSlide < totalSlides - 1) {
+                    currentSlide++;
+                    updatePresentation();
+                }
+            }
+
+            function prevSlide() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updatePresentation();
+                }
+            }
+
+            // Event Listeners
+            if(btnNext) btnNext.addEventListener('click', nextSlide);
+            if(btnPrev) btnPrev.addEventListener('click', prevSlide);
+
+            // Keyboard Navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === 'Enter') {
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft') {
+                    prevSlide();
+                }
+            });
+
+            // Click on right side of screen to advance, left to go back (Desktop)
+            const presentationContainer = document.getElementById('presentation');
+            if(presentationContainer) {
+                presentationContainer.addEventListener('click', (e) => {
+                    const screenWidth = window.innerWidth;
+                    if(e.clientX > screenWidth * 0.75) {
+                        nextSlide();
+                    } else if (e.clientX < screenWidth * 0.25) {
+                        prevSlide();
+                    }
+                });
+            }
+
+            // Fullscreen Toggle
+            if(btnFullscreen) {
+                btnFullscreen.addEventListener('click', () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(err => {
+                            console.log(`Error attempting to enable full-screen mode: ${err.message}`);
+                        });
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        }
+                    }
+                });
+            }
+
+            // Initialize
+            updatePresentation();
+        });
+    </script>
+</body>
+</html>

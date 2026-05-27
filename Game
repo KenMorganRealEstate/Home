@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoning War: Strategy Game</title>
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --text-color: #e0e0e0;
+            --accent-p1: #00d2ff; /* Neon Blue */
+            --accent-p2: #ff2e63; /* Neon Red */
+            --panel-bg: #16213e;
+            --grid-border: #0f3460;
+            --water: #006266;
+            --downtown: #574b90;
+            --industrial: #B53471;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        #container {
+            max-width: 1600px;
+            width: 100%;
+            background-color: var(--panel-bg);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        /* Header & Toggle */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--grid-border);
+            padding-bottom: 15px;
+        }
+
+        h1 { margin: 0; font-size: 2.5em; letter-spacing: 2px; text-transform: uppercase; background: linear-gradient(to right, var(--accent-p1), var(--accent-p2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1em;
+            cursor: pointer;
+            background-color: var(--grid-border);
+            color: var(--text-color);
+            border: none;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        button:hover { background-color: #535c68; transform: translateY(-2px); }
+        .btn-p1 { background-color: var(--accent-p1); color: #000; }
+        .btn-p2 { background-color: var(--accent-p2); color: #fff; }
+        .btn-action { background-color: #f1c40f; color: #000; margin-right: 10px;}
+
+        #rules-container {
+            display: none;
+            background-color: #2c3e50;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            line-height: 1.6;
+        }
+
+        /* Main Layout */
+        main {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+
+        /* The Grid */
+        #grid-container {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 5px;
+            aspect-ratio: 1 / 1;
+            background-color: var(--grid-border);
+            border: 3px solid var(--grid-border);
+            padding: 5px;
+        }
+
+        .tile {
+            background-color: #353b48;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.9em;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .tile span { font-weight: bold; font-size: 1.1em;}
+        .tile small { font-size: 0.8em; opacity: 0.8; }
+        
+        /* Tile Variations */
+        .tile.waterfront { background-color: var(--water); }
+        .tile.downtown { background-color: var(--downtown); }
+        .tile.industrial { background-color: var(--industrial); }
+        .tile.auctioning { animation: pulse 1.5s infinite alternate; border: 3px solid yellow; z-index: 10; }
+        .tile.p1-owned { box-shadow: inset 0 0 0 5px var(--accent-p1); }
+        .tile.p2-owned { box-shadow: inset 0 0 0 5px var(--accent-p2); }
+        .tile.frozen::after { content: "❄️ FROZEN"; position: absolute; top:0; left:0; right:0; bottom:0; background: rgba(255,255,255,0.7); color: black; display: flex; justify-content: center; align-items: center; font-weight: bold;}
+
+        @keyframes pulse { from { box-shadow: 0 0 10px yellow; } to { box-shadow: 0 0 25px yellow; } }
+
+        /* Sidebar & Dashboards */
+        #sidebar { display: flex; flex-direction: column; gap: 20px; }
+        .dashboard-card { background-color: rgba(0,0,0,0.2); padding: 20px; border-radius: 10px; }
+        .p1-dash { border-top: 4px solid var(--accent-p1); }
+        .p2-dash { border-top: 4px solid var(--accent-p2); }
+        .dash-stats { display: flex; justify-content: space-between; margin-top: 10px; }
+        .stat-box { text-align: center; }
+        .stat-val { font-size: 1.5em; font-weight: bold; display: block; }
+        
+        #status-box {
+            background-color: #ffeaa7; color: #2d3436;
+            padding: 15px; border-radius: 8px; font-weight: bold; text-align: center;
+            font-size: 1.2em; border-left: 10px solid #fdcb6e;
+        }
+
+        #controls-area { display: none; flex-direction: column; gap: 15px; }
+        .control-group { display: flex; gap: 10px; margin-bottom: 10px; }
+        input[type="number"], select { padding: 12px; border-radius: 5px; border: none; flex-grow: 1; font-size: 1.1em;}
+
+        #log-area { height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 10px; font-family: monospace; font-size: 0.9em; }
+        .log-entry { margin-bottom: 5px; padding-left: 10px; border-left: 3px solid #555; }
+        .log-p1 { border-color: var(--accent-p1); color: var(--accent-p1); }
+        .log-p2 { border-color: var(--accent-p2); color: var(--accent-p2); }
+
+        /* AI Section */
+        #ai-judge-section { margin-top: 30px; padding: 30px; background: linear-gradient(45deg, #2c3e50, #16213e); border-radius: 15px; text-align: center; display: none;}
+        #ai-prompt-output { width: 80%; height: 150px; margin: 20px auto; background: #eee; color: #333; padding: 10px; border-radius: 5px; font-family: monospace;}
+
+        /* File Inputs hidden */
+        input[type="file"] { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="container">
+    <header>
+        <h1>Zoning War</h1>
+        <div>
+            <button onclick="toggleRules()">📜 Toggle Rules</button>
+            <button class="btn-p1" onclick="resetGame()">🔄 New Game</button>
+        </div>
+    </header>
+
+    <div id="rules-container">
+        <h3>📜 Rules of Engagement</h3>
+        <p><strong>Objective:</strong> Control the most valuable territory after 12 rounds. Start with $10,000,000 each. Zero luck. Pure strategy.</p>
+        <p><strong>Gameplay:</strong> Every round, one random tile goes up for auction. You must choose 1 of 3 actions secretly:</p>
+        <ol>
+            <li><strong>BID:</strong> Enter a cash amount. Highest bid wins the tile. Loser keeps their cash. Ties result in no sale.</li>
+            <li><strong>REZONES ($100k):</strong> You don't bid on the auction tile. Instead, you pay $100k to upgrade a tile you *already own* that is adjacent to the auction tile. (Industrial -> Downtown -> Waterfront).</li>
+            <li><strong>SABOTAGE ($200k):</strong> You pay $200k to trap the auction tile. If your opponent wins the bid, they get the tile, but it is FROZEN (zero value) for 3 rounds.</li>
+        </ol>
+        <p><strong>How to Play via Text (Security Protocol):</strong></p>
+        <ul>
+            <li><strong>Step 1 (Player A):</strong> Selects move and clicks "LOCK MOVE". This saves a secret file locally and exports a "Hash File" to send to Player B.</li>
+            <li><strong>Step 2 (Player B):</strong> Imports Hash File. Makes their move. Clicks "FINALIZE ROUND". Exports a "Resolution File" containing their move and A's hash.</li>
+            <li><strong>Step 3 (Player A):</strong> Imports Resolution File. The game verifies A's secret local move against the hash, reveals B's move, and calculates the results.</li>
+        </ul>
+    </div>
+
+    <main>
+        <div id="grid-wrapper">
+            <h2 style="text-align: center;">Metropolitan Grid <span id="round-indicator">Round 1 / 12</span></h2>
+            <div id="grid-container">
+                </div>
+        </div>
+
+        <div id="sidebar">
+            <div id="status-box">Welcome. Player 1 must begin the round.</div>
+
+            <div class="dashboard-card" style="text-align: center;">
+                <h3>📡 Data Link</h3>
+                <p id="file-instruction">Select an action below.</p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                     <input type="file" id="fileInput" accept=".json" onchange="handleFileImport(this.files)">
+                    <button id="btn-import" onclick="document.getElementById('fileInput').click()">📥 IMPORT FILE</button>
+                    <button id="btn-export" disabled onclick="handleFileExport()">📤 EXPORT FILE</button>
+                </div>
+            </div>
+
+            <div id="controls-area" class="dashboard-card" style="border-top: 4px solid yellow;">
+                <h3>⚡ Make Your Move</h3>
+                <p>Targeting: <span id="target-tile-name" style="font-weight: bold; color: yellow;">-</span></p>
+                
+                <div class="control-group">
+                    <select id="action-select" onchange="updateActionUI()">
+                        <option value="bid">💰 Blind Bid</option>
+                        <option value="rezone">🏗️ Rezone Adjacent ($100k)</option>
+                        <option value="sabotage">💣 Sabotage Auction ($200k)</option>
+                    </select>
+                </div>
+
+                <div id="bid-input-ui" class="control-group">
+                    <input type="number" id="bid-amount" placeholder="Enter Bid Amount ($)" min="0" step="10000">
+                </div>
+                
+                <div id="rezone-input-ui" class="control-group" style="display:none;">
+                    <select id="rezone-target">
+                        </select>
+                </div>
+
+                <button id="btn-commit" class="btn-action" onclick="commitAction()">🔒 LOCK MOVE</button>
+            </div>
+
+            <div class="dashboard-card p1-dash">
+                <h3 style="color: var(--accent-p1)">Player 1 (Blue)</h3>
+                <div class="dash-stats">
+                    <div class="stat-box"><span class="stat-val" id="p1-cash">$10.0M</span><small>Cash</small></div>
+                    <div class="stat-box"><span class="stat-val" id="p1-assets">0</span><small>Assets</small></div>
+                    <div class="stat-box"><span class="stat-val" id="p1-value">$0</span><small>Est. Value</small></div>
+                </div>
+            </div>
+
+            <div class="dashboard-card p2-dash">
+                <h3 style="color: var(--accent-p2)">Player 2 (Red)</h3>
+                 <div class="dash-stats">
+                    <div class="stat-box"><span class="stat-val" id="p2-cash">$10.0M</span><small>Cash</small></div>
+                    <div class="stat-box"><span class="stat-val" id="p2-assets">0</span><small>Assets</small></div>
+                    <div class="stat-box"><span class="stat-val" id="p2-value">$0</span><small>Est. Value</small></div>
+                </div>
+            </div>
+
+             <div class="dashboard-card">
+                <h3>📠Event Log</h3>
+                <div id="log-area"></div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="ai-judge-section">
+        <h2>🤖 The Final Audit</h2>
+        <p>The game is over. Copy the prompt below and paste it into any AI (ChatGPT, Claude, etc.) to determine the ultimate victor based on a randomly generated future scenario.</p>
+        <textarea id="ai-prompt-output" readonly></textarea>
+        <button onclick="copyAiPrompt()">📋 Copy Prompt to Clipboard</button>
+    </div>
+</div>
+
+<script>
+    // --- Configuration ---
+    const GRID_SIZE = 6;
+    const MAX_ROUNDS = 12;
+    const STARTING_CASH = 10000000;
+    const TILE_TYPES = ['industrial', 'industrial', 'downtown', 'downtown', 'waterfront']; // Weighted randoms
+    const TILE_VALUES = { industrial: 500000, downtown: 1000000, waterfront: 2500000 };
+    const COST_REZONE = 100000;
+    const COST_SABOTAGE = 200000;
+    const FREEZE_DURATION = 3;
+
+    // --- Game State ---
+    let gameState = {
+        round: 1,
+        gameOver: false,
+        // Phases: 'start', 'p1_moving', 'p2_moving_reply', 'p1_resolving'
+        phase: 'start', 
+        p1: { cash: STARTING_CASH, color: 'var(--accent-p1)' },
+        p2: { cash: STARTING_CASH, color: 'var(--accent-p2)' },
+        grid: [], // Array of tile objects
+        auctionTileIdx: null, // Index of tile currently up for auction
+        p1CommitHash: null, // The hash P1 sends to P2
+        p2EncryptedMove: null, // The move P2 sends back to P1
+        logHistory: []
+    };
+
+    // --- Initialization ---
+    function initGame() {
+        gameState.grid = [];
+        gameState.logHistory = [];
+        const gridContainer = document.getElementById('grid-container');
+        gridContainer.innerHTML = '';
+
+        // 1. Generate Grid
+        for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+            const type = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
+            gameState.grid.push({
+                id: i,
+                type: type,
+                owner: null,
+                frozenTurns: 0,
+                coords: getCoords(i)
+            });
+
+            const tileDiv = document.createElement('div');
+            tileDiv.className = `tile ${type}`;
+            tileDiv.id = `tile-${i}`;
+            tileDiv.innerHTML = `<span>${getCoords(i)}</span><small>${type.toUpperCase()}</small>`;
+            gridContainer.appendChild(tileDiv);
+        }
+
+        // 2. Pick first auction tile (ensure it's not already owned, though none are at start)
+        pickNextAuctionTile();
+        
+        gameState.phase = 'start';
+        updateUI();
+        addLog("System initialized. Grid generated. Ready for Round 1.");
+        setStatus("Player 1: It is your turn to initiate the round. Make your move.");
+        document.getElementById('btn-import').disabled = false;
+    }
+
+    function pickNextAuctionTile() {
+        let available = gameState.grid.filter(t => t.owner === null);
+        if (available.length === 0 || gameState.round > MAX_ROUNDS) {
+            endGame();
+            return;
+        }
+        const randomIndex = Math.floor(Math.random() * available.length);
+        gameState.auctionTileIdx = available[randomIndex].id;
+    }
+
+
+    // --- Main Game Loop & Security Flow ---
+
+    // Simple non-crypto hash for obfuscation (sufficient for this use case)
+    function simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = (hash << 5) - hash + char;
+            hash |= 0; // Convert to 32bit integer
+        }
+        return hash.toString(16);
+    }
+
+    function commitAction() {
+        const actionType = document.getElementById('action-select').value;
+        let moveData = { type: actionType, player: getCurrentActivePlayer() };
+        let playerObj = gameState[moveData.player];
+
+        // Validate inputs
+        if (actionType === 'bid') {
+            const amount = parseInt(document.getElementById('bid-amount').value);
+            if (isNaN(amount) || amount < 0 || amount > playerObj.cash) {
+                alert("Invalid bid amount. Check your cash balance."); return;
+            }
+            moveData.val = amount;
+        } else if (actionType === 'rezone') {
+             if (playerObj.cash < COST_REZONE) { alert("Not enough cash for Rezone."); return; }
+             moveData.targetId = parseInt(document.getElementById('rezone-target').value);
+             moveData.val = COST_REZONE;
+        } else if (actionType === 'sabotage') {
+            if (playerObj.cash < COST_SABOTAGE) { alert("Not enough cash for Sabotage."); return; }
+            moveData.val = COST_SABOTAGE;
+        }
+
+        // Security Flow Handling
+        if (gameState.phase === 'start' || gameState.phase === 'p1_moving') {
+            // ---> Step 1: P1 Commits and Hashes <---
+            const salt = Math.random().toString(36).substring(2, 15);
+            const moveString = JSON.stringify(moveData);
+            const hash = simpleHash(moveString + salt);
+
+            // Save secret locally (crucial!)
+            localStorage.setItem('zw_p1_secret', moveString);
+            localStorage.setItem('zw_p1_salt', salt);
+
+            gameState.p1CommitHash = hash;
+            gameState.phase = 'p2_moving_reply';
+            setStatus("P1 Move Locked. EXPORT this file and send to Player 2.");
+            addLog("Player 1 locked their move secretly.");
+
+        } else if (gameState.phase === 'p2_moving_reply') {
+             // ---> Step 2: P2 Finalizes and embeds move <---
+             gameState.p2EncryptedMove = moveData; // It's not actually encrypted in the JSON, just stored.
+             gameState.phase = 'p1_resolving';
+             setStatus("P2 Move Finalized. EXPORT file and send back to Player 1 for resolution.");
+             addLog("Player 2 finalized their move.");
+        }
+
+        updateUI();
+    }
+
+    function resolveRound() {
+        // ---> Step 3: P1 resolves the round <---
+        
+        // 1. Retrieve P1 secret from local storage
+        const p1SecretStr = localStorage.getItem('zw_p1_secret');
+        const p1Salt = localStorage.getItem('zw_p1_salt');
+
+        if(!p1SecretStr || !p1Salt) { alert("Security Error: Could not find your local secret move."); return; }
+
+        // 2. Verify Hash Integrity
+        const calculatedHash = simpleHash(p1SecretStr + p1Salt);
+        if (calculatedHash !== gameState.p1CommitHash) {
+            alert("SECURITY ALERT: The file hash does not match your local secret. File may have been tampered with.");
+            return;
+        }
+
+        const p1Move = JSON.parse(p1SecretStr);
+        const p2Move = gameState.p2EncryptedMove;
+        const auctionTile = gameState.grid[gameState.auctionTileIdx];
+        
+        addLog(`--- Round ${gameState.round} Resolution ---`);
+
+        // Process Costs first (Rezone/Sabotage happen regardless of bid outcome)
+        if(p1Move.type !== 'bid') { gameState.p1.cash -= p1Move.val; }
+        if(p2Move.type !== 'bid') { gameState.p2.cash -= p2Move.val; }
+
+        // Execute Non-Bid Actions
+        [p1Move, p2Move].forEach(m => {
+            if(m.type === 'rezone') {
+                const t = gameState.grid[m.targetId];
+                const oldType = t.type;
+                t.type = oldType === 'industrial' ? 'downtown' : 'waterfront';
+                addLog(`${m.player.toUpperCase()} rezoned ${t.coords} from ${oldType} to ${t.type}.`);
+            }
+        });
+
+        // Determine Auction Winner
+        let p1Bid = p1Move.type === 'bid' ? p1Move.val : 0;
+        let p2Bid = p2Move.type === 'bid' ? p2Move.val : 0;
+        let winner = null;
+
+        addLog(`P1 Action: ${p1Move.type.toUpperCase()} (${p1Bid > 0 ? '$'+p1Bid/1000+'k' : '-'})`);
+        addLog(`P2 Action: ${p2Move.type.toUpperCase()} (${p2Bid > 0 ? '$'+p2Bid/1000+'k' : '-'})`);
+
+        if (p1Bid > p2Bid) winner = 'p1';
+        else if (p2Bid > p1Bid) winner = 'p2';
+        else addLog("Bids tied. No sale.");
+
+        if (winner) {
+            let cost = winner === 'p1' ? p1Bid : p2Bid;
+            gameState[winner].cash -= cost;
+            auctionTile.owner = winner;
+            addLog(`${winner.toUpperCase()} won auction for ${auctionTile.coords} for $${cost.toLocaleString()}.`);
+
+            // Check Sabotage application
+            const opponent = winner === 'p1' ? 'p2' : 'p1';
+            const opponentMove = winner === 'p1' ? p2Move : p1Move;
+            if(opponentMove.type === 'sabotage') {
+                auctionTile.frozenTurns = FREEZE_DURATION;
+                addLog(`BUT! ${opponent.toUpperCase()} sabotaged the lot! It is frozen for ${FREEZE_DURATION} turns.`);
+            }
+        }
+
+        // Cleanup & Next Round Prep
+        localStorage.removeItem('zw_p1_secret');
+        localStorage.removeItem('zw_p1_salt');
+        gameState.p1CommitHash = null;
+        gameState.p2EncryptedMove = null;
+        
+        // Process frozen tiles
+        gameState.grid.forEach(t => { if(t.frozenTurns > 0) t.frozenTurns--; });
+
+        gameState.round++;
+        pickNextAuctionTile();
+        gameState.phase = 'start'; // Reset phase loop
+        setStatus("Round resolved. Player 1: It is your turn to start the next round.");
+        updateUI();
+    }
+
+
+    // --- Helper Functions & UI Updates ---
+    function getCoords(index) {
+        const col = String.fromCharCode(65 + (index % GRID_SIZE)); // A, B, C...
+        const row = Math.floor(index / GRID_SIZE) + 1; // 1, 2, 3...
+        return `${col}-${row}`;
+    }
+
+    function getCurrentActivePlayer() {
+        if(gameState.phase === 'start' || gameState.phase === 'p1_moving') return 'p1';
+        if(gameState.phase === 'p2_moving_reply') return 'p2';
+        return null;
+    }
+
+    function getAdjacentOwned(playerKey, targetIdx) {
+        const owned = [];
+        const row = Math.floor(targetIdx / GRID_SIZE);
+        const col = targetIdx % GRID_SIZE;
+        const candidates = [
+            {r: row-1, c: col}, {r: row+1, c: col}, // Up, Down
+            {r: row, c: col-1}, {r: row, c: col+1}  // Left, Right
+        ];
+
+        candidates.forEach(coord => {
+            if(coord.r >=0 && coord.r < GRID_SIZE && coord.c >=0 && coord.c < GRID_SIZE) {
+                const idx = coord.r * GRID_SIZE + coord.c;
+                if(gameState.grid[idx].owner === playerKey && gameState.grid[idx].type !== 'waterfront') {
+                    owned.push(gameState.grid[idx]);
+                }
+            }
+        });
+        return owned;
+    }
+
+    function updateActionUI() {
+        const action = document.getElementById('action-select').value;
+        document.getElementById('bid-input-ui').style.display = action === 'bid' ? 'block' : 'none';
+        document.getElementById('rezone-input-ui').style.display = action === 'rezone' ? 'block' : 'none';
+
+        if(action === 'rezone') {
+            const currentPlayer = getCurrentActivePlayer();
+            const targets = getAdjacentOwned(currentPlayer, gameState.auctionTileIdx);
+            const select = document.getElementById('rezone-target');
+            select.innerHTML = '';
+            if(targets.length === 0) {
+                select.innerHTML = '<option>No adjacent owned tiles to upgrade</option>';
+                document.getElementById('btn-commit').disabled = true;
+            } else {
+                targets.forEach(t => {
+                   select.innerHTML += `<option value="${t.id}">${t.coords} (${t.type})</option>`;
+                });
+                document.getElementById('btn-commit').disabled = false;
+            }
+        } else {
+            document.getElementById('btn-commit').disabled = false;
+        }
+    }
+
+    function setStatus(msg) { document.getElementById('status-box').innerText = msg; }
+    function addLog(msg) {
+        gameState.logHistory.push(msg);
+        const logArea = document.getElementById('log-area');
+        let className = 'log-entry';
+        if(msg.startsWith('P1')) className += ' log-p1';
+        if(msg.startsWith('P2')) className += ' log-p2';
+        logArea.innerHTML += `<div class="${className}">${msg}</div>`;
+        logArea.scrollTop = logArea.scrollHeight;
+    }
+
+    function updateUI() {
+        document.getElementById('round-indicator').innerText = `Round ${gameState.round} / ${MAX_ROUNDS}`;
+        
+        // Update Grid
+        gameState.grid.forEach(t => {
+            const tileDiv = document.getElementById(`tile-${t.id}`);
+            tileDiv.className = `tile ${t.type}`;
+            if(t.owner === 'p1') tileDiv.classList.add('p1-owned');
+            if(t.owner === 'p2') tileDiv.classList.add('p2-owned');
+            if(t.frozenTurns > 0) tileDiv.classList.add('frozen');
+            if(t.id === gameState.auctionTileIdx && !gameState.gameOver) tileDiv.classList.add('auctioning');
+            tileDiv.innerHTML = `<span>${t.coords}</span><small>${t.type.toUpperCase()}</small>`;
+        });
+
+        // Update Stats
+        let p1Stats = calculateStats('p1');
+        let p2Stats = calculateStats('p2');
+        document.getElementById('p1-cash').innerText = '$' + (gameState.p1.cash / 1000000).toFixed(1) + 'M';
+        document.getElementById('p2-cash').innerText = '$' + (gameState.p2.cash / 1000000).toFixed(1) + 'M';
+        document.getElementById('p1-assets').innerText = p1Stats.count;
+        document.getElementById('p2-assets').innerText = p2Stats.count;
+        document.getElementById('p1-value').innerText = '$' + (p1Stats.value / 1000000).toFixed(1) + 'M';
+        document.getElementById('p2-value').innerText = '$' + (p2Stats.value / 1000000).toFixed(1) + 'M';
+
+        // Update Controls Visibility & Buttons
+        const controls = document.getElementById('controls-area');
+        const importBtn = document.getElementById('btn-import');
+        const exportBtn = document.getElementById('btn-export');
+        const fileInstr = document.getElementById('file-instruction');
+
+        if(gameState.gameOver) {
+            controls.style.display = 'none';
+            importBtn.disabled = true;
+            exportBtn.disabled = true;
+            return;
+        }
+
+        // Logic to show controls based on phase
+        let showControls = false;
+        importBtn.disabled = false;
+        exportBtn.disabled = true;
+        fileInstr.innerText = "Waiting for file import...";
+
+        if (gameState.phase === 'start') {
+            setStatus("Player 1: It's your turn. Please make your move.");
+            showControls = true;
+            gameState.phase = 'p1_moving'; // Auto-transition
+        } else if (gameState.phase === 'p1_moving') {
+             showControls = true;
+        } else if (gameState.phase === 'p2_moving_reply') {
+             // If I am P1, I should be exporting. If I am P2, I should be moving.
+             // The UI doesn't know who "I" am until I interact.
+             // The logic here assumes the correct person opened the correct file state.
+             if(gameState.p1CommitHash && !gameState.p2EncryptedMove) {
+                 // P1 just locked. P2 needs to move.
+                 showControls = true;
+                 importBtn.disabled = true; // Don't import over current state
+                 exportBtn.disabled = false; // Allow P1 to export the hash file
+                 fileInstr.innerText = "P1 has locked. P2 must move, or P1 must export.";
+             }
+        } else if (gameState.phase === 'p1_resolving') {
+             // P2 has moved. P1 needs to import to resolve.
+             showControls = false;
+             importBtn.disabled = false;
+             exportBtn.disabled = false; // P2 can export their move file
+             fileInstr.innerText = "P2 has finalized. P1 import to resolve.";
+             // If P1 is viewing this immediately after P2 sent file, auto-resolve
+             if(localStorage.getItem('zw_p1_secret')) {
+                 resolveRound();
+                 return; // Exit updateUI so resolveRound can trigger a fresh update
+             }
+        }
+
+        controls.style.display = showControls ? 'flex' : 'none';
+        if(showControls && gameState.auctionTileIdx !== null) {
+            document.getElementById('target-tile-name').innerText = gameState.grid[gameState.auctionTileIdx].coords;
+            const activePlayer = getCurrentActivePlayer();
+            document.getElementById('btn-commit').innerText = activePlayer === 'p1' ? "🔒 LOCK MOVE (Step 1)" : "✅ FINALIZE ROUND (Step 2)";
+            document.getElementById('btn-commit').className = activePlayer === 'p1' ? "btn-action btn-p1" : "btn-action btn-p2";
+            updateActionUI();
+        }
+    }
+
+    function calculateStats(playerKey) {
+        let count = 0;
+        let value = 0;
+        gameState.grid.forEach(t => {
+            if(t.owner === playerKey) {
+                count++;
+                if(t.frozenTurns === 0) value += TILE_VALUES[t.type];
+            }
+        });
+        return { count, value };
+    }
+
+    // --- File I/O ---
+    function handleFileExport() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(gameState));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        let fileName = `ZoningWar_R${gameState.round}_`;
+        if(gameState.phase === 'p2_moving_reply') fileName += "P1_Locked.json";
+        else if(gameState.phase === 'p1_resolving') fileName += "P2_Finalized.json";
+        else fileName += "State.json";
+        
+        downloadAnchorNode.setAttribute("download", fileName);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+        addLog("Game state exported to file.");
+    }
+
+    function handleFileImport(files) {
+        if (files.length === 0) return;
+        const file = files[0];
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                const importedState = JSON.parse(event.target.result);
+                // Basic validation
+                if(!importedState.grid || !importedState.p1) throw new Error("Invalid file format");
+                
+                gameState = importedState;
+                // Restore log UI
+                document.getElementById('log-area').innerHTML = '';
+                gameState.logHistory.forEach(msg => {
+                     let className = 'log-entry';
+                    if(msg.startsWith('P1')) className += ' log-p1';
+                    if(msg.startsWith('P2')) className += ' log-p2';
+                    document.getElementById('log-area').innerHTML += `<div class="${className}">${msg}</div>`;
+                });
+
+                addLog("File imported successfully.");
+                updateUI();
+
+            } catch (e) {
+                alert("Error importing file: " + e.message);
+            }
+        };
+        reader.readAsText(file);
+        document.getElementById('fileInput').value = ''; // Reset input
+    }
+
+    // --- UI Toggles & End Game ---
+    function toggleRules() {
+        const rules = document.getElementById('rules-container');
+        rules.style.display = rules.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function resetGame() {
+        if(confirm("Are you sure you want to start a new game? Current progress will be lost.")) {
+            localStorage.clear();
+            initGame();
+        }
+    }
+
+    function endGame() {
+        gameState.gameOver = true;
+        gameState.auctionTileIdx = null;
+        setStatus("GAME OVER. Generating Final Audit...");
+        updateUI();
+
+        const p1Stats = calculateStats('p1');
+        const p2Stats = calculateStats('p2');
+        
+        let summary = `Game finished after ${MAX_ROUNDS} rounds.\n`;
+        summary += `Player 1 (Blue): ${p1Stats.count} assets. Cash remaining: $${(gameState.p1.cash/1m).toFixed(2)}M.\n`;
+        summary += `Player 2 (Red): ${p2Stats.count} assets. Cash remaining: $${(gameState.p2.cash/1m).toFixed(2)}M.\n`;
+        summary += `\nASSET MANIFEST:\n`;
+        
+        let p1Assets = []; let p2Assets = [];
+        gameState.grid.forEach(t => {
+            if(t.owner) {
+                let desc = `${t.coords} (${t.type.toUpperCase()})`;
+                if(t.frozenTurns > 0) desc += " [FROZEN - SABOTAGED]";
+                if(t.owner === 'p1') p1Assets.push(desc);
+                else p2Assets.push(desc);
+            }
+        });
+        summary += `P1 Holdings: ${p1Assets.join(', ') || 'None'}\n`;
+        summary += `P2 Holdings: ${p2Assets.join(', ') || 'None'}\n`;
+
+        const prompt = `You are the ruthless AI Judge of a high-stakes real estate game called Zoning War. 
+Two players have competed to acquire territory. 
+
+Here is the final state of the game:
+${summary}
+
+TASK:
+1. Randomly select one future scenario from this list: [A: The Great Tech Boom (Downtown is king), B: Climate Catastrophe (Waterfront is flooded/useless, high ground Industrial is valuable), C: The Renaissance of Industry (Industrial is king), D: The Leisure Society (Waterfront is king)].
+2. Announce the selected scenario.
+3. Based *only* on that specific scenario, evaluate the holdings of Player 1 vs Player 2.
+4. Declare a final winner and provide a funny, biting commentary on why the loser's portfolio failed in this new world order.`;
+
+        document.getElementById('ai-judge-section').style.display = 'block';
+        document.getElementById('ai-prompt-output').value = prompt;
+        // Scroll to bottom
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+    function copyAiPrompt() {
+        const copyText = document.getElementById("ai-prompt-output");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); /* For mobile devices */
+        navigator.clipboard.writeText(copyText.value);
+        alert("Prompt copied! Paste this into ChatGPT, Bard, or Claude to find out who won.");
+    }
+
+    // Start game on load
+    initGame();
+
+</script>
+</body>
+</html>

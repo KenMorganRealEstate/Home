@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplayer Sea Battle</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Firebase Modules -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc, updateDoc, where, getDocs, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // Expose Firebase functionality globally for the main script
+        window.firebase = {
+            initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged,
+            getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc, updateDoc, where, getDocs, runTransaction
+        };
+    </script>
+    <style>
+        /* Custom styles for the grid cells and theme */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f9ff; /* Light sky blue background */
+        }
+        .grid-cell {
+            width: 100%;
+            padding-bottom: 100%; /* Makes the cell square */
+            position: relative;
+            cursor: pointer;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: background-color 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            user-select: none;
+            font-weight: bold;
+        }
+        .grid-cell:hover:not(.shot):not(.disabled):not(.placing) {
+            transform: scale(1.03);
+            box-shadow: 0 0 5px rgba(0, 78, 116, 0.5);
+        }
+        
+        /* State colors */
+        .water { background-color: #3b82f6; } /* Blue */
+        .ship { background-color: #10b981; } /* Darker teal for owned ships */
+        .miss { background-color: #f8fafc; } /* White/Miss Marker */
+        .hit { background-color: #ef4444; } /* Red/Hit Marker */
+        .sunk { background-color: #b91c1c; } /* Darker Red/Sunk Ship */
+
+        /* Disabled state */
+        .disabled { cursor: not-allowed !important; opacity: 0.7; }
+        
+        /* Message Panel */
+        .info-panel {
+            transition: background-color 0.3s;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+
+    <div id="game-container" class="max-w-6xl mx-auto shadow-2xl rounded-xl bg-white p-6 md:p-10">
+        <h1 class="text-3xl md:text-5xl font-extrabold text-center text-gray-800 mb-6">Multiplayer Sea Battle</h1>
+
+        <!-- User Info Panel -->
+        <div class="mb-6 p-3 bg-gray-100 rounded-lg text-sm text-gray-600 border border-gray-300">
+            <p>Your ID: <span id="user-id" class="font-mono text-gray-800">... Loading ...</span></p>
+            <p>Game ID: <span id="game-id-display" class="font-mono text-gray-800">None</span></p>
+        </div>
+
+        <!-- Lobby & Status Panel -->
+        <div id="lobby-view" class="mb-8 p-6 bg-blue-50 border-l-4 border-blue-500 rounded-lg shadow-inner flex flex-col items-center">
+            
+            <!-- Placement Controls -->
+            <div id="placement-controls" class="w-full text-center mb-6">
+                <h2 class="text-xl font-bold text-blue-800 mb-2">Ship Placement</h2>
+                <p class="text-lg font-semibold mb-3 text-gray-700">Placing: <span id="ship-to-place" class="text-indigo-600">...</span></p>
+                <button id="orientation-toggle-btn" class="px-4 py-2 bg-purple-500 text-white font-bold rounded-lg shadow-md hover:bg-purple-600 transition duration-150">
+                    Current: Horizontal
+                </button>
+            </div>
+            
+            <h2 class="text-xl font-bold text-blue-800 mb-4">Join or Create a Game</h2>
+            <input type="text" id="game-id-input" placeholder="Enter Game ID (e.g., GAME-123)" class="w-full md:w-1/2 p-3 border border-gray-300 rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <div id="game-action-buttons" class="flex space-x-4">
+                <button id="join-game-btn" class="px-6 py-3 bg-indigo-600 text-white font-bold rounded-lg shadow-md hover:bg-indigo-700 transition duration-150 transform hover:scale-105">
+                    Join Game
+                </button>
+                <button id="create-game-btn" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition duration-150 transform hover:scale-105">
+                    Create New Game
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Info Panel -->
+        <div id="game-info-panel" class="hidden mb-8 p-4 border-l-4 rounded-lg shadow-inner flex flex-col md:flex-row justify-between items-center info-panel">
+            <div id="message-area" class="text-lg font-semibold text-yellow-800 mb-4 md:mb-0">
+                Waiting for Opponent...
+            </div>
+        </div>
+
+        <!-- Grids Container (Responsive Layout) -->
+        <div id="game-grids" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <!-- 1. Player's Fleet Board (Status) -->
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold mb-4 text-center text-gray-700">Your Fleet Status</h2>
+                <div id="player-grid" class="grid grid-cols-10 border border-gray-300 rounded-lg overflow-hidden bg-blue-400 aspect-square">
+                    <!-- Cells will be generated by JS -->
+                </div>
+            </div>
+
+            <!-- 2. Opponent's Grid (Attack Grid) -->
+            <div>
+                <h2 class="text-xl md:text-2xl font-bold mb-4 text-center text-gray-700">Opponent's Waters</h2>
+                <div id="opponent-grid" class="grid grid-cols-10 border border-gray-300 rounded-lg overflow-hidden bg-blue-500 aspect-square">
+                    <!-- Cells will be generated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="mt-8 text-center hidden" id="reset-container">
+            <button id="reset-game-btn" class="px-6 py-2 bg-gray-500 text-white font-bold rounded-lg shadow-md hover:bg-gray-600 transition duration-150">
+                Start New Game (Refresh)
+            </button>
+        </div>
+
+    </div>
+
+    <script type="module">
+        // --- FIREBASE SETUP (Must be defined before module code) ---
+        let app, db, auth;
+        let userId = 'loading';
+        let appId = 'default-app-id';
+
+        // Wait for window.firebase to be populated by the script tag above
+        const setupFirebase = async () => {
+            if (typeof window.firebase === 'undefined') {
+                console.error("Firebase modules failed to load.");
+                return;
+            }
+
+            // Global variables provided by the Canvas environment
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+            const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+            try {
+                app = window.firebase.initializeApp(firebaseConfig);
+                db = window.firebase.getFirestore(app);
+                auth = window.firebase.getAuth(app);
+                
+                // Set up authentication
+                if (initialAuthToken) {
+                    await window.firebase.signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await window.firebase.signInAnonymously(auth);
+                }
+                
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                document.getElementById('user-id').textContent = userId;
+
+                // Initialize UI once auth is ready
+                initializeLobby();
+
+            } catch (error) {
+                console.error("Firebase initialization or authentication failed:", error);
+                document.getElementById('message-area').textContent = "Error: Could not connect to the game service.";
+            }
+        };
+
+
+        // --- GAME CONSTANTS ---
+        const GRID_SIZE = 10;
+        const SHIP_LENGTHS = [4, 3, 2, 2]; // 4 ships: Carrier, Cruiser, Destroyer, Destroyer
+        const SHIP_NAMES = { 4: "Carrier", 3: "Cruiser", 2: "Destroyer" };
+        const CELL_STATE = { WATER: 0, SHIP: 1, HIT: 2, MISS: 3, SUNK: 4 };
+
+        // --- GAME STATE ---
+        let gameId = null;
+        let isPlayerOne = false;
+        let opponentId = null;
+        let unsubscribeSnapshot = null;
+        
+        let placingShips = true; // Overall state: Are we in placement phase?
+        let isManualPlacementComplete = false; // New: Have all ships been placed?
+        let currentShipIndex = 0; // New: Index of the ship being placed
+        let isShipHorizontal = true; // New: Current placement orientation
+
+        let myBoard = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(CELL_STATE.WATER));
+        let myShips = [];
+        let opponentBoard = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(CELL_STATE.WATER));
+        let opponentShips = []; 
+
+        // --- DOM ELEMENTS ---
+        const lobbyViewEl = document.getElementById('lobby-view');
+        const gameInfoPanelEl = document.getElementById('game-info-panel');
+        const gameGridsEl = document.getElementById('game-grids');
+        const messageAreaEl = document.getElementById('message-area');
+        const joinGameBtn = document.getElementById('join-game-btn');
+        const createGameBtn = document.getElementById('create-game-btn');
+        const gameIdInputEl = document.getElementById('game-id-input');
+        const gameIdDisplayEl = document.getElementById('game-id-display');
+        const playerGridEl = document.getElementById('player-grid');
+        const opponentGridEl = document.getElementById('opponent-grid');
+        
+        // New DOM elements for placement controls
+        const placementControlsEl = document.getElementById('placement-controls'); 
+        const shipToPlaceEl = document.getElementById('ship-to-place'); 
+        const orientationToggleBtn = document.getElementById('orientation-toggle-btn');
+        const gameActionBtns = document.getElementById('game-action-buttons'); 
+
+        // --- GAME FLOW FUNCTIONS ---
+
+        function initializeLobby() {
+            joinGameBtn.onclick = () => handleGameAction('join');
+            createGameBtn.onclick = () => handleGameAction('create');
+            document.getElementById('reset-game-btn').onclick = () => window.location.reload();
+            orientationToggleBtn.onclick = toggleOrientation; // Setup toggle handler
+
+            // Initial UI state: Disable game action buttons until placement is done
+            // The following line is CRITICAL for the initial disabled state
+            gameActionBtns.classList.add('opacity-50', 'pointer-events-none'); 
+            
+            // Start Manual Placement
+            startManualPlacement();
+            renderGrid(playerGridEl, myBoard, 'player');
+            renderGrid(opponentGridEl, opponentBoard, 'opponent'); // Initial empty render
+        }
+        
+        // Multiplayer setup and state management
+        const getGameDocRef = (id) => window.firebase.doc(db, `artifacts/${appId}/public/data/sea_battle_games`, id);
+
+        async function handleGameAction(action) {
+            if (!isManualPlacementComplete) {
+                updateMessage("Please finish placing all your ships first.", true);
+                return;
+            }
+            
+            let id = gameIdInputEl.value.trim().toUpperCase() || (action === 'create' ? `GAME-${Math.random().toString(36).substring(2, 8).toUpperCase()}` : '');
+            if (!id) {
+                updateMessage('Please enter a Game ID.', true);
+                return;
+            }
+            gameId = id;
+            gameIdDisplayEl.textContent = gameId;
+
+            // Use Firestore transaction to safely create or join a game
+            try {
+                await window.firebase.runTransaction(db, async (transaction) => {
+                    const gameDocRef = getGameDocRef(gameId);
+                    const gameDoc = await transaction.get(gameDocRef);
+
+                    if (gameDoc.exists()) {
+                        // Game exists (JOIN attempt)
+                        const gameData = gameDoc.data();
+                        if (gameData.player2Id) {
+                            throw new Error('Game is full.');
+                        }
+                        if (gameData.player1Id === userId) {
+                             // Rejoining own game
+                             isPlayerOne = true;
+                        } else {
+                            // Joining as Player 2
+                            isPlayerOne = false;
+                            opponentId = gameData.player1Id;
+                            
+                            // Update document with P2's ID and initial board
+                            const p2Data = {
+                                player2Id: userId,
+                                P2_Board: JSON.stringify(myBoard), // Use manually placed board
+                                P2_Ships: JSON.stringify(myShips), // Use manually placed ships
+                                status: 'ready',
+                                turn: gameData.player1Id // P1 always starts
+                            };
+                            transaction.update(gameDocRef, p2Data);
+                        }
+
+                    } else {
+                        // Game does not exist (CREATE attempt)
+                        if (action === 'join') {
+                            throw new Error('Game ID not found.');
+                        }
+                        
+                        // Creating as Player 1
+                        isPlayerOne = true;
+                        const initialData = {
+                            player1Id: userId,
+                            player2Id: null, // Waiting for P2
+                            P1_Board: JSON.stringify(myBoard), // Use manually placed board
+                            P1_Ships: JSON.stringify(myShips), // Use manually placed ships
+                            turn: userId, // P1 starts when P2 joins
+                            status: 'waiting',
+                            lastMove: null
+                        };
+                        transaction.set(gameDocRef, initialData);
+                    }
+                });
+                
+                // If transaction succeeds, move to game view and start listening
+                startListeningForGameUpdates();
+                
+            } catch (error) {
+                console.error("Game transaction failed:", error);
+                updateMessage(`Error: ${error.message}`, true);
+                gameId = null;
+                gameIdDisplayEl.textContent = 'None';
+            }
+        }
+
+        function startListeningForGameUpdates() {
+            lobbyViewEl.classList.add('hidden');
+            gameInfoPanelEl.classList.remove('hidden');
+            gameGridsEl.classList.remove('hidden');
+
+            const gameDocRef = getGameDocRef(gameId);
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+            unsubscribeSnapshot = window.firebase.onSnapshot(gameDocRef, (doc) => {
+                if (!doc.exists()) {
+                    updateMessage("Game session ended or deleted.", true);
+                    return;
+                }
+                const gameData = doc.data();
+                
+                if (gameData.status === 'waiting') {
+                    if (isPlayerOne) {
+                        updateMessage(`Waiting for opponent to join using Game ID: ${gameId}`);
+                    } else {
+                        updateMessage("Game is initializing...", false); // Should not happen often for P2
+                    }
+                    return;
+                }
+
+                // Game is active
+                const myRole = isPlayerOne ? 'P1' : 'P2';
+                const oppRole = isPlayerOne ? 'P2' : 'P1';
+
+                opponentId = isPlayerOne ? gameData.player2Id : gameData.player1Id;
+                
+                // Load opponent's initial state if it wasn't already loaded during join
+                myBoard = JSON.parse(gameData[`${myRole}_Board`]);
+                opponentBoard = JSON.parse(gameData[`${oppRole}_Board`]);
+                myShips = JSON.parse(gameData[`${myRole}_Ships`]);
+                opponentShips = JSON.parse(gameData[`${oppRole}_Ships`]);
+
+                // Check for Game Over
+                if (gameData.status === 'finished') {
+                    endGame(gameData.winnerId);
+                    return;
+                }
+
+                // Update turn and message
+                handleTurnUpdate(gameData);
+                
+                // Redraw grids based on new state
+                renderGrid(playerGridEl, myBoard, 'player');
+                renderGrid(opponentGridEl, opponentBoard, 'opponent');
+                
+            }, (error) => {
+                console.error("Snapshot error:", error);
+                updateMessage("Real-time connection lost.", true);
+            });
+        }
+
+        function handleTurnUpdate(gameData) {
+            const isMyTurn = gameData.turn === userId;
+            
+            if (isMyTurn) {
+                updateMessage("It's your turn! Click on the Opponent's Waters to fire.", false, 'text-green-700 bg-green-100 border-green-500');
+                setupPlayerShot(true);
+            } else {
+                updateMessage(`Waiting for opponent (${opponentId ? opponentId.substring(0, 5) : 'Unknown'}) to move...`, false, 'text-yellow-800 bg-yellow-100 border-yellow-500');
+                setupPlayerShot(false);
+            }
+            
+            // Show last move feedback if available
+            if (gameData.lastMove) {
+                const moveUser = gameData.lastMove.shooterId === userId ? 'You' : gameData.lastMove.shooterId.substring(0, 5);
+                const moveMsg = gameData.lastMove.message;
+                // Only show opponent's last shot or player's last shot when turn changes
+                if (gameData.lastMove.shooterId !== userId || isMyTurn) {
+                     updateMessage(`${moveUser}: ${moveMsg}`, false, gameData.lastMove.isHit ? 'text-red-700 bg-red-100 border-red-500' : 'text-blue-700 bg-blue-100 border-blue-500');
+                }
+            }
+        }
+
+        // --- GAMEPLAY/VISUALS ---
+
+        function renderGrid(containerEl, board, type) {
+            if (containerEl.children.length === 0) {
+                 // Initial render
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'grid-cell';
+                        cell.dataset.row = r;
+                        cell.dataset.col = c;
+                        cell.dataset.type = type;
+                        containerEl.appendChild(cell);
+                    }
+                }
+            }
+            
+            // Update cell appearances
+            const cells = containerEl.querySelectorAll('.grid-cell');
+            cells.forEach(cell => {
+                const r = parseInt(cell.dataset.row);
+                const c = parseInt(cell.dataset.col);
+                updateCellAppearance(cell, board[r][c], type);
+            });
+        }
+
+        function updateCellAppearance(cell, state, type) {
+            cell.classList.remove('water', 'ship', 'miss', 'hit', 'sunk', 'disabled');
+            cell.innerHTML = '';
+            
+            // Only update "ship" state on the player's own board
+            if (type === 'player') {
+                if (state === CELL_STATE.SHIP) {
+                    cell.classList.add('ship');
+                } else if (state === CELL_STATE.HIT) {
+                    cell.classList.add('ship', 'hit');
+                    cell.innerHTML = '💥';
+                } else if (state === CELL_STATE.MISS) {
+                    cell.classList.add('water', 'miss');
+                    cell.innerHTML = '💧';
+                } else if (state === CELL_STATE.SUNK) {
+                    cell.classList.add('ship', 'sunk');
+                    cell.innerHTML = '💀';
+                } else {
+                    cell.classList.add('water');
+                }
+            } else {
+                // Opponent's board only shows shot results
+                cell.classList.add('water');
+                if (state === CELL_STATE.HIT) {
+                    cell.classList.remove('water');
+                    cell.classList.add('hit');
+                    cell.innerHTML = '🔥';
+                } else if (state === CELL_STATE.MISS) {
+                    cell.classList.remove('water');
+                    cell.classList.add('miss');
+                    cell.innerHTML = '💧';
+                } else if (state === CELL_STATE.SUNK) {
+                    // Sunk state is only possible if the opponent's board reflects it (i.e., we hit it)
+                    cell.classList.remove('water');
+                    cell.classList.add('sunk');
+                    cell.innerHTML = '💀';
+                }
+            }
+        }
+        
+        function updateMessage(message, isError = false, classes = 'text-yellow-800 bg-yellow-100 border-yellow-500') {
+            messageAreaEl.textContent = message;
+            
+            // Reset parent classes
+            messageAreaEl.parentElement.className = 'mb-8 p-4 border-l-4 rounded-lg shadow-inner flex flex-col md:flex-row justify-between items-center info-panel';
+            messageAreaEl.parentElement.classList.add(...classes.split(' '));
+            
+            if (isError) {
+                messageAreaEl.parentElement.classList.add('text-red-800', 'bg-red-100', 'border-red-500');
+            }
+        }
+        
+        // --- SHIP PLACEMENT (MANUAL FOR MP) ---
+
+        function startManualPlacement() {
+            // Reset ship data and state for placement
+            myBoard = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(CELL_STATE.WATER));
+            myShips = [];
+            currentShipIndex = 0;
+            isManualPlacementComplete = false;
+            placingShips = true;
+            // Ensure buttons start disabled
+            gameActionBtns.classList.add('opacity-50', 'pointer-events-none'); 
+            
+            updatePlacementControls();
+            
+            // Enable placement listeners on player grid
+            const cells = playerGridEl.querySelectorAll('.grid-cell');
+            cells.forEach(cell => {
+                cell.onclick = handlePlacementClick;
+                cell.onmouseover = handlePlacementHover;
+                cell.onmouseout = handlePlacementOut;
+            });
+        }
+
+        function updatePlacementControls() {
+            // Show/Hide controls based on placement progress
+            if (currentShipIndex < SHIP_LENGTHS.length) {
+                placementControlsEl.classList.remove('hidden');
+                const length = SHIP_LENGTHS[currentShipIndex];
+                const name = SHIP_NAMES[length] || `Ship of length ${length}`;
+                shipToPlaceEl.textContent = `${name} (${length} cells)`;
+                orientationToggleBtn.textContent = isShipHorizontal ? 'Current: Horizontal' : 'Current: Vertical';
+                updateMessage(`Placing: ${name}. Click on the Your Fleet Status grid to set the starting cell.`);
+            } else {
+                // *** FIX APPLIED HERE: Ensure the flag is set and controls are removed ***
+                placementControlsEl.classList.add('hidden');
+                
+                // Disable placement listeners
+                const cells = playerGridEl.querySelectorAll('.grid-cell');
+                cells.forEach(cell => {
+                    cell.onclick = null;
+                    cell.onmouseover = null;
+                    cell.onmouseout = null;
+                    cell.style.backgroundColor = ''; // Clear hover highlights
+                });
+                
+                isManualPlacementComplete = true;
+                placingShips = false;
+                
+                // *** CRITICAL ACTIVATION: Enable the game action buttons ***
+                gameActionBtns.classList.remove('opacity-50', 'pointer-events-none'); 
+                
+                updateMessage('All ships are placed! Choose a Game ID and click Create or Join.', false, 'text-green-700 bg-green-100 border-green-500');
+            }
+        }
+
+        function toggleOrientation() {
+            if (isManualPlacementComplete || !placingShips) return;
+            isShipHorizontal = !isShipHorizontal;
+            updatePlacementControls();
+            
+            // Force redraw hover effects after orientation change
+            playerGridEl.querySelectorAll('.grid-cell').forEach(cell => {
+                handlePlacementOut(); // Clear all
+                // Simulate hover on a known cell if needed, but clearing all is safer.
+            });
+        }
+
+        function handlePlacementHover(e) {
+            if (isManualPlacementComplete || !placingShips) return;
+            const r = parseInt(e.currentTarget.dataset.row);
+            const c = parseInt(e.currentTarget.dataset.col);
+            const length = SHIP_LENGTHS[currentShipIndex];
+            
+            // Clear all previous hover highlights from water cells
+            playerGridEl.querySelectorAll('.grid-cell').forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                if (myBoard[row][col] === CELL_STATE.WATER || myBoard[row][col] === CELL_STATE.MISS) {
+                    cell.style.backgroundColor = '';
+                }
+            });
+
+            if (isPlacementValid(myBoard, r, c, length, isShipHorizontal)) {
+                // Highlight valid cells
+                for (let i = 0; i < length; i++) {
+                    const row = r + (isShipHorizontal ? 0 : i);
+                    const col = c + (isShipHorizontal ? i : 0);
+                    const targetCell = playerGridEl.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    if (targetCell) {
+                        targetCell.style.backgroundColor = '#a5b4fc'; // Light indigo highlight
+                    }
+                }
+            } else {
+                // Highlight invalid start point with red background
+                 e.currentTarget.style.backgroundColor = '#fca5a5';
+            }
+        }
+
+        function handlePlacementOut(e) {
+             // Clear all hover highlights from water cells
+            playerGridEl.querySelectorAll('.grid-cell').forEach(cell => {
+                const row = parseInt(cell.dataset.row);
+                const col = parseInt(cell.dataset.col);
+                if (myBoard[row][col] === CELL_STATE.WATER || myBoard[row][col] === CELL_STATE.MISS) {
+                    cell.style.backgroundColor = '';
+                }
+            });
+        }
+
+
+        function handlePlacementClick(e) {
+            if (isManualPlacementComplete || !placingShips) return;
+
+            const r = parseInt(e.currentTarget.dataset.row);
+            const c = parseInt(e.currentTarget.dataset.col);
+            const length = SHIP_LENGTHS[currentShipIndex];
+
+            if (isPlacementValid(myBoard, r, c, length, isShipHorizontal)) {
+                placeShip(myBoard, myShips, r, c, length, isShipHorizontal);
+                currentShipIndex++;
+                
+                // Update visuals and controls
+                renderGrid(playerGridEl, myBoard, 'player');
+                updatePlacementControls();
+                
+                // Trigger a hover update to clear any lingering highlights
+                handlePlacementOut();
+
+            } else {
+                updateMessage('Invalid placement. Ship must fit entirely on the board and cannot overlap existing ships.', true);
+            }
+        }
+        
+        function placeShip(board, shipList, r, c, length, isHorizontal) {
+            const newShip = { length, hits: 0, sunk: false, cells: [] };
+            for (let i = 0; i < length; i++) {
+                const row = r + (isHorizontal ? 0 : i);
+                const col = c + (isHorizontal ? i : 0);
+                board[row][col] = CELL_STATE.SHIP;
+                newShip.cells.push({ r: row, c: col });
+            }
+            shipList.push(newShip);
+            return true;
+        }
+
+        function isPlacementValid(board, r, c, length, isHorizontal) {
+            for (let i = 0; i < length; i++) {
+                const row = r + (isHorizontal ? 0 : i);
+                const col = c + (isHorizontal ? i : 0);
+                // Check bounds and overlap
+                if (row >= GRID_SIZE || col >= GRID_SIZE || board[row][col] === CELL_STATE.SHIP) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // --- MULTIPLAYER SHOT HANDLING ---
+
+        function setupPlayerShot(canShoot) {
+            const cells = opponentGridEl.querySelectorAll('.grid-cell');
+            cells.forEach(cell => {
+                cell.onclick = null;
+                cell.classList.remove('disabled');
+                
+                if (canShoot) {
+                    // Only attach click handler if it's the player's turn AND the cell hasn't been shot
+                    const r = parseInt(cell.dataset.row);
+                    const c = parseInt(cell.dataset.col);
+                    if (opponentBoard[r][c] !== CELL_STATE.HIT && opponentBoard[r][c] !== CELL_STATE.MISS && opponentBoard[r][c] !== CELL_STATE.SUNK) {
+                        cell.onclick = handlePlayerShot;
+                    } else {
+                        cell.classList.add('disabled');
+                    }
+                } else {
+                    cell.classList.add('disabled');
+                }
+            });
+        }
+        
+        async function handlePlayerShot(e) {
+            if (gameId === null || placingShips) return;
+
+            const r = parseInt(e.currentTarget.dataset.row);
+            const c = parseInt(e.currentTarget.dataset.col);
+            
+            // Check if already shot (double check for safety)
+            if (opponentBoard[r][c] === CELL_STATE.HIT || opponentBoard[r][c] === CELL_STATE.MISS || opponentBoard[r][c] === CELL_STATE.SUNK) {
+                 updateMessage('Location already targeted.', true);
+                 return;
+            }
+
+            // Temporarily disable shooting while updating database
+            setupPlayerShot(false);
+            
+            try {
+                // Use a transaction to ensure atomic update of the game state
+                await window.firebase.runTransaction(db, async (transaction) => {
+                    const gameDocRef = getGameDocRef(gameId);
+                    const gameDoc = await transaction.get(gameDocRef);
+                    
+                    if (!gameDoc.exists()) throw new Error("Game not found during shot.");
+                    const gameData = gameDoc.data();
+                    
+                    if (gameData.turn !== userId) throw new Error("It is not your turn.");
+                    
+                    // Determine which board to modify (the opponent's board in the database)
+                    const oppRole = isPlayerOne ? 'P2' : 'P1';
+                    let opponentCurrentBoard = JSON.parse(gameData[`${oppRole}_Board`]);
+                    let opponentCurrentShips = JSON.parse(gameData[`${oppRole}_Ships`]);
+                    
+                    const cellState = opponentCurrentBoard[r][c];
+                    let isHit = false;
+                    let message = `Fired at (${r},${c}): Miss!`;
+                    let nextTurn = opponentId; // Default to opponent's turn
+
+                    if (cellState === CELL_STATE.SHIP) {
+                        opponentCurrentBoard[r][c] = CELL_STATE.HIT;
+                        isHit = true;
+                        message = `Fired at (${r},${c}): Hit!`;
+                        nextTurn = userId; // Player gets another turn on hit
+
+                        // Process ship hit
+                        const hitShip = opponentCurrentShips.find(ship =>
+                            ship.cells.some(cell => cell.r === r && cell.c === c)
+                        );
+
+                        if (hitShip) {
+                            hitShip.hits++;
+                            if (hitShip.hits === hitShip.length) {
+                                hitShip.sunk = true;
+                                message = `Fired at (${r},${c}): Sunk! The ${SHIP_NAMES[hitShip.length]} is gone!`;
+                                // Mark all cells of the sunk ship as sunk in the board
+                                hitShip.cells.forEach(cell => {
+                                    opponentCurrentBoard[cell.r][cell.c] = CELL_STATE.SUNK;
+                                });
+                            }
+                        }
+                    } else {
+                        opponentCurrentBoard[r][c] = CELL_STATE.MISS;
+                    }
+                    
+                    // Check for win condition against opponent's ships
+                    const allSunk = opponentCurrentShips.every(ship => ship.sunk);
+                    let newStatus = gameData.status;
+                    let winnerId = gameData.winnerId;
+
+                    if (allSunk) {
+                        newStatus = 'finished';
+                        winnerId = userId;
+                        message += ` GAME OVER: ${userId.substring(0, 5)} WINS!`;
+                    }
+
+                    // Update the database with the new state
+                    const updateData = {
+                        [`${oppRole}_Board`]: JSON.stringify(opponentCurrentBoard),
+                        [`${oppRole}_Ships`]: JSON.stringify(opponentCurrentShips),
+                        turn: allSunk ? null : nextTurn, // If game over, stop the turn
+                        status: newStatus,
+                        winnerId: winnerId,
+                        lastMove: {
+                            shooterId: userId,
+                            targetR: r,
+                            targetC: c,
+                            isHit: isHit,
+                            message: message
+                        }
+                    };
+                    transaction.update(gameDocRef, updateData);
+                });
+                
+                // Transaction succeeded. The onSnapshot listener will handle the resulting state update.
+
+            } catch (error) {
+                console.error("Shot failed:", error);
+                updateMessage(`Error making move: ${error.message}`, true);
+                setupPlayerShot(true); // Re-enable shooting if turn didn't switch
+            }
+        }
+
+        function isGameOver(shipList) {
+            return shipList.every(ship => ship.sunk);
+        }
+
+        function endGame(winnerId) {
+            if (unsubscribeSnapshot) unsubscribeSnapshot();
+            document.getElementById('reset-container').classList.remove('hidden');
+
+            if (winnerId === userId) {
+                updateMessage('🎉 GAME OVER: YOU WIN! The opponent\'s fleet has been sunk!', false, 'text-green-700 bg-green-100 border-green-500');
+            } else {
+                updateMessage(`😭 GAME OVER: The opponent (${winnerId.substring(0, 5)}) destroyed your fleet.`, false, 'text-red-700 bg-red-100 border-red-500');
+            }
+            setupPlayerShot(false); // Disable all interaction
+        }
+
+
+        // --- ENTRY POINT ---
+        setupFirebase();
+
+    </script>
+</body>
+</html>

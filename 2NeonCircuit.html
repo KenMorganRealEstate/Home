@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NEON CIRCUIT: Final Fixed</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+        body {
+            margin: 0;
+            background-color: #050510;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* --- START OVERLAY --- */
+        #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 16, 0.98);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        #start-overlay h1 {
+            font-size: 3rem; margin-bottom: 10px;
+            background: linear-gradient(to right, #00d2ff, #ff0055); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .role-btn {
+            background: transparent;
+            border: 3px solid #333;
+            color: #fff;
+            padding: 20px 40px;
+            margin: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: 0.2s;
+            width: 80%;
+            max-width: 300px;
+        }
+        .role-btn:hover { transform: scale(1.05); }
+        .role-ken { border-color: #00d2ff; color: #00d2ff; }
+        .role-ken:hover { background: #00d2ff; color: #000; box-shadow: 0 0 30px #00d2ff; }
+        .role-kevin { border-color: #ff0055; color: #ff0055; }
+        .role-kevin:hover { background: #ff0055; color: #fff; box-shadow: 0 0 30px #ff0055; }
+
+        /* --- UI LAYER --- */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        /* HEADER */
+        header {
+            text-align: center;
+            pointer-events: auto;
+            margin-top: 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            padding-bottom: 20px;
+        }
+        
+        #game-title { 
+            margin: 0; font-size: 2rem; letter-spacing: 3px; 
+            text-shadow: 0 0 20px rgba(0, 210, 255, 0.5);
+        }
+        
+        #game-status {
+            font-size: 1.2rem;
+            color: #fff;
+            background: rgba(0,0,0,0.8);
+            padding: 8px 25px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+            display: inline-block;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        /* --- CONTROL PANEL (BOTTOM) --- */
+        #controls {
+            pointer-events: auto;
+            background: rgba(10, 10, 20, 0.9);
+            border-top: 2px solid #00d2ff;
+            width: 100%;
+            padding: 15px 0;
+            border-radius: 20px 20px 0 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        /* BUTTONS */
+        .btn {
+            background: linear-gradient(135deg, #00d2ff, #0055ff);
+            border: none;
+            padding: 10px 15px;
+            color: #fff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 50px;
+            text-transform: uppercase;
+            box-shadow: 0 0 10px #00d2ff;
+            transition: 0.1s;
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn:disabled { background: #333; color: #555; box-shadow: none; cursor: not-allowed; border: 1px solid #444;}
+        
+        .btn-red { background: linear-gradient(135deg, #ff0055, #ff0000); box-shadow: 0 0 15px #ff0055; }
+        .btn-purple { background: linear-gradient(135deg, #b000ff, #7700ff); box-shadow: 0 0 15px #b000ff; }
+        .btn-big { padding: 15px 30px; font-size: 1.2rem; min-width: 120px;}
+
+        /* PLAYER STATS */
+        .player-area { text-align: center; }
+        .score-big { font-size: 2rem; font-weight: 900; line-height: 1;}
+        .p-label { font-size: 0.8rem; letter-spacing: 2px; }
+
+        /* DICE AREA (CENTER) */
+        .dice-area { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+        }
+        #dice-display { font-size: 3rem; margin-bottom: 5px; text-shadow: 0 0 20px #fff; height: 50px;}
+
+        /* --- POPUP MODAL --- */
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 100;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+        }
+        #modal-box {
+            background: #111;
+            border: 2px solid #00d2ff;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(0, 210, 255, 0.3);
+        }
+        input[type="text"] {
+            background: #222; border: 1px solid #444; color: #00ff88;
+            padding: 15px; font-size: 1.5rem; width: 80%;
+            text-align: center; margin: 20px 0; border-radius: 10px;
+            font-family: monospace; letter-spacing: 2px;
+        }
+
+        /* CANVAS */
+        #game-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            z-index: 1;
+            background: radial-gradient(circle at center, #1b1b2f 0%, #000000 100%);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-overlay">
+        <h1>NEON CIRCUIT</h1>
+        <p style="color:#aaa; margin-bottom: 30px;">IDENTITY VERIFICATION</p>
+        <button class="role-btn role-ken" onclick="startGame('Ken')">I AM KEN</button>
+        <button class="role-btn role-kevin" onclick="startGame('Kevin')">I AM KEVIN</button>
+    </div>
+
+    <div id="ui-layer">
+        <header>
+            <h2 id="game-title">NEON CIRCUIT</h2>
+            <div id="game-status">WAITING...</div>
+        </header>
+
+        <div id="controls">
+            <div class="player-area">
+                <div class="p-label" style="color:#00d2ff">KEN</div>
+                <div class="score-big" id="p1-score">0</div>
+                <button class="btn btn-purple" style="margin-top:5px;" onclick="openLoadModal()">📂 LOAD</button>
+            </div>
+
+            <div class="dice-area">
+                <div id="dice-display">🎲</div>
+                <button class="btn btn-big" id="btn-roll" disabled onclick="playTurn()">ROLL</button>
+            </div>
+
+            <div class="player-area">
+                <div class="p-label" style="color:#ff0055">KEVIN</div>
+                <div class="score-big" id="p2-score">0</div>
+                <button class="btn btn-red" style="margin-top:5px;" onclick="resetGame()">🔄 RESET</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-overlay">
+        <div id="modal-box">
+            <h2 id="modal-title">TITLE</h2>
+            <p id="modal-desc">Description</p>
+            
+            <div id="load-ui" style="display:none;">
+                <input type="text" id="code-input" placeholder="PASTE CODE HERE">
+                <br>
+                <button class="btn btn-green btn-big" onclick="submitLoad()">LOAD</button>
+                <br><br>
+                <button class="btn btn-red" onclick="closeModal()">CANCEL</button>
+            </div>
+
+            <div id="send-ui" style="display:none;">
+                <div style="display:flex; flex-direction:column; gap:15px; align-items: center;">
+                    <a id="email-link" href="#" class="btn btn-green btn-big" style="text-decoration:none; display:flex; justify-content:center; align-items:center; width: 220px;">📧 EMAIL MOVE</a>
+                    <a id="sms-link" href="#" class="btn btn-green btn-big" style="text-decoration:none; display:flex; justify-content:center; align-items:center; width: 220px;">📱 TEXT MOVE</a>
+                </div>
+                <p style="color:#555; margin-top:20px; font-size:0.8rem;">OR COPY MANUALLY:</p>
+                <input type="text" id="code-display" readonly onclick="this.select()">
+                <button class="btn" onclick="copyCode()">📋 COPY</button>
+                <br><br>
+                <button class="btn btn-red" onclick="closeModal()">CLOSE</button>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="game-canvas"></canvas>
+
+<script>
+    /* --- CONFIGURATION --- */
+    const CONFIG = {
+        totalTiles: 50,
+        Ken: { email: "sales@kenmorgan.ca", phone: "9056301225" },
+        Kevin: { email: "kevin@astoundgroup.com", phone: "4169916651" }
+    };
+
+    /* --- GLOBAL STATE --- */
+    let myIdentity = null; // 'Ken' or 'Kevin'
+    let state = {
+        turn: 1,
+        activePlayer: 1, // 1=Ken, 2=Kevin
+        p1Pos: 0,
+        p2Pos: 0,
+        winner: 0
+    };
+
+    /* --- AUDIO ENGINE --- */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        const now = audioCtx.currentTime;
+
+        if (type === 'roll') {
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.linearRampToValueAtTime(800, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'move') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(300, now);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now); osc.stop(now + 0.1);
+        } else if (type === 'win') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.linearRampToValueAtTime(800, now + 1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0, now + 1);
+            osc.start(now); osc.stop(now + 1);
+        }
+    }
+
+    /* --- GRAPHICS ENGINE --- */
+    const canvas = document.getElementById('game-canvas');
+    const ctx = canvas.getContext('2d');
+    let boardPath = [];
+    let particles = [];
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        generatePath();
+    }
+    window.addEventListener('resize', resize);
+
+    function generatePath() {
+        boardPath = [];
+        const w = canvas.width;
+        const h = canvas.height;
+        const cols = w < 600 ? 5 : 10;
+        const rows = w < 600 ? 10 : 5;
+        const padX = w / (cols + 1);
+        const padY = h / (rows + 1);
+
+        for (let i = 0; i < CONFIG.totalTiles; i++) {
+            let row = Math.floor(i / cols);
+            let col = i % cols;
+            if (row % 2 === 1) col = (cols - 1) - col; 
+            boardPath.push({
+                x: (padX/2) + (col * padX) + padX/2,
+                y: (padY/2) + (row * padY) + padY/2
+            });
+        }
+    }
+
+    function spawnParticle(x, y, color) {
+        for(let i=0; i<15; i++) {
+            particles.push({
+                x: x, y: y,
+                vx: (Math.random()-0.5)*8, vy: (Math.random()-0.5)*8,
+                life: 1.0, color: color
+            });
+        }
+    }
+
+    function draw() {
+        ctx.fillStyle = 'rgba(5, 5, 16, 0.25)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Track
+        if(boardPath.length > 0) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 10;
+            ctx.moveTo(boardPath[0].x, boardPath[0].y);
+            for(let i=1; i<boardPath.length; i++) ctx.lineTo(boardPath[i].x, boardPath[i].y);
+            ctx.stroke();
+        }
+
+        // Tiles
+        boardPath.forEach((pos, i) => {
+            const isSpecial = i % 5 === 0 && i !== 0;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, isSpecial?8:4, 0, Math.PI*2);
+            ctx.fillStyle = isSpecial ? '#ffcc00' : '#333';
+            if(isSpecial) { ctx.shadowBlur = 15; ctx.shadowColor = '#ffcc00'; }
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        });
+
+        // Players
+        drawPlayer(state.p1Pos, 1, '#00d2ff');
+        drawPlayer(state.p2Pos, 2, '#ff0055');
+
+        // Particles
+        particles.forEach((p, idx) => {
+            p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+            ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+            ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+            ctx.globalAlpha = 1.0;
+            if(p.life<=0) particles.splice(idx,1);
+        });
+
+        requestAnimationFrame(draw);
+    }
+
+    function drawPlayer(posIndex, pNum, color) {
+        if (posIndex >= boardPath.length) posIndex = boardPath.length - 1;
+        const pos = boardPath[posIndex];
+        
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y - 15, 15, 0, Math.PI*2);
+        ctx.fillStyle = color;
+        ctx.shadowBlur = 20; ctx.shadowColor = color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 12px Orbitron";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("P"+pNum, pos.x, pos.y-15);
+    }
+
+    /* --- GAME LOGIC --- */
+    
+    function startGame(role) {
+        myIdentity = role;
+        // Init Audio on first user interaction
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        document.getElementById('start-overlay').style.display = 'none';
+        updateUI();
+    }
+
+    function resetGame() {
+        if(!confirm("Reset current game?")) return;
+        state = { turn: 1, activePlayer: 1, p1Pos: 0, p2Pos: 0, winner: 0 };
+        updateUI();
+    }
+
+    async function playTurn() {
+        // Double check it's my turn
+        const myPlayerNum = myIdentity === 'Ken' ? 1 : 2;
+        if(state.activePlayer !== myPlayerNum) return;
+
+        document.getElementById('btn-roll').disabled = true;
+        
+        const roll = await animateDice();
+        
+        let currentPos = state.activePlayer === 1 ? state.p1Pos : state.p2Pos;
+        let newPos = currentPos + roll;
+        if(newPos >= CONFIG.totalTiles - 1) {
+            newPos = CONFIG.totalTiles - 1;
+            state.winner = state.activePlayer;
+        }
+
+        await animateMove(state.activePlayer, currentPos, newPos);
+        
+        // Commit
+        if(state.activePlayer === 1) state.p1Pos = newPos; else state.p2Pos = newPos;
+
+        if(state.winner !== 0) {
+            playSound('win');
+            alert(`PLAYER ${state.winner} WINS!`);
+            updateUI();
+        } else {
+            // Powerups
+            if(newPos % 5 === 0 && newPos !== 0) {
+                spawnParticle(boardPath[newPos].x, boardPath[newPos].y, '#ffcc00');
+                // Auto boost
+                let boostPos = Math.min(newPos + 2, CONFIG.totalTiles-1);
+                await animateMove(state.activePlayer, newPos, boostPos);
+                if(state.activePlayer === 1) state.p1Pos = boostPos; else state.p2Pos = boostPos;
+            }
+
+            // End Turn -> Swap Active Player
+            state.activePlayer = state.activePlayer === 1 ? 2 : 1;
+            state.turn++;
+            updateUI(); // Lock buttons
+            openSendModal(); // Show code
+        }
+    }
+
+    function updateUI() {
+        document.getElementById('p1-score').innerText = state.p1Pos;
+        document.getElementById('p2-score').innerText = state.p2Pos;
+
+        if(!myIdentity) return; // Not started yet
+
+        const btn = document.getElementById('btn-roll');
+        const status = document.getElementById('game-status');
+        const myNum = myIdentity === 'Ken' ? 1 : 2;
+
+        if(state.winner !== 0) {
+            status.innerText = `WINNER: PLAYER ${state.winner}`;
+            status.style.color = '#ffcc00';
+            btn.disabled = true;
+            return;
+        }
+
+        if(state.activePlayer === myNum) {
+            // It is MY turn
+            status.innerText = "YOUR TURN";
+            status.style.color = "#00ff88";
+            btn.disabled = false;
+            btn.style.opacity = "1";
+        } else {
+            // It is THEIR turn
+            const otherName = myIdentity === 'Ken' ? 'KEVIN' : 'KEN';
+            status.innerText = `WAITING FOR ${otherName}...`;
+            status.style.color = "#aaa";
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+        }
+    }
+
+    /* --- ANIMATIONS --- */
+    function animateDice() {
+        return new Promise(resolve => {
+            let i = 0;
+            const el = document.getElementById('dice-display');
+            const interval = setInterval(() => {
+                el.innerText = Math.floor(Math.random()*6)+1;
+                playSound('roll');
+                i++;
+                if(i>10) { clearInterval(interval); resolve(parseInt(el.innerText)); }
+            }, 80);
+        });
+    }
+
+    function animateMove(pNum, from, to) {
+        return new Promise(resolve => {
+            let curr = from;
+            const interval = setInterval(() => {
+                if(curr < to) {
+                    curr++;
+                    if(pNum===1) state.p1Pos = curr; else state.p2Pos = curr;
+                    playSound('move');
+                } else {
+                    clearInterval(interval);
+                    resolve();
+                }
+            }, 150);
+        });
+    }
+
+    /* --- IMPORT / EXPORT SYSTEM --- */
+    
+    function compressState() {
+        return `${state.turn}|${state.activePlayer}|${state.p1Pos}|${state.p2Pos}|${state.winner}`;
+    }
+
+    function decompressState(str) {
+        const parts = str.split('|');
+        if(parts.length < 5) throw new Error("Invalid");
+        return {
+            turn: parseInt(parts[0]),
+            activePlayer: parseInt(parts[1]),
+            p1Pos: parseInt(parts[2]),
+            p2Pos: parseInt(parts[3]),
+            winner: parseInt(parts[4])
+        };
+    }
+
+    function openSendModal() {
+        const code = compressState();
+        document.getElementById('modal-overlay').style.display = 'flex';
+        document.getElementById('send-ui').style.display = 'block';
+        document.getElementById('load-ui').style.display = 'none';
+        
+        document.getElementById('modal-title').innerText = "TURN COMPLETE";
+        document.getElementById('modal-desc').innerText = "Send this code to opponent:";
+        document.getElementById('code-display').value = code;
+
+        // Determine recipient
+        // If I am Ken (1), and I just finished my turn, activePlayer became 2 (Kevin).
+        // So I need to send to Kevin.
+        const targetName = myIdentity === 'Ken' ? 'Kevin' : 'Ken';
+        const targetData = CONFIG[targetName];
+        
+        const subject = `Neon Circuit Turn ${state.turn}`;
+        const body = `Move Code: ${code}`;
+        
+        document.getElementById('email-link').href = `mailto:${targetData.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        document.getElementById('sms-link').href = `sms:${targetData.phone}?&body=${encodeURIComponent(body)}`;
+    }
+
+    function openLoadModal() {
+        document.getElementById('modal-overlay').style.display = 'flex';
+        document.getElementById('send-ui').style.display = 'none';
+        document.getElementById('load-ui').style.display = 'block';
+        document.getElementById('modal-title').innerText = "LOAD GAME";
+        document.getElementById('modal-desc').innerText = "Paste received code:";
+        document.getElementById('code-input').value = "";
+    }
+
+    function submitLoad() {
+        try {
+            const val = document.getElementById('code-input').value.trim();
+            const newState = decompressState(val);
+            state = newState;
+            updateUI();
+            
+            // Check if it's now my turn
+            const myNum = myIdentity === 'Ken' ? 1 : 2;
+            if(state.activePlayer === myNum) {
+                alert("Code Loaded! It is your turn.");
+            } else {
+                alert("Code Loaded! Still waiting for opponent.");
+            }
+            closeModal();
+            
+        } catch(e) {
+            alert("Invalid Code");
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('modal-overlay').style.display = 'none';
+    }
+
+    function copyCode() {
+        const c = document.getElementById('code-display');
+        c.select(); document.execCommand('copy');
+        c.blur();
+        alert("Copied to Clipboard");
+    }
+
+    // BOOT
+    resize();
+    generatePath();
+    draw();
+
+</script>
+</body>
+</html>

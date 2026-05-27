@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ken Morgan | The Hybrid Marketing Blueprint</title>
+    
+    <!-- Google Fonts: Montserrat for that clean, high-end architectural look -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        tech: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        navy: '#061024',
+                        navylight: '#0f2046',
+                        chartreuse: '#D4FF00',
+                        offwhite: '#F8FAFC'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #061024;
+            color: #F8FAFC;
+            overflow: hidden; /* Prevent scrolling, act like a slide deck */
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Global Header for Logos */
+        #global-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 2rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 50;
+            pointer-events: none; /* Let clicks pass through to slides */
+        }
+
+        .header-logo {
+            height: 60px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+            opacity: 0.95;
+            filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.5));
+            color: transparent;
+            font-size: 0;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.6s ease-in-out, visibility 0.6s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            z-index: 10;
+        }
+
+        /* High-Tech Grid Overlay */
+        .bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(6, 16, 36, 0.95) 0%, rgba(6, 16, 36, 0.80) 100%), 
+                        url('data:image/svg+xml;utf8,<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><rect width="40" height="40" fill="none"/><path d="M0 0h40v40H0V0zm1 1h38v38H1V1z" fill="rgba(212,255,0,0.03)"/></svg>');
+            z-index: -1;
+        }
+
+        .bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -2;
+        }
+
+        /* High-Tech Glassmorphism Panels */
+        .glass-panel {
+            background: rgba(15, 32, 70, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(212, 255, 0, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .glass-panel:hover {
+            border-color: rgba(212, 255, 0, 0.4);
+            box-shadow: 0 8px 32px rgba(212, 255, 0, 0.1);
+        }
+
+        /* Navigation Controls */
+        #controls {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            z-index: 100;
+            display: flex;
+            gap: 15px;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        #controls:hover {
+            opacity: 1;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover {
+            background: #D4FF00;
+            color: #061024;
+            border-color: #D4FF00;
+        }
+        
+        .accent-text {
+            color: #D4FF00;
+        }
+
+        /* Slide Content Formatting */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 100%;
+            width: 100%;
+            align-items: center;
+            padding-top: 60px; /* Space for the global header */
+        }
+
+        .text-column {
+            padding: 4rem 6rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .image-column {
+            height: 100%;
+            width: 100%;
+            padding: 6rem 6rem 6rem 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .image-column.left {
+            padding: 6rem 0 6rem 6rem;
+        }
+
+        .text-column.right {
+            padding: 4rem 6rem 4rem 4rem;
+        }
+
+        .image-column img {
+            width: 100%;
+            max-height: 75vh;
+            object-fit: cover;
+            border-radius: 12px;
+            border: 1px solid rgba(212, 255, 0, 0.4);
+            box-shadow: 0 0 30px rgba(212, 255, 0, 0.15);
+        }
+
+        /* Global Footer for Contact Info */
+        .global-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 1.5rem;
+            text-align: center;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        /* List styling */
+        ul.custom-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        ul.custom-list li {
+            position: relative;
+            padding-left: 2.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.15rem;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+        ul.custom-list li::before {
+            content: "!";
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #D4FF00;
+            font-weight: 900;
+            font-size: 1.25rem;
+        }
+        
+        /* Progress Bar */
+        #progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background-color: #D4FF00;
+            z-index: 1000;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 10px #D4FF00;
+        }
+
+        .tech-font {
+            font-family: 'Space Grotesk', sans-serif;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="progress-bar" style="width: 0%;"></div>
+
+    <!-- GLOBAL HEADER: Logos -->
+    <div id="global-header">
+        <img src="https://github.com/KenMorganRealEstate/Home/blob/main/KenMorganLogoBestOneTransparent.png?raw=true" alt="Ken Morgan Logo" class="header-logo" style="height: 72px;">
+        <img src="https://github.com/KenMorganRealEstate/Home/blob/main/CASORA%20PRIMARY%20LOGO_blue.png?raw=true" alt="Casora Logo" class="header-logo">
+    </div>
+
+    <!-- GLOBAL FOOTER: Contact Info -->
+    <div class="global-footer">
+        <div class="text-xs text-gray-500 font-semibold tracking-widest tech-font">KEN MORGAN | CASORA! REALTY INC. | (905) 630-1225 | KENMORGAN.CA</div>
+    </div>
+
+    <!-- SLIDE 1: TITLE SLIDE -->
+    <div class="slide active">
+        <video autoplay loop muted playsinline class="bg-image">
+            <source src="https://github.com/KenMorganRealEstate/Home/raw/refs/heads/main/backgroundvideoforweb.mp4" type="video/mp4">
+        </video>
+        <div class="bg-overlay" style="background: linear-gradient(135deg, rgba(6, 16, 36, 0.95) 0%, rgba(6, 16, 36, 0.60) 100%), url('data:image/svg+xml;utf8,<svg width=%2240%22 height=%2240%22 viewBox=%220 0 40 40%22 xmlns=%22http://www.w3.org/2000/svg%22><rect width=%2240%22 height=%2240%22 fill=%22none%22/><path d=%22M0 0h40v40H0V0zm1 1h38v38H1V1z%22 fill=%22rgba(212,255,0,0.05)%22/></svg>');"></div>
+        
+        <div class="flex flex-col items-center justify-center h-full text-center px-8 relative z-10 pt-20">
+            <div class="glass-panel p-6 rounded-2xl mb-12 shadow-[0_0_30px_rgba(212,255,0,0.2)] border-chartreuse">
+                <svg class="w-16 h-16 text-chartreuse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+            </div>
+
+            <h1 class="text-6xl md:text-7xl font-bold tracking-tight mb-4 shadow-sm">Professionally Marketing <br><span class="accent-text">Your Home</span></h1>
+            <h2 class="text-2xl md:text-3xl text-gray-300 font-light mb-16 tech-font">The Ultimate Omnichannel Blueprint</h2>
+            
+            <p class="text-xl tracking-widest uppercase font-semibold text-gray-400">
+                A Proactive Plan. A Promise of Proven Results.
+            </p>
+        </div>
+    </div>
+
+    <!-- SLIDE 2: THE CASORA DIFFERENCE & QUOTE -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="flex flex-col items-center justify-center h-full px-12 text-center w-full max-w-5xl mx-auto pt-20">
+            <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-4 tech-font">The Standard is Broken</h2>
+            <h1 class="text-6xl font-bold mb-10">Why <span class="accent-text">CASORA!</span></h1>
+            
+            <p class="text-2xl text-gray-300 font-light mb-12 leading-relaxed italic">
+                "No one ever attains very eminent success by simply doing what is required of him; it is the amount and excellence of what is over and above the required that determines the greatness of ultimate distinction." <br><span class="text-lg text-chartreuse font-semibold mt-4 block">— Charles Kendall Adams</span>
+            </p>
+
+            <div class="glass-panel p-10 rounded-xl text-left border-t-4 border-chartreuse shadow-[0_0_20px_rgba(212,255,0,0.2)]">
+                <p class="text-xl text-white leading-relaxed">
+                    The sale of your home is more than a transaction; it's a significant life transition. At Casora!, we honor this by blending the wisdom of experience with the power of intelligent technology. Our name combines 'Casa'—the heart of the home—with a forward-thinking, results-oriented promise. 
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 3: 25 YEARS EXPERIENCE -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="content-grid" style="grid-template-columns: 0.9fr 1.1fr;">
+            <div class="image-column left">
+                <img src="https://images.unsplash.com/photo-1560520653-9e0e4c89eb11?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="Experience and Trust">
+            </div>
+            <div class="text-column right">
+                <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-2 tech-font">The Bedrock of Success</h2>
+                <h1 class="text-5xl font-bold mb-8">25 Years of <span class="accent-text">Experience</span></h1>
+                
+                <p class="text-xl text-gray-300 mb-8 leading-relaxed">
+                    Technology is powerful, but it cannot replace the nuanced art of the deal. 
+                </p>
+
+                <ul class="custom-list space-y-4">
+                    <li>
+                        <strong class="text-white text-xl">Accurate Knowledge</strong><br>
+                        With two and a half decades of navigating the Ontario real estate market, I provide an intuitive understanding of our local community that algorithms simply cannot replicate.
+                    </li>
+                    <li>
+                        <strong class="text-white text-xl">Relentless Negotiation</strong><br>
+                        This deep experience is the foundation upon which our modern strategy is built, ensuring your interests are fiercely protected and your financial outcome is maximized at the negotiating table.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 4: PROVEN TRACK RECORD -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="flex flex-col items-center justify-center h-full px-12 text-center w-full max-w-5xl mx-auto pt-20">
+            <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-4 tech-font">The Results</h2>
+            <h1 class="text-6xl font-bold mb-16">A Proven <span class="accent-text">Track Record</span></h1>
+            
+            <div class="grid grid-cols-2 gap-12 w-full text-center">
+                <div class="glass-panel p-12 rounded-xl border-t-4 border-chartreuse shadow-[0_0_30px_rgba(212,255,0,0.2)]">
+                    <h3 class="text-7xl font-black text-white mb-4 tech-font">106<span class="text-chartreuse">%</span></h3>
+                    <h4 class="text-2xl font-bold text-gray-200 mb-4 tracking-widest uppercase">Sale-to-List Ratio</h4>
+                    <p class="text-lg text-gray-400">
+                        Our data-driven pricing strategies consistently yield offers above asking, outperforming the regional Ontario average.
+                    </p>
+                </div>
+                <div class="glass-panel p-12 rounded-xl border-t-4 border-blue-500 shadow-[0_0_30px_rgba(59,130,246,0.2)]">
+                    <h3 class="text-7xl font-black text-white mb-4 tech-font">8 <span class="text-blue-500 text-5xl">Days</span></h3>
+                    <h4 class="text-2xl font-bold text-gray-200 mb-4 tracking-widest uppercase">Average on Market</h4>
+                    <p class="text-lg text-gray-400">
+                        Through aggressive pre-market digital campaigns, we generate immediate buyer friction and bidding wars to sell your home faster.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 5: THE PHILOSOPHY (ACTIVE HUNTER) -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="content-grid">
+            <div class="text-column">
+                <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-2 tech-font">The Philosophy</h2>
+                <h1 class="text-5xl font-bold mb-8">The Difference is <span class="accent-text">Proactive Action.</span></h1>
+                
+                <div class="mb-10">
+                    <h3 class="text-2xl font-semibold mb-3 text-red-400">The Passive Agent</h3>
+                    <p class="text-lg text-gray-400 leading-relaxed mb-2">Most agents rely on the "3 P's": Put it on the MLS, Put up a sign, and Pray that it sells. They wait for the market to come to them.</p>
+                </div>
+
+                <div class="glass-panel p-6 rounded-xl border border-chartreuse/30">
+                    <h3 class="text-2xl font-semibold mb-3 accent-text flex items-center gap-3">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        The Active Hunter
+                    </h3>
+                    <p class="text-lg text-gray-300 leading-relaxed">
+                        I treat your home as a high-stakes product launch. We combine aggressive traditional tactics with bleeding-edge digital syndication to ensure <strong class="text-white">no stone is left unturned.</strong> We actively hunt the buyers down.
+                    </p>
+                </div>
+            </div>
+            <div class="image-column">
+                <img src="https://images.unsplash.com/photo-1587825140062-712544155ab2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="Strategy Chess">
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 6: PILLARS OF A TOP DOLLAR SALE -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="flex flex-col items-center justify-center h-full px-12 text-center w-full max-w-6xl mx-auto pt-20">
+            <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-2 tech-font">The Formula</h2>
+            <h1 class="text-5xl font-bold mb-12">What Determines a <span class="accent-text">Top Dollar Sale?</span></h1>
+            
+            <div class="grid grid-cols-4 gap-6 w-full">
+                <div class="glass-panel p-8 rounded-2xl border-t-4 border-chartreuse shadow-lg">
+                    <div class="text-4xl font-black text-chartreuse tech-font mb-4">01</div>
+                    <h3 class="text-xl font-bold text-white mb-2">How It Is Priced</h3>
+                    <p class="text-gray-400 text-sm">Strategic, data-driven, market-proven valuation.</p>
+                </div>
+                <div class="glass-panel p-8 rounded-2xl border-t-4 border-blue-400 shadow-lg">
+                    <div class="text-4xl font-black text-blue-400 tech-font mb-4">02</div>
+                    <h3 class="text-xl font-bold text-white mb-2">How It Shows</h3>
+                    <p class="text-gray-400 text-sm">Creating an irresistible digital and physical first impression.</p>
+                </div>
+                <div class="glass-panel p-8 rounded-2xl border-t-4 border-purple-500 shadow-lg">
+                    <div class="text-4xl font-black text-purple-500 tech-font mb-4">03</div>
+                    <h3 class="text-xl font-bold text-white mb-2">How It Is Marketed</h3>
+                    <p class="text-gray-400 text-sm">Proactive promotion, actively hunting for the perfect buyer.</p>
+                </div>
+                <div class="glass-panel p-8 rounded-2xl border-t-4 border-white shadow-lg">
+                    <div class="text-4xl font-black text-white tech-font mb-4">04</div>
+                    <h3 class="text-xl font-bold text-white mb-2">Communication</h3>
+                    <p class="text-gray-400 text-sm">Transparent feedback and aggressive negotiation defense.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 7: 5-5-5 PRICING STRATEGY -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="flex flex-col items-center justify-center h-full px-12 text-center w-full max-w-6xl mx-auto pt-20">
+            <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-2 tech-font">The Valuation</h2>
+            <h1 class="text-5xl font-bold mb-6">The Science of Pricing: <span class="accent-text">5-5-5</span></h1>
+            <p class="text-2xl text-gray-300 mb-16 font-light">The right price is determined only by current market conditions. We triangulate the data.</p>
+
+            <div class="grid grid-cols-3 gap-8 w-full">
+                <!-- ACTIVE -->
+                <div class="glass-panel p-8 rounded-xl border-t-4 border-t-blue-500 relative overflow-hidden">
+                    <h3 class="text-4xl font-black text-blue-500 mb-2 tech-font">5</h3>
+                    <h4 class="text-xl font-bold text-white mb-2">ACTIVE LISTINGS</h4>
+                    <p class="text-gray-400 text-sm">Your direct competition right now. Who are we fighting against for the buyer's attention?</p>
+                </div>
+                
+                <!-- PENDING -->
+                <div class="glass-panel p-8 rounded-xl border-t-4 border-t-yellow-500 relative overflow-hidden">
+                    <h3 class="text-4xl font-black text-yellow-500 mb-2 tech-font">5</h3>
+                    <h4 class="text-xl font-bold text-white mb-2">PENDING SALES</h4>
+                    <p class="text-gray-400 text-sm">The current speed. What is the market actively absorbing this exact week?</p>
+                </div>
+
+                <!-- SOLD -->
+                <div class="glass-panel p-8 rounded-xl border-t-4 border-t-chartreuse relative overflow-hidden">
+                    <h3 class="text-4xl font-black text-chartreuse mb-2 tech-font">5</h3>
+                    <h4 class="text-xl font-bold text-white mb-2">SOLD PROPERTIES</h4>
+                    <p class="text-gray-400 text-sm">The proven value. What have buyers recently proven they are willing to pay?</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 8: PRICING PYRAMID & BUYER INTEREST -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="content-grid" style="grid-template-columns: 0.9fr 1.1fr;">
+            <div class="image-column left flex flex-col gap-6">
+                <!-- Conceptual Pricing Pyramid/Chart visual -->
+                <div class="glass-panel p-6 rounded-xl w-full">
+                    <h4 class="text-chartreuse font-bold mb-4 text-center">Pricing vs. Potential Buyers</h4>
+                    <div class="flex items-end justify-center gap-2 h-40 border-b border-l border-gray-600 p-4">
+                        <div class="w-1/4 bg-red-500/50 h-1/4 flex items-center justify-center text-xs">+15%</div>
+                        <div class="w-1/4 bg-yellow-500/50 h-2/4 flex items-center justify-center text-xs">+10%</div>
+                        <div class="w-1/4 bg-chartreuse/50 h-3/4 flex items-center justify-center text-xs text-navy font-bold">Market Value</div>
+                        <div class="w-1/4 bg-blue-500/50 h-full flex items-center justify-center text-xs">-10%</div>
+                    </div>
+                </div>
+                <div class="glass-panel p-6 rounded-xl w-full">
+                    <h4 class="text-chartreuse font-bold mb-4 text-center">Buyer Interest Over Time</h4>
+                    <div class="relative h-32 w-full">
+                        <!-- Simulated bell curve peak at week 1 -->
+                        <svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                            <path d="M0,100 C20,90 30,10 50,10 C70,10 80,90 100,100" fill="none" stroke="#D4FF00" stroke-width="3"/>
+                            <circle cx="50" cy="10" r="4" fill="#fff" />
+                        </svg>
+                        <p class="absolute top-0 right-[15%] text-xs text-white">Optimal Pricing Window (Week 1)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="text-column right">
+                <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-2 tech-font">The Analytics</h2>
+                <h1 class="text-5xl font-bold mb-6">The Importance of <span class="accent-text">Pricing</span></h1>
+                
+                <p class="text-lg text-gray-300 mb-6">
+                    Properly priced, you will have the possibility of many more buyers competing for your property. 
+                </p>
+
+                <ul class="custom-list space-y-4">
+                    <li>
+                        <strong class="text-white text-xl">The Pyramid of Demand</strong><br>
+                        As you price above market value, you attract a significantly smaller percentage of prospective buyers. Pricing accurately at the centerline maximizes buyer pool penetration (attracting 60% or more of the total market).
+                    </li>
+                    <li>
+                        <strong class="text-white text-xl">The Interest Curve</strong><br>
+                        When a property is first listed, it generates a massive spike in buyer interest. This interest reduces dramatically over time. It is vital to be priced correctly from Day 1 to capitalize on the "Optimal Pricing Window."
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 9: VISUALS (PHOTOGRAPHY & TOURS) -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="content-grid" style="grid-template-columns: 1.1fr 0.9fr;">
+            <div class="image-column left">
+                <img src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="Luxury Interior">
+            </div>
+            <div class="text-column right">
+                <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-2 tech-font">The Presentation</h2>
+                <h1 class="text-5xl font-bold mb-6">Bridging the <span class="accent-text">Imagination Gap</span></h1>
+                
+                <p class="text-lg text-gray-300 mb-8">Online, your home has exactly 3 seconds to capture attention. If your visual presentation doesn't stop a buyer from scrolling, you've lost them.</p>
+
+                <ul class="custom-list space-y-4">
+                    <li>
+                        <strong class="text-white text-xl">4K Drone & Twilight Photography</strong><br>
+                        We use specialized architectural photographers to capture the perfect lighting, aerial lot boundaries, and warm twilight atmospheres to stand out instantly.
+                    </li>
+                    <li>
+                        <strong class="text-white text-xl">Matterport Immersive 3D Tours</strong><br>
+                        We create a 24/7 digital open house. This allows highly-qualified buyers to walk through your property from anywhere in the world, filtering out the "looky-loos."
+                    </li>
+                    <li>
+                        <strong class="text-white text-xl">Photorealistic Virtual Staging</strong><br>
+                        Empty or dated spaces are elevated with digital staging, helping buyers visualize the ultimate potential of the property without the cost of physical furniture rental.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 10: DIGITAL MASSIVE EXPOSURE -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="content-grid">
+            <div class="text-column">
+                <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-2 tech-font">Digital Air Cover</h2>
+                <h1 class="text-5xl font-bold mb-8">Massive <span class="accent-text">Exposure</span></h1>
+                
+                <p class="text-lg text-gray-300 mb-6 leading-relaxed">
+                    We don't just list on the MLS. We orchestrate a digital takeover. 49% of buyers find the home they purchase online; we ensure your property dominates that space.
+                </p>
+
+                <div class="space-y-4">
+                    <div class="glass-panel p-5 rounded-lg border-l-4 border-l-blue-500">
+                        <h4 class="text-lg font-bold text-white mb-1">AI Buyer Targeting & Geo-Fencing</h4>
+                        <p class="text-gray-400 text-sm">We use predictive analytics to identify people statistically likely to buy, and cast a digital net around competing open houses to serve ads directly to their smartphones.</p>
+                    </div>
+                    <div class="glass-panel p-5 rounded-lg border-l-4 border-l-chartreuse">
+                        <h4 class="text-lg font-bold text-white mb-1">Your Unique .COM Domain</h4>
+                        <p class="text-gray-400 text-sm">We purchase a dedicated website (e.g., <em>www.123YourStreet.com</em>) exclusively for your property, free of distracting portal ads.</p>
+                    </div>
+                    <div class="glass-panel p-5 rounded-lg border-l-4 border-l-white">
+                        <h4 class="text-lg font-bold text-white mb-1">Leveraging Competitor Websites</h4>
+                        <p class="text-gray-400 text-sm">Through intelligent syndication, your property is actively promoted on the websites of <strong class="text-chartreuse">other top competing agents and global brokerages.</strong> No stone is left unturned.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="image-column">
+                <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="Global Network Syndication">
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 11: TRADITIONAL TACTICS (THE STREET) -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="content-grid" style="grid-template-columns: 0.9fr 1.1fr;">
+            <div class="image-column left">
+                <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="Open House & Neighborhood">
+            </div>
+            <div class="text-column right">
+                <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-2 tech-font">Tactical Ground Warfare</h2>
+                <h1 class="text-5xl font-bold mb-6">Dominating <span class="accent-text">The Street</span></h1>
+                
+                <p class="text-lg text-gray-300 mb-8">
+                    While digital marketing casts a global net, real estate is still inherently local. We coordinate physical media and community buzz to create localized demand.
+                </p>
+
+                <ul class="custom-list space-y-4">
+                    <li>
+                        <strong class="text-white text-xl">Proactive Open Houses</strong><br>
+                        We don't just open the door and hope. We actively market our open houses to generate intense foot traffic, creating a competitive environment among buyers.
+                    </li>
+                    <li>
+                        <strong class="text-white text-xl">Neighborhood Directional Signs</strong><br>
+                        Strategic placement of custom, high-visibility signage to capture drive-by traffic and local residents looking to move within the community.
+                    </li>
+                    <li>
+                        <strong class="text-white text-xl">Coordinated Print Media & Feature Sheets</strong><br>
+                        We design and deploy premium, full-color feature sheets and targeted print campaigns. When buyers leave your home, they take a luxury brochure that keeps your property top-of-mind.
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 12: THE NETWORK (DIRECT-TO-AGENT) -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="flex flex-col items-center justify-center h-full px-12 text-center w-full max-w-5xl mx-auto pt-20">
+            <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-4 tech-font">The VIP Velvet Rope</h2>
+            <h1 class="text-6xl font-bold mb-10">Direct-to-Agent <span class="accent-text">Outreach</span></h1>
+            
+            <p class="text-2xl text-gray-300 font-light mb-12 leading-relaxed">
+                Statistically, 31% of buyers find their home through their Real Estate Agent. <br>I don't wait for those agents to stumble across your listing on the MLS.
+            </p>
+
+            <div class="grid grid-cols-2 gap-8 w-full text-left">
+                <div class="glass-panel p-8 rounded-xl border-t-4 border-chartreuse shadow-[0_0_20px_rgba(212,255,0,0.15)]">
+                    <h3 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                        <svg class="w-6 h-6 text-chartreuse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        Reverse Prospecting & Top Producers
+                    </h3>
+                    <p class="text-lg text-gray-300">
+                        Using the MLS backend, I systematically identify the top agents who have active buyers searching for homes exactly like yours in our area.
+                    </p>
+                </div>
+                <div class="glass-panel p-8 rounded-xl border-t-4 border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.15)]">
+                    <h3 class="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                        The Pre-Heat Whisper & Office Meetings
+                    </h3>
+                    <p class="text-lg text-gray-300">
+                        By pitching your home via Realtor office meetings, e-flyers, and direct calls before it officially hits the market, we bypass the noise and go straight to fully-funded buyers.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 13: FRICTIONLESS SERVICE -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="content-grid">
+            <div class="text-column">
+                <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-2 tech-font">The Experience</h2>
+                <h1 class="text-5xl font-bold mb-8">Frictionless <br><span class="accent-text">White-Glove Service</span></h1>
+                
+                <p class="text-xl text-gray-300 mb-8 leading-relaxed">
+                    Selling your home shouldn't disrupt your life. We handle the heavy lifting so you don't have to.
+                </p>
+
+                <div class="glass-panel p-8 rounded-xl border border-white/20">
+                    <ul class="custom-list space-y-4">
+                        <li><strong class="text-white">Vendor Coordination:</strong> Managing stagers, deep cleaners, and minor repair contractors seamlessly.</li>
+                        <li><strong class="text-white">Smart Access Management:</strong> Secure, trackable smart-lock access for verified agent showings.</li>
+                        <li><strong class="text-white">Clear Communication:</strong> You are never left in the dark. We provide regular, transparent feedback reports.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="image-column">
+                <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="White Glove Service">
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 14: THE GLADIATOR ARENA -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="flex flex-col items-center justify-center h-full px-12 text-center w-full max-w-5xl mx-auto pt-20">
+            <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-4 tech-font">Weaponized Conflict</h2>
+            <h1 class="text-6xl font-bold mb-8">The <span class="accent-text">Gladiator Arena</span></h1>
+            
+            <p class="text-3xl text-gray-300 font-light mb-12 italic">
+                "A passive agent wants to quietly matchmake. I want to build a Colosseum."
+            </p>
+
+            <div class="glass-panel p-10 rounded-xl text-left border-t-4 border-chartreuse shadow-[0_0_20px_rgba(212,255,0,0.2)]">
+                <p class="text-xl text-white leading-relaxed mb-6">
+                    If you want a polite, quiet sale, you will get a polite, average price. To extract the absolute maximum yield from the market, we must engineer demand.
+                </p>
+                <p class="text-xl text-white leading-relaxed">
+                    By combining our massive digital syndication, relentless physical canvassing, and direct agent outreach, <strong class="text-chartreuse">I operate as a mercenary for your equity.</strong> We force buyers to bring their absolute highest and best offer immediately, lest someone else steals it. 
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 15: GUARANTEES -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="content-grid" style="grid-template-columns: 0.9fr 1.1fr;">
+            <div class="image-column left">
+                <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1600&q=80" alt="Handshake / Contract">
+            </div>
+            <div class="text-column right">
+                <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-2 tech-font">The Partnership</h2>
+                <h1 class="text-5xl font-bold mb-8">My <span class="accent-text">Guarantees</span></h1>
+                
+                <p class="text-xl text-gray-300 mb-8 leading-relaxed">
+                    I provide personalized service dedicated to achieving your goals with absolute integrity.
+                </p>
+
+                <div class="space-y-6">
+                    <div class="glass-panel p-6 rounded-lg border-l-4 border-l-chartreuse shadow-xl">
+                        <h4 class="text-2xl font-bold text-white mb-2">Transparent Communication</h4>
+                        <p class="text-gray-300 text-md">Real-time updates and insights. You receive a comprehensive feedback report every Tuesday. You are always in control.</p>
+                    </div>
+                    
+                    <div class="glass-panel p-6 rounded-lg border-l-4 border-l-blue-500 shadow-xl">
+                        <h4 class="text-2xl font-bold text-white mb-2">Seamless Transaction Process</h4>
+                        <p class="text-gray-300 text-md">I manage every detail—from organizing the paperwork, negotiating the offers, to the final closing—with precision.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 16: ROADMAP -->
+    <div class="slide">
+        <div class="bg-overlay"></div>
+        <div class="flex flex-col items-center justify-center h-full px-12 text-center w-full max-w-5xl mx-auto pt-20">
+            <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-4 tech-font">Execution Protocol</h2>
+            <h1 class="text-6xl font-bold mb-20">The <span class="accent-text">Launch Sequence</span></h1>
+            
+            <div class="flex items-center justify-between w-full relative">
+                <!-- Connecting Line -->
+                <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-700 -z-10 transform -translate-y-1/2"></div>
+                <div class="absolute top-1/2 left-0 w-3/4 h-1 bg-chartreuse -z-10 transform -translate-y-1/2 shadow-[0_0_10px_rgba(212,255,0,0.5)]"></div>
+                
+                <!-- Step 1 -->
+                <div class="flex flex-col items-center bg-navy px-4">
+                    <div class="w-16 h-16 rounded-full bg-chartreuse text-navy flex items-center justify-center text-2xl font-bold mb-4 shadow-[0_0_15px_rgba(212,255,0,0.5)] tech-font">1</div>
+                    <h3 class="text-xl font-bold text-white">Authorize</h3>
+                    <p class="text-sm text-gray-400 mt-2 max-w-[150px]">Review the CMA and sign the agreement.</p>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="flex flex-col items-center bg-navy px-4">
+                    <div class="w-16 h-16 rounded-full bg-chartreuse text-navy flex items-center justify-center text-2xl font-bold mb-4 shadow-[0_0_15px_rgba(212,255,0,0.5)] tech-font">2</div>
+                    <h3 class="text-xl font-bold text-white">Prep</h3>
+                    <p class="text-sm text-gray-400 mt-2 max-w-[150px]">Deploy staging, detailing, and visualization team.</p>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="flex flex-col items-center bg-navy px-4">
+                    <div class="w-16 h-16 rounded-full bg-chartreuse text-navy flex items-center justify-center text-2xl font-bold mb-4 shadow-[0_0_15px_rgba(212,255,0,0.5)] tech-font">3</div>
+                    <h3 class="text-xl font-bold text-white">Media</h3>
+                    <p class="text-sm text-gray-400 mt-2 max-w-[150px]">Cinematic video, 3D tours & photography shoot.</p>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="flex flex-col items-center bg-navy px-4">
+                    <div class="w-24 h-24 rounded-full border-4 border-chartreuse bg-navy flex items-center justify-center text-3xl font-black text-chartreuse mb-4 shadow-[0_0_25px_rgba(212,255,0,0.6)] tech-font">4</div>
+                    <h3 class="text-2xl font-bold text-chartreuse tracking-widest">LAUNCH</h3>
+                    <p class="text-sm text-gray-300 mt-2 max-w-[150px]">Activate the Active Hunter Campaign globally.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 17: FINAL CLOSE -->
+    <div class="slide">
+        <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80" alt="Open Door" class="bg-image">
+        <div class="bg-overlay" style="background: linear-gradient(135deg, rgba(6, 16, 36, 0.95) 0%, rgba(6, 16, 36, 0.70) 100%);"></div>
+        
+        <div class="flex flex-col items-center justify-center h-full text-center px-8 relative z-10 max-w-5xl mx-auto pt-20">
+            <h2 class="text-sm uppercase tracking-widest accent-text font-bold mb-4 tech-font">The Next Step</h2>
+            <h1 class="text-6xl md:text-7xl font-bold tracking-tight mb-12">Ready to Make <span class="accent-text">Your Move?</span></h1>
+            
+            <p class="text-2xl text-gray-300 font-light mb-12 leading-relaxed">
+                The blueprint is laid out. I am confident that with my proactive system, 25 years of experience, and Casora! Realty's innovative support, we will achieve an outstanding result for your home.
+            </p>
+
+            <div class="glass-panel p-8 rounded-xl border border-chartreuse/50 shadow-[0_0_20px_rgba(212,255,0,0.2)]">
+                <p class="text-3xl font-bold text-white">Let's get your home SOLD.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Controls -->
+    <div id="controls">
+        <button class="nav-btn" id="btn-fullscreen" title="Toggle Fullscreen">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+        </button>
+        <button class="nav-btn" id="btn-prev" title="Previous Slide (Left Arrow)">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </button>
+        <button class="nav-btn" id="btn-next" title="Next Slide (Right Arrow or Space)">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const slides = document.querySelectorAll('.slide');
+            const progressBar = document.getElementById('progress-bar');
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+
+            function updateSlide() {
+                slides.forEach(slide => slide.classList.remove('active'));
+                slides[currentSlide].classList.add('active');
+
+                const progress = ((currentSlide) / (totalSlides - 1)) * 100;
+                progressBar.style.width = `${progress}%`;
+            }
+
+            function nextSlide() {
+                if (currentSlide < totalSlides - 1) {
+                    currentSlide++;
+                    updateSlide();
+                }
+            }
+
+            function prevSlide() {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlide();
+                }
+            }
+
+            function toggleFullScreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`Error attempting to enable fullscreen: ${err.message}`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            }
+
+            document.getElementById('btn-next').addEventListener('click', nextSlide);
+            document.getElementById('btn-prev').addEventListener('click', prevSlide);
+            document.getElementById('btn-fullscreen').addEventListener('click', toggleFullScreen);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === 'Enter') {
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft') {
+                    prevSlide();
+                }
+            });
+
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            document.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+
+            document.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+
+            function handleSwipe() {
+                const swipeThreshold = 50; 
+                if (touchEndX < touchStartX - swipeThreshold) {
+                    nextSlide(); 
+                }
+                if (touchEndX > touchStartX + swipeThreshold) {
+                    prevSlide(); 
+                }
+            }
+
+            updateSlide();
+        });
+    </script>
+</body>
+</html>

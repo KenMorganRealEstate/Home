@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ken Morgan: 2026 Tax & Cash Flow Planner</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --primary: #0f172a;
+            --primary-light: #334155;
+            --accent: #0ea5e9;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --gold: #C5A059;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        /* --- HEADER --- */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+            border-bottom: 4px solid var(--gold);
+        }
+
+        .header h1 { margin: 0; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.5px; }
+        .header p { color: #94a3b8; margin: 10px 0 0; font-size: 0.95rem; }
+
+        .export-btn {
+            position: absolute; top: 20px; right: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white; padding: 8px 16px; border-radius: 8px;
+            cursor: pointer; font-weight: 600; font-size: 0.85rem;
+            display: flex; align-items: center; gap: 8px; transition: all 0.2s;
+        }
+        .export-btn:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-1px); }
+
+        .hero-input {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 20px; border-radius: 12px;
+            margin: 25px auto 0; max-width: 500px;
+        }
+
+        .income-display {
+            font-size: 3rem; font-weight: 800; margin: 10px 0; color: var(--gold);
+            text-shadow: 0 2px 10px rgba(197, 160, 89, 0.3);
+        }
+
+        /* --- LAYOUT --- */
+        .main-grid {
+            display: grid; grid-template-columns: 1.3fr 0.9fr; gap: 25px; margin-bottom: 40px;
+        }
+        @media (max-width: 1024px) { .main-grid { grid-template-columns: 1fr; } }
+
+        /* --- CARDS --- */
+        .card {
+            background: var(--bg-card); border-radius: 16px; padding: 25px;
+            margin-bottom: 25px; box-shadow: var(--shadow); border: 1px solid var(--border);
+        }
+
+        .card-title {
+            display: flex; align-items: center; gap: 12px;
+            font-size: 1.1rem; font-weight: 700; color: var(--primary);
+            margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border);
+        }
+
+        .card-icon {
+            width: 36px; height: 36px; background: var(--gold); color: #1e293b;
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        /* --- INPUTS --- */
+        .control-group { margin-bottom: 25px; }
+        .control-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 600; font-size: 0.95rem;}
+        .sub-label { font-size: 0.8rem; color: var(--text-sub); font-weight: normal; }
+
+        .input-row { display: flex; align-items: center; gap: 15px; }
+        input[type="range"] {
+            flex: 1; height: 6px; background: #e2e8f0; border-radius: 10px; outline: none; -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 20px; height: 20px; background: var(--primary);
+            border-radius: 50%; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border: 2px solid white;
+        }
+        input[type="number"] {
+            width: 100px; padding: 8px 10px; border: 1px solid var(--border);
+            border-radius: 8px; font-weight: 700; color: var(--primary);
+            text-align: right; background: #f8fafc; font-family: 'Courier New', monospace;
+        }
+
+        /* --- TOGGLES --- */
+        .toggle-card {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #f8fafc; padding: 15px; border-radius: 12px;
+            margin-bottom: 15px; cursor: pointer; border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+        .toggle-card:hover { border-color: var(--gold); }
+        
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1; border-radius: 34px; transition: .3s;
+        }
+        .slider:before {
+            position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white; border-radius: 50%; transition: .3s;
+        }
+        input:checked + .slider { background-color: var(--gold); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* --- MATH BREAKDOWN SECTION --- */
+        .math-breakdown {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            border-left: 3px solid var(--primary-light);
+            display: none; 
+        }
+        
+        .math-row {
+            display: flex; justify-content: space-between; margin-bottom: 4px; color: var(--text-sub);
+        }
+        .math-row.final {
+            border-top: 1px solid var(--border); margin-top: 6px; padding-top: 6px;
+            font-weight: 700; color: var(--text-main); font-size: 0.9rem;
+        }
+        .math-val { font-family: 'Courier New', monospace; }
+        
+        .math-highlight { color: var(--success); font-weight: 600; }
+        
+        .pro-tip {
+            margin-top: 12px; padding: 10px; background: rgba(197, 160, 89, 0.1);
+            border-radius: 6px; font-size: 0.85rem; color: #856404;
+            display: flex; gap: 10px; align-items: start;
+        }
+        .pro-tip i { margin-top: 3px; }
+
+        /* --- DASHBOARD --- */
+        .dashboard {
+            background: #1e293b; color: white; border-radius: 20px; padding: 25px;
+            box-shadow: var(--shadow); position: sticky; top: 20px;
+        }
+        .dash-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .dash-row:last-child { border-bottom: none; }
+        .dash-label { font-size: 0.9rem; opacity: 0.8; }
+        .dash-value { font-weight: 700; font-size: 1rem; font-family: 'Courier New', monospace; }
+        
+        .positive { color: #86efac; }
+        .negative { color: #fca5a5; }
+
+        .cash-summary {
+            background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px;
+            margin-top: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .cash-amount { font-size: 2.2rem; font-weight: 800; margin: 5px 0; color: var(--gold); }
+        
+        /* --- VISUALIZATION --- */
+        .viz-bar {
+            height: 10px; background: rgba(0,0,0,0.3); border-radius: 5px; margin-top: 20px;
+            display: flex; overflow: hidden;
+        }
+        .viz-segment { height: 100%; transition: width 0.5s ease; }
+        .viz-expenses { background: var(--warning); }
+        .viz-assets { background: #8b5cf6; }
+        .viz-taxes { background: var(--danger); }
+        .viz-cash { background: var(--success); }
+
+        /* --- SCENARIO LAB & TIMELINE --- */
+        .lab-section { margin-top: 40px; }
+        .lab-title { 
+            font-size: 1.5rem; font-weight: 800; color: var(--primary); 
+            margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+        }
+        .lab-grid { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; 
+        }
+        .lab-card {
+            background: white; border-radius: 16px; padding: 25px;
+            box-shadow: var(--shadow); border: 1px solid var(--border);
+        }
+        .lab-header { 
+            font-weight: 700; color: var(--primary); margin-bottom: 20px; 
+            font-size: 1.1rem; display: flex; align-items: center; gap: 10px;
+        }
+        
+        .compare-row {
+            display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem;
+        }
+        .compare-bar-bg {
+            height: 24px; background: #f1f5f9; border-radius: 4px; overflow: hidden; margin-bottom: 15px; position: relative;
+        }
+        .compare-bar-fill {
+            height: 100%; display: flex; align-items: center; justify-content: flex-end;
+            padding-right: 8px; color: white; font-size: 0.75rem; font-weight: bold;
+            transition: width 0.5s;
+        }
+        .bg-personal { background: #ef4444; }
+        .bg-business { background: #10b981; }
+
+        .savings-badge {
+            background: #ecfdf5; color: #059669; border: 1px solid #10b981;
+            padding: 10px; border-radius: 8px; text-align: center; font-weight: 700;
+            margin-top: 15px;
+        }
+
+        .earnings-required {
+            text-align: center; font-size: 0.8rem; color: var(--text-sub); margin-top: 5px; font-style: italic;
+        }
+
+        /* --- TIME TRAVEL SLIDER --- */
+        .timeline-section {
+            background: #f8fafc; border: 1px solid var(--border); border-radius: 12px;
+            padding: 20px; margin-bottom: 25px; margin-top: 10px;
+        }
+        .timeline-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+        }
+        .timeline-year {
+            font-size: 1.2rem; font-weight: 800; color: var(--primary);
+            background: rgba(15, 23, 42, 0.1); padding: 5px 15px; border-radius: 20px;
+        }
+
+        /* HELOC Highlight */
+        .heloc-active {
+            border: 2px solid var(--gold);
+            background: #fffbeb;
+        }
+
+        /* Recommendation Badge */
+        .rec-badge {
+            display: block;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-top: 15px;
+            font-size: 1.1rem;
+        }
+        .rec-go { background: #dcfce7; color: #166534; border: 2px solid #22c55e; }
+        .rec-stop { background: #fee2e2; color: #991b1b; border: 2px solid #ef4444; }
+        .rec-leverage { background: #eff6ff; color: #1e40af; border: 2px solid #3b82f6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <button onclick="exportData()" class="export-btn">
+            <i class="fas fa-robot"></i> Export for AI
+        </button>
+
+        <p style="text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; opacity: 0.8;">Strategies for Sole Proprietors</p>
+        <h1>2026 Tax & Cash Flow Planner</h1>
+        
+        <div class="hero-input">
+            <div style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; margin-bottom:5px;">
+                Target Gross Commission
+            </div>
+            <div id="incomeDisplay" class="income-display">$40,000</div>
+            <div class="input-row">
+                <input type="range" id="incomeSlider" min="0" max="250000" step="1000" value="40000">
+                <input type="number" id="incomeInput" value="40000" step="1000">
+            </div>
+            <div style="margin-top: 10px; font-size: 0.9rem; color: #94a3b8;">
+                <i class="fas fa-info-circle"></i> HST Collected on top: <span id="headerHst" style="color:white; font-weight:bold;">$5,200</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TIMELINE SLIDER (GLOBAL CONTROL) -->
+    <div class="timeline-section">
+        <div class="timeline-header">
+            <div style="font-weight:700; color:var(--primary); font-size:1.1rem;"><i class="fas fa-hourglass-half"></i> Long-Term Wealth Projection</div>
+            <div id="timelineYearDisplay" class="timeline-year">Year 1</div>
+        </div>
+        <input type="range" id="timelineSlider" min="1" max="10" step="1" value="5">
+        <div style="font-size:0.8rem; color:var(--text-sub); margin-top:5px; text-align:center;">
+            Use this slider to see cumulative savings, vehicle depreciation, and your <strong>exit strategy</strong> horizon.
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- LEFT COLUMN: INPUTS -->
+        <div>
+            <!-- HOME EQUITY & FINANCING STRATEGY -->
+            <div class="card" id="helocCard">
+                <div class="card-title">
+                    <div class="card-icon"><i class="fas fa-home"></i></div>
+                    Equity & Financing Strategy
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Current Home Value</span>
+                    </div>
+                    <div class="input-row">
+                        <input type="range" id="homeValSlider" min="500000" max="2500000" step="10000" value="1000000">
+                        <input type="number" id="homeValInput" value="1000000">
+                    </div>
+                </div>
+
+                <div class="toggle-card" onclick="toggleCheckbox('helocToggle')">
+                    <div>
+                        <strong>Fund Business via HELOC?</strong>
+                        <div class="sub-label">Write-off Interest (Smith Maneuver Lite)</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="helocToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div id="helocDetails" style="display:none;">
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>HELOC Interest Rate</span>
+                            <span class="sub-label">Prime + 1% (approx)</span>
+                        </div>
+                        <div class="input-row">
+                            <input type="range" id="helocRateSlider" min="3" max="10" step="0.1" value="5.95">
+                            <input type="number" id="helocRateInput" value="5.95">
+                        </div>
+                    </div>
+                    <div class="math-breakdown" style="display:block; border-color:var(--gold);">
+                        <div class="math-row">
+                            <span>Gross Interest Rate:</span> <span class="math-val" id="gross-rate">5.95%</span>
+                        </div>
+                        <div class="math-row">
+                            <span>Tax Deduction Savings:</span> <span class="math-val math-highlight" id="rate-savings">-2.56%</span>
+                        </div>
+                        <div class="math-row final">
+                            <span>NET EFFECTIVE RATE:</span> <span class="math-val" id="net-rate">3.39%</span>
+                        </div>
+                        <div style="font-size:0.8rem; margin-top:5px; color:var(--text-sub);">
+                            <i class="fas fa-check-circle"></i> Cheaper than using cash (Opportunity Cost > 5%)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EXPENSES -->
+            <div class="card">
+                <div class="card-title">
+                    <div class="card-icon"><i class="fas fa-wallet"></i></div>
+                    Lifestyle & Business Expenses
+                </div>
+                
+                <!-- Fixed Costs -->
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Fixed Costs (Tech, Office, Fees)</span>
+                    </div>
+                    <div class="input-row">
+                        <input type="range" id="fixedSlider" min="0" max="30000" step="100" value="10800">
+                        <input type="number" id="fixedInput" value="10800">
+                    </div>
+                </div>
+
+                <!-- Marketing -->
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Marketing & Farming</span>
+                    </div>
+                    <div class="input-row">
+                        <input type="range" id="marketingSlider" min="0" max="50000" step="100" value="2000">
+                        <input type="number" id="marketingInput" value="2000">
+                    </div>
+                </div>
+
+                <!-- Salary -->
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Admin Salary (Income Splitting)</span>
+                    </div>
+                    <div class="input-row">
+                        <input type="range" id="salarySlider" min="0" max="40000" step="100" value="2500">
+                        <input type="number" id="salaryInput" value="2500">
+                    </div>
+                </div>
+
+                <!-- Travel & Meals -->
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Travel & Meals</span>
+                    </div>
+                    <div class="input-row">
+                        <input type="range" id="travelSlider" min="0" max="20000" step="100" value="1000">
+                        <input type="number" id="travelInput" value="1000">
+                    </div>
+                </div>
+
+                <!-- Meals -->
+                <div class="control-group">
+                    <div class="control-label">
+                        <span>Meals & Entertainment</span>
+                    </div>
+                    <div class="input-row">
+                        <input type="range" id="mealsSlider" min="0" max="10000" step="100" value="1000">
+                        <input type="number" id="mealsInput" value="1000">
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- VEHICLE STRATEGY -->
+            <div class="card">
+                <div class="card-title">
+                    <div class="card-icon"><i class="fas fa-truck-pickup"></i></div>
+                    Vehicle Strategy (Asset)
+                </div>
+
+                <div class="toggle-card" onclick="toggleCheckbox('truckToggle')">
+                    <div>
+                        <strong>Purchase Business Vehicle</strong>
+                        <div class="sub-label">Leverage CCA & HST ITC</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="truckToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div id="truckDetails">
+                    <div class="control-group">
+                        <div class="control-label">
+                            <span>Vehicle Price</span>
+                            <span id="capWarning" style="color: var(--warning); font-size: 0.8rem; display: none;">
+                                <i class="fas fa-exclamation-triangle"></i> Exceeds $38k CCA Cap
+                            </span>
+                        </div>
+                        <div class="input-row">
+                            <input type="range" id="truckSlider" min="10000" max="90000" step="500" value="37000">
+                            <input type="number" id="truckInput" value="37000">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: DASHBOARD -->
+        <div>
+            <div class="dashboard">
+                <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 1.2rem; display:flex; align-items:center; gap:10px;">
+                    <i class="fas fa-chart-line" style="color:var(--gold);"></i> 
+                    Cash Flow Engine
+                </h2>
+
+                <div class="dash-row">
+                    <div class="dash-label">Gross Commission</div>
+                    <div id="dashGross" class="dash-value">$40,000</div>
+                </div>
+                <div class="dash-row">
+                    <div class="dash-label">HST Collected (Holding)</div>
+                    <div id="dashHstCol" class="dash-value positive">+$5,200</div>
+                </div>
+                <div class="dash-row">
+                    <div class="dash-label">Expenses (Inc. HST)</div>
+                    <div id="dashExp" class="dash-value negative">-$15,600</div>
+                </div>
+                <div class="dash-row">
+                    <div class="dash-label">Vehicle Purchase</div>
+                    <div id="dashTruck" class="dash-value negative">-$41,810</div>
+                </div>
+                <div class="dash-row">
+                    <div class="dash-label">HST Refund (ITC)</div>
+                    <div id="dashHstRef" class="dash-value positive">+$6,838</div>
+                </div>
+
+                <!-- Tax Calculation Block -->
+                <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:8px; margin: 15px 0;">
+                    <div style="font-size:0.8rem; color:#94a3b8; text-transform:uppercase; font-weight:700; margin-bottom:5px;">Tax Calculation</div>
+                    
+                    <div class="dash-row" style="border:none; padding:2px 0;">
+                        <div class="dash-label">Taxable Profit</div>
+                        <div id="dashTaxable" class="dash-value">$24,400</div>
+                    </div>
+                    
+                    <!-- New HELOC Deduction Line -->
+                    <div class="dash-row" id="heloc-deduction-row" style="border:none; padding:2px 0; display:none;">
+                        <div class="dash-label">HELOC Interest Deduction</div>
+                        <div id="dashHelocInt" class="dash-value positive">-$2,200</div>
+                    </div>
+
+                    <div class="dash-row" style="border:none; padding:2px 0;">
+                        <div class="dash-label">Marginal Rate</div>
+                        <div class="dash-value" style="color:var(--warning);"><span id="dashRate">43</span>%</div>
+                    </div>
+                    <div class="dash-row" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:5px; margin-top:5px;">
+                        <div class="dash-label">Income Tax & CPP</div>
+                        <div id="dashTaxBill" class="dash-value negative">-$12,858</div>
+                    </div>
+                </div>
+
+                <div class="cash-summary">
+                    <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color:#cbd5e1;">
+                        Final Pocket Cash
+                    </div>
+                    <div id="finalCash" class="cash-amount">$10,346</div>
+                    <div id="cashWarning" class="cash-warning" style="display: none;">
+                        <i class="fas fa-exclamation-circle"></i> Deficit: Requires personal injection
+                    </div>
+                </div>
+
+                <div class="viz-bar">
+                    <div id="barExp" class="viz-segment viz-expenses" style="width: 30%"></div>
+                    <div id="barAsset" class="viz-segment viz-assets" style="width: 30%"></div>
+                    <div id="barTax" class="viz-segment viz-taxes" style="width: 20%"></div>
+                    <div id="barCash" class="viz-segment viz-cash" style="width: 20%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCENARIO LAB -->
+    <div class="lab-section">
+        <div class="lab-title"><i class="fas fa-microscope"></i> Wealth Optimization Lab</div>
+        
+        <div class="lab-grid">
+            
+            <!-- SMART PURCHASE ASSISTANT -->
+            <div class="lab-card" style="border-top: 4px solid var(--primary);">
+                <div class="lab-header"><i class="fas fa-brain"></i> Smart Decision Assistant</div>
+                <p style="font-size:0.85rem; color:#64748b; margin-bottom:15px;">
+                    Enter a potential purchase to see the best strategy based on your real-time cash flow.
+                </p>
+
+                <div class="control-group">
+                    <div class="control-label"><span>Item Cost</span></div>
+                    <div class="input-row">
+                        <input type="range" id="smartItemSlider" min="1000" max="100000" step="500" value="5000">
+                        <input type="number" id="smartItemInput" value="5000">
+                    </div>
+                </div>
+
+                <div class="toggle-card" onclick="toggleCheckbox('smartBizToggle')" style="padding:10px; margin-bottom:10px;">
+                    <div><span style="font-size:0.9rem; font-weight:600;">Business Related?</span></div>
+                    <label class="switch">
+                        <input type="checkbox" id="smartBizToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="toggle-card" onclick="toggleCheckbox('smartFinToggle')" style="padding:10px;">
+                    <div><span style="font-size:0.9rem; font-weight:600;">Finance/HELOC?</span></div>
+                    <label class="switch">
+                        <input type="checkbox" id="smartFinToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="math-breakdown" style="display:block; margin-top:10px;">
+                    <div class="math-row">
+                        <span>Personal Cost (Cash):</span> <span class="math-val" id="smart-personal">$5,650</span>
+                    </div>
+                    <div class="math-row">
+                        <span>Business Net Cost:</span> <span class="math-val math-highlight" id="smart-business">$2,850</span>
+                    </div>
+                    <div class="math-row final">
+                        <span>VERDICT:</span>
+                    </div>
+                </div>
+                
+                <div id="smart-verdict" class="rec-badge rec-leverage">LEVERAGE IT</div>
+            </div>
+
+            <!-- TRAVEL OPTIMIZER -->
+            <div class="lab-card">
+                <div class="lab-header"><i class="fas fa-plane"></i> Travel Optimizer</div>
+                <p style="font-size:0.85rem; color:#64748b; margin-bottom:15px;">
+                    Convert personal vacations into business trips by adding client meetings.
+                </p>
+                
+                <div class="control-group">
+                    <div class="control-label"><span>Total Trip Cost</span></div>
+                    <div class="input-row">
+                        <input type="range" id="tripCostSlider" min="1000" max="20000" step="100" value="5000">
+                        <input type="number" id="tripCostInput" value="5000">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-label"><span>% Business Related</span></div>
+                    <input type="range" id="tripBizPct" min="0" max="100" step="10" value="50">
+                    <div style="text-align:right; font-weight:bold; color:var(--primary);" id="tripBizDisp">50%</div>
+                </div>
+                
+                <div class="compare-row">
+                    <span>Personal Trip (After-Tax)</span>
+                    <span id="tripPersonal" style="color:var(--danger); font-weight:700;">$5,650</span>
+                </div>
+                <div class="compare-row">
+                    <span>Your Optimized Cost</span>
+                    <span id="tripOptimized" style="color:var(--success); font-weight:700;">$4,250</span>
+                </div>
+                <div class="savings-badge">
+                    SAVINGS: <span id="tripSavings">$1,400</span>
+                </div>
+            </div>
+
+            <!-- EXIT STRATEGY (DOWNSIZE) -->
+            <div class="lab-card" style="border-top: 4px solid var(--gold);">
+                <div class="lab-header"><i class="fas fa-door-open"></i> The "5-Year Exit" Strategy</div>
+                <p style="font-size:0.85rem; color:#64748b; margin-bottom:15px;">
+                    Projected windfall when you downsize in <strong><span id="exit-year-disp">5</span> years</strong>.
+                </p>
+
+                <div class="compare-row">
+                    <span>Future Home Value (3% Growth)</span>
+                    <span id="exit-home-val" style="color:var(--primary); font-weight:700;">$1,159,000</span>
+                </div>
+                <div class="compare-row">
+                    <span>HELOC Debt to Repay</span>
+                    <span id="exit-debt" style="color:var(--danger); font-weight:700;">-$40,000</span>
+                </div>
+                <div class="compare-row">
+                    <span>Realtor Savings (You sell it)</span>
+                    <span id="exit-savings" style="color:var(--success); font-weight:700;">+$32,000</span>
+                </div>
+                
+                <div class="savings-badge" style="background:#fffbeb; color:#b45309; border-color:#d97706;">
+                    NET TAX-FREE CASH <br>
+                    <span id="exit-net-cash" style="font-size:1.4rem;">$1,151,000</span>
+                </div>
+            </div>
+
+            <!-- Asset Depreciation Simulator -->
+            <div class="lab-card">
+                <div class="lab-header"><i class="fas fa-chart-area"></i> Asset Depreciation Simulator</div>
+                <p style="font-size:0.85rem; color:#64748b; margin-bottom:10px;">
+                    Cumulative effect of Class 10.1 (Passenger Vehicle) tax write-offs over time.
+                </p>
+                <div style="height:180px;">
+                    <canvas id="depreciationChart"></canvas>
+                </div>
+                <div class="math-breakdown" style="display:block; margin-top:10px;">
+                    <div class="math-row">
+                        <span>Vehicle Cost Basis:</span> <span class="math-val" id="cca-basis">$38,000</span>
+                    </div>
+                    <div class="math-row">
+                        <span>Total Tax Deductions (Year <span id="cca-year-disp">1</span>):</span> <span class="math-val math-highlight" id="cca-cumul-deduct">-$5,700</span>
+                    </div>
+                    <div class="math-row">
+                        <span>Remaining Undepreciated Cost:</span> <span class="math-val" id="cca-ucc">$32,300</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lifestyle Subsidy Calculator -->
+            <div class="lab-card">
+                <div class="lab-header"><i class="fas fa-piggy-bank"></i> "Lifestyle Subsidy" Projector</div>
+                <p style="font-size:0.85rem; color:#64748b; margin-bottom:15px;">
+                    Total <strong>personal cash saved</strong> by running these expenses through the business over the selected timeline.
+                </p>
+                
+                <div style="text-align:center; padding:20px; background:#f0fdf4; border-radius:12px; border:1px solid #bbf7d0;">
+                    <div style="font-size:0.9rem; color:#15803d; font-weight:600;">CUMULATIVE WEALTH PRESERVED</div>
+                    <div id="lifestyle-subsidy-total" style="font-size:2.5rem; font-weight:800; color:#16a34a; margin:10px 0;">$14,500</div>
+                    <div style="font-size:0.8rem; color:#166534;">
+                        Over <span id="subsidy-years">1</span> Years
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // --- CONSTANTS ---
+    const PENSION_BASE = 87600;
+    const HST_RATE = 0.13;
+    const CCA_CAP = 38000; 
+    const CPP_RATE = 0.119;
+    const CPP_BASIC_EXEMPTION = 3500;
+    const CPP_MAX_EARNINGS = 73200;
+    const HOME_GROWTH = 0.03; // Conservative 3%
+
+    // Tax brackets (2026 Ontario Estimated)
+    const TAX_BRACKETS = [
+        { min: 0, max: 53359, rate: 0.2005 },
+        { min: 53360, max: 106717, rate: 0.3148 },
+        { min: 106718, max: 150000, rate: 0.3791 }, 
+        { min: 150001, max: 173205, rate: 0.4341 },
+        { min: 173206, max: 220000, rate: 0.4829 },
+        { min: 220001, max: Infinity, rate: 0.5353 }
+    ];
+
+    // --- ELEMENTS ---
+    const els = {
+        incomeSlider: document.getElementById('incomeSlider'),
+        incomeInput: document.getElementById('incomeInput'),
+        incomeDisplay: document.getElementById('incomeDisplay'),
+        headerHst: document.getElementById('headerHst'),
+        
+        homeValSlider: document.getElementById('homeValSlider'),
+        homeValInput: document.getElementById('homeValInput'),
+        helocToggle: document.getElementById('helocToggle'),
+        helocDetails: document.getElementById('helocDetails'),
+        helocRateSlider: document.getElementById('helocRateSlider'),
+        helocRateInput: document.getElementById('helocRateInput'),
+        
+        fixedSlider: document.getElementById('fixedSlider'),
+        fixedInput: document.getElementById('fixedInput'),
+        marketingSlider: document.getElementById('marketingSlider'),
+        marketingInput: document.getElementById('marketingInput'),
+        salarySlider: document.getElementById('salarySlider'),
+        salaryInput: document.getElementById('salaryInput'),
+        travelSlider: document.getElementById('travelSlider'),
+        travelInput: document.getElementById('travelInput'),
+        mealsSlider: document.getElementById('mealsSlider'),
+        mealsInput: document.getElementById('mealsInput'),
+        
+        truckToggle: document.getElementById('truckToggle'),
+        truckSlider: document.getElementById('truckSlider'),
+        truckInput: document.getElementById('truckInput'),
+        truckDetails: document.getElementById('truckDetails'),
+        
+        anyItemSlider: document.getElementById('anyItemSlider'),
+        anyItemInput: document.getElementById('anyItemInput'),
+        
+        timelineSlider: document.getElementById('timelineSlider'),
+        timelineYearDisplay: document.getElementById('timelineYearDisplay'),
+
+        // Smart Assistant
+        smartItemSlider: document.getElementById('smartItemSlider'),
+        smartItemInput: document.getElementById('smartItemInput'),
+        smartBizToggle: document.getElementById('smartBizToggle'),
+        smartFinToggle: document.getElementById('smartFinToggle'),
+        
+        // Travel Optimizer
+        tripCostSlider: document.getElementById('tripCostSlider'),
+        tripCostInput: document.getElementById('tripCostInput'),
+        tripBizPct: document.getElementById('tripBizPct'),
+        tripBizDisp: document.getElementById('tripBizDisp'),
+
+        // Dashboard
+        dashGross: document.getElementById('dashGross'),
+        dashHstCol: document.getElementById('dashHstCol'),
+        dashExp: document.getElementById('dashExp'),
+        dashTruck: document.getElementById('dashTruck'),
+        dashHstRef: document.getElementById('dashHstRef'),
+        dashTaxable: document.getElementById('dashTaxable'),
+        dashRate: document.getElementById('dashRate'),
+        dashTaxBill: document.getElementById('dashTaxBill'),
+        dashHelocInt: document.getElementById('dashHelocInt'),
+        finalCash: document.getElementById('finalCash'),
+        cashWarning: document.getElementById('cashWarning'),
+
+        // Bars
+        barExp: document.getElementById('barExp'),
+        barAsset: document.getElementById('barAsset'),
+        barTax: document.getElementById('barTax'),
+        barCash: document.getElementById('barCash'),
+    };
+
+    // --- CHART SETUP ---
+    let depreciationChart = null;
+
+    function initCharts() {
+        const ctx = document.getElementById('depreciationChart').getContext('2d');
+        depreciationChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Remaining Vehicle Value (UCC)',
+                    data: [],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return fmt(context.parsed.y);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: function(value) { return '$' + value/1000 + 'k'; } }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- UTILS ---
+    const fmt = (num) => '$' + Math.round(num).toLocaleString();
+    const fmtDec = (num) => '$' + num.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+
+    // --- CALCULATION LOGIC ---
+    function calculateMarginalRate(income) {
+        for(let b of TAX_BRACKETS) {
+            if(income >= b.min && income <= b.max) return b.rate;
+        }
+        return 0.5353;
+    }
+
+    function calculateCPP(netSelfEmployed) {
+        if(netSelfEmployed <= 0) return 0;
+        const pensionable = Math.min(netSelfEmployed, CPP_MAX_EARNINGS) - CPP_BASIC_EXEMPTION;
+        return Math.max(0, pensionable * CPP_RATE);
+    }
+
+    // Toggle helper
+    window.toggleCheckbox = function(id) {
+        const checkbox = document.getElementById(id);
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            checkbox.dispatchEvent(new Event('change'));
+        }
+    };
+
+    function update() {
+        // 1. Inputs
+        const commission = parseInt(els.incomeInput.value) || 0;
+        const homeVal = parseInt(els.homeValInput.value) || 0;
+        const fixed = parseInt(els.fixedInput.value) || 0;
+        const marketing = parseInt(els.marketingInput.value) || 0;
+        const salary = parseInt(els.salaryInput.value) || 0;
+        const travel = parseInt(els.travelInput.value) || 0;
+        const meals = parseInt(els.mealsInput.value) || 0; 
+        
+        const hasTruck = els.truckToggle.checked;
+        const truckPrice = hasTruck ? (parseInt(els.truckInput.value) || 0) : 0;
+        
+        const useHeloc = els.helocToggle.checked;
+        const helocRate = parseFloat(els.helocRateInput.value) / 100 || 0;
+        
+        const years = parseInt(els.timelineSlider.value) || 1;
+
+        els.timelineYearDisplay.textContent = `Year ${years}`;
+        document.getElementById('exit-year-disp').textContent = years;
+
+        // 2. HST Calculations
+        const hstCollected = commission * HST_RATE;
+        const hstOnExpenses = (fixed + marketing + travel + meals) * HST_RATE; 
+        const hstOnTruck = truckPrice * HST_RATE;
+        const totalITCRefund = hstOnExpenses + hstOnTruck;
+
+        // 3. HELOC Interest Calculation
+        let helocPrincipal = 0;
+        if(useHeloc) {
+             helocPrincipal += truckPrice * 1.13; 
+        }
+        
+        const annualHelocInterest = helocPrincipal * helocRate;
+        
+        // 4. Tax Deductions
+        const truckCCABase = Math.min(truckPrice, CCA_CAP); 
+        let currentUCC = truckCCABase;
+        let totalCCA = 0;
+        let ccaDataPoints = [];
+        let labels = [];
+
+        // Calculate CCA over time
+        for(let i=1; i<=10; i++) {
+            let yearlyRate = (i === 1) ? 0.15 : 0.30;
+            let deduction = currentUCC * yearlyRate;
+            currentUCC -= deduction;
+            labels.push('Year ' + i);
+            ccaDataPoints.push(currentUCC);
+            if(i <= years) totalCCA += deduction;
+        }
+        
+        if (depreciationChart) {
+            depreciationChart.data.labels = labels;
+            depreciationChart.data.datasets[0].data = ccaDataPoints;
+            depreciationChart.update();
+        }
+        
+        // Net Income Calculation
+        const year1CCA = truckCCABase * 0.15;
+        const mealsDeduction = meals * 0.5;
+        // Interest is 100% deductible
+        const totalDeductions = fixed + marketing + salary + travel + mealsDeduction + year1CCA + annualHelocInterest;
+        const netBusinessIncome = Math.max(0, commission - totalDeductions);
+
+        // 5. Tax Bill
+        const totalIncome = PENSION_BASE + netBusinessIncome;
+        const marginalRate = calculateMarginalRate(totalIncome);
+        const incomeTax = netBusinessIncome * marginalRate;
+        const cpp = calculateCPP(netBusinessIncome);
+        const totalTaxBill = incomeTax + cpp;
+
+        // 6. Cash Flow
+        const cashIn = commission + hstCollected + totalITCRefund;
+        // If HELOC used for Truck, we don't pay cash for truck now. We pay interest.
+        const cashOutTruck = useHeloc ? 0 : (truckPrice * 1.13); 
+        const cashOutOps = (fixed + marketing + travel + meals) * 1.13 + salary; 
+        const cashOutInterest = annualHelocInterest;
+        const cashOutTax = totalTaxBill; 
+
+        const netCash = cashIn - cashOutOps - cashOutTruck - cashOutInterest - cashOutTax;
+
+        // 7. DASHBOARD UPDATES
+        els.incomeDisplay.textContent = fmt(commission);
+        els.headerHst.textContent = fmt(hstCollected);
+        els.dashGross.textContent = fmt(commission);
+        els.dashHstCol.textContent = '+' + fmt(hstCollected);
+        els.dashExp.textContent = '-' + fmt(cashOutOps);
+        
+        // Truck on Dashboard
+        if(hasTruck) {
+            if(useHeloc) {
+                els.dashTruck.innerHTML = `<span style="color:#C5A059">Financed (Interest Only)</span>`;
+            } else {
+                els.dashTruck.textContent = '-' + fmt(truckPrice * 1.13);
+            }
+            els.dashTruck.parentElement.style.display = 'flex';
+        } else {
+            els.dashTruck.parentElement.style.display = 'none';
+        }
+
+        // HELOC Interest Line
+        const helocRow = document.getElementById('heloc-deduction-row');
+        if(useHeloc && annualHelocInterest > 0) {
+            helocRow.style.display = 'flex';
+            document.getElementById('dashHelocInt').textContent = '-' + fmt(annualHelocInterest);
+            els.helocDetails.style.display = 'block';
+            document.getElementById('helocCard').classList.add('heloc-active');
+        } else {
+            helocRow.style.display = 'none';
+            els.helocDetails.style.display = 'none';
+            document.getElementById('helocCard').classList.remove('heloc-active');
+        }
+
+        els.dashHstRef.textContent = '+' + fmt(totalITCRefund);
+        els.dashTaxable.textContent = fmt(netBusinessIncome);
+        els.dashRate.textContent = (marginalRate * 100).toFixed(1);
+        els.dashTaxBill.textContent = '-' + fmt(totalTaxBill);
+
+        els.finalCash.textContent = fmt(netCash);
+        els.finalCash.style.color = netCash >= 0 ? '#10b981' : '#ef4444';
+        els.cashWarning.style.display = netCash < 0 ? 'block' : 'none';
+
+        // 8. HELOC MATH
+        document.getElementById('gross-rate').textContent = (helocRate*100).toFixed(2) + '%';
+        document.getElementById('rate-savings').textContent = '-' + (helocRate * marginalRate * 100).toFixed(2) + '%';
+        document.getElementById('net-rate').textContent = (helocRate * (1-marginalRate) * 100).toFixed(2) + '%';
+
+        // 9. EXIT STRATEGY LAB
+        const futureHomeValue = homeVal * Math.pow(1 + HOME_GROWTH, years);
+        const debtAtExit = useHeloc ? helocPrincipal : 0; 
+        const realtorSavings = futureHomeValue * 0.025 * 1.13;
+        
+        document.getElementById('exit-home-val').textContent = fmt(futureHomeValue);
+        document.getElementById('exit-debt').textContent = '-' + fmt(debtAtExit);
+        document.getElementById('exit-savings').textContent = '+' + fmt(realtorSavings);
+        document.getElementById('exit-net-cash').textContent = fmt(futureHomeValue - debtAtExit + realtorSavings);
+        
+        // 10. DEPRECIATION LAB & SUBSIDY
+        document.getElementById('cca-basis').textContent = fmt(truckCCABase);
+        document.getElementById('cca-year-disp').textContent = years;
+        document.getElementById('cca-cumul-deduct').textContent = '-' + fmt(totalCCA);
+        document.getElementById('cca-ucc').textContent = fmt(truckCCABase - totalCCA);
+
+        const annualRecurringSavings = 
+            (fixed * 0.13 + fixed * marginalRate) +
+            (travel * 0.13 + travel * marginalRate) +
+            (marketing * 0.13 + marketing * marginalRate) +
+            (meals * 0.13 + (meals * 0.5 * marginalRate));
+        
+        const truckSavings = hasTruck ? (truckPrice * 0.13 + (totalCCA * marginalRate)) : 0;
+        const interestSavings = useHeloc ? (annualHelocInterest * marginalRate * years) : 0;
+
+        const totalLifestyleSubsidy = (annualRecurringSavings * years) + truckSavings + interestSavings;
+        document.getElementById('lifestyle-subsidy-total').textContent = fmt(totalLifestyleSubsidy);
+        document.getElementById('subsidy-years').textContent = years;
+
+        // VIZ BARS
+        const totalFlow = cashOutOps + (useHeloc?0:cashOutTruck) + cashOutInterest + totalTaxBill + Math.max(0, netCash);
+        if(totalFlow > 0) {
+            els.barExp.style.width = (cashOutOps / totalFlow * 100) + '%';
+            els.barAsset.style.width = ((useHeloc?0:cashOutTruck) / totalFlow * 100) + '%';
+            els.barTax.style.width = ((cashOutInterest + totalTaxBill) / totalFlow * 100) + '%'; // Group interest with tax/burn
+            els.barCash.style.width = (Math.max(0, netCash) / totalFlow * 100) + '%';
+        }
+
+        // --- UPDATE SMART ASSISTANT ---
+        const smartCost = parseInt(els.smartItemInput.value) || 0;
+        const isSmartBiz = els.smartBizToggle.checked;
+        const isSmartFin = els.smartFinToggle.checked;
+        
+        // Personal Cost
+        const personalCostSmart = smartCost * 1.13;
+        document.getElementById('smart-personal').textContent = fmt(personalCostSmart);
+
+        // Business Net Cost
+        let bizNetCost = smartCost * 1.13; // default
+        if (isSmartBiz) {
+            const itc = smartCost * 0.13;
+            const writeOff = smartCost * marginalRate;
+            bizNetCost = (smartCost * 1.13) - itc - writeOff;
+            
+            if (isSmartFin) {
+                // If financed (HELOC), add interest cost but deduct interest write-off
+                // Simplified 1 year view: 5.95% interest
+                const interest = smartCost * 0.0595;
+                const intDeduct = interest * marginalRate;
+                bizNetCost += (interest - intDeduct); // Add net interest cost
+            }
+        }
+        document.getElementById('smart-business').textContent = fmt(bizNetCost);
+        
+        // Verdict Logic
+        const smartVerdict = document.getElementById('smart-verdict');
+        if (netCash < smartCost && !isSmartFin) {
+            smartVerdict.textContent = "CASH SHORTAGE - WAIT";
+            smartVerdict.className = "rec-badge rec-stop";
+        } else if (isSmartBiz && isSmartFin) {
+            smartVerdict.textContent = "LEVERAGE IT (GOOD DEBT)";
+            smartVerdict.className = "rec-badge rec-leverage";
+        } else if (isSmartBiz) {
+            smartVerdict.textContent = "BUY - TAX DEDUCTIBLE";
+            smartVerdict.className = "rec-badge rec-go";
+        } else {
+            smartVerdict.textContent = "PERSONAL EXPENSE";
+            smartVerdict.className = "rec-badge rec-stop";
+            smartVerdict.style.background = "#f1f5f9";
+            smartVerdict.style.color = "#64748b";
+            smartVerdict.style.borderColor = "#cbd5e1";
+        }
+
+        // --- UPDATE TRAVEL OPTIMIZER ---
+        const tripTotal = parseInt(els.tripCostInput.value) || 0;
+        const tripBizPct = parseInt(els.tripBizPct.value) / 100;
+        els.tripBizDisp.textContent = Math.round(tripBizPct * 100) + '%';
+        
+        // Personal Trip (Full Pop)
+        const tripPersonalCost = tripTotal * 1.13;
+        document.getElementById('tripPersonal').textContent = fmt(tripPersonalCost);
+        
+        // Optimized Trip
+        // Portion personal: Pay full tax
+        const partPersonal = tripTotal * (1 - tripBizPct) * 1.13;
+        
+        // Portion business: Get ITC + Tax Writeoff
+        const bizPartBase = tripTotal * tripBizPct;
+        const bizPartNet = (bizPartBase * 1.13) - (bizPartBase * 0.13) - (bizPartBase * marginalRate);
+        
+        const tripTotalOptimized = partPersonal + bizPartNet;
+        document.getElementById('tripOptimized').textContent = fmt(tripTotalOptimized);
+        document.getElementById('tripSavings').textContent = fmt(tripPersonalCost - tripTotalOptimized);
+
+        window.currentAnalysis = {
+            inputs: { commission, fixed, marketing, salary, truckPrice, years, useHeloc },
+            results: { netCash, marginalRate, totalTaxBill, totalITCRefund, totalLifestyleSubsidy, futureHomeValue }
+        };
+    }
+
+    // --- SETUP LISTENERS ---
+    const rangeInputs = document.querySelectorAll('input[type="range"]');
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+
+    rangeInputs.forEach(range => {
+        range.addEventListener('input', function() {
+            const numInput = this.parentElement.querySelector('input[type="number"]');
+            if(numInput) numInput.value = this.value;
+            update();
+        });
+    });
+
+    numberInputs.forEach(num => {
+        num.addEventListener('input', function() {
+            const rangeInput = this.parentElement.querySelector('input[type="range"]');
+            if(rangeInput) rangeInput.value = this.value;
+            update();
+        });
+    });
+
+    els.truckToggle.addEventListener('change', update);
+    els.helocToggle.addEventListener('change', update);
+    els.smartBizToggle.addEventListener('change', update);
+    els.smartFinToggle.addEventListener('change', update);
+    els.tripBizPct.addEventListener('input', update);
+
+    window.exportData = function() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(window.currentAnalysis, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "financial_analysis_" + new Date().toISOString().slice(0,10) + ".json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+
+    window.addEventListener('load', () => {
+        initCharts();
+        update();
+    });
+
+</script>
+
+</body>
+</html>

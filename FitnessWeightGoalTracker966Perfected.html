@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRUISE MISSION CONTROL</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        missionTeal: { DEFAULT: '#00FFFF', light: '#E0FFFF', dark: '#008B8B' },
+                        missionOrange: { DEFAULT: '#FF9F00', light: '#FFD700', dark: '#FF4500' },
+                        missionGreen: '#00FF00', // Matrix Green
+                        missionRed: '#FF0000', // Alert Red
+                        missionBg: '#050505',
+                        panelBg: '#111111'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #050505; font-family: 'Segoe UI', Roboto, monospace; color: #c7d2fe; }
+        
+        /* Neon Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #008B8B; border-radius: 4px; border: 1px solid #00FFFF; }
+        
+        /* High Contrast Glass Panel */
+        .glass-panel {
+            background: rgba(10, 10, 15, 0.95);
+            border: 1px solid #333;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Sci-Fi Buttons */
+        .btn-sci {
+            position: relative; overflow: hidden; transition: all 0.2s; text-transform: uppercase; letter-spacing: 1px;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+        }
+        .btn-sci:hover { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0, 255, 255, 0.2); }
+        .btn-sci:active { transform: translateY(1px); }
+
+        /* Inputs */
+        .mission-input {
+            background: #000; border: 1px solid #333; color: #00FFFF; padding: 8px;
+            font-family: monospace; font-size: 0.9rem; width: 100%; transition: all 0.2s;
+        }
+        .mission-input:focus { outline: none; border-color: #FF9F00; box-shadow: 0 0 10px rgba(255, 159, 0, 0.3); }
+
+        /* Chevron Buttons */
+        .chevron-btn {
+            background: #1a1a1a; border: 1px solid #333; color: #00FFFF; width: 30px; height: 100%;
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.1s;
+        }
+        .chevron-btn:hover { background: #00FFFF; color: #000; }
+        .chevron-btn:active { transform: scale(0.9); }
+
+        /* Calendar Grid */
+        .calendar-day {
+            aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; items-center;
+            cursor: pointer; border: 1px solid #222; transition: all 0.2s; position: relative; font-size: 0.7rem; 
+        }
+        .calendar-day:hover { z-index: 10; transform: scale(1.2); border-color: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.8); background: #222; }
+        .day-perfect { background: rgba(16, 185, 129, 0.3); border-color: #10B981; color: #fff; }
+        .day-good { background: rgba(245, 158, 11, 0.3); border-color: #F59E0B; color: #fff; }
+        .day-missed { background: rgba(239, 68, 68, 0.3); border-color: #EF4444; color: #fff; }
+        .day-unrated { background: #0a0a0a; color: #444; }
+        .day-selected { box-shadow: inset 0 0 0 2px white; z-index: 5; }
+
+        /* Range Slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 0; 
+            background: #FF9F00; cursor: pointer; margin-top: -6px; border: 2px solid black;
+        }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #333; }
+        
+        /* CRT Scanline */
+        .scanlines {
+            position: fixed; top: 0; left: 0; w: 100%; h: 100%; pointer-events: none; z-index: 9999;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%; width: 100vw; height: 100vh; opacity: 0.4;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pb-20">
+    
+    <div class="scanlines"></div>
+
+    <div class="w-full px-6 md:px-12 space-y-10 py-8 relative z-10">
+        
+        <!-- 1. HEADER -->
+        <div class="glass-panel p-4 border-t-4 border-missionTeal flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-4 w-full md:w-auto">
+                <div class="p-2 bg-missionTeal/20 rounded-full border border-missionTeal/50 animate-pulse">
+                    <i data-lucide="ship" class="w-8 h-8 text-missionTeal"></i>
+                </div>
+                <div class="flex-grow">
+                    <div class="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] mb-1">ACTIVE PROTOCOL</div>
+                    <select id="missionSelector" onchange="switchMission()" onmouseenter="AudioEngine.playHover()" class="bg-transparent font-black text-2xl md:text-3xl text-white uppercase tracking-widest outline-none cursor-pointer hover:text-missionOrange transition w-full">
+                        <!-- JS Populated -->
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="toggleAudio()" id="audioBtn" class="btn-sci bg-gray-900 text-missionTeal border border-gray-700 p-3" title="Audio">
+                    <i data-lucide="volume-2" class="w-5 h-5"></i>
+                </button>
+                <button type="button" onclick="toggleMissionManager()" class="btn-sci bg-gray-900 text-missionOrange border border-gray-700 py-3 px-6 font-bold text-xs flex items-center gap-2">
+                    <i data-lucide="settings"></i> CONFIG
+                </button>
+            </div>
+        </div>
+
+        <!-- MISSION MANAGER MODAL -->
+        <div id="missionManager" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm p-4">
+            <div class="glass-panel w-full max-w-4xl border border-missionOrange flex flex-col max-h-[90vh]">
+                <div class="p-4 border-b border-gray-800 flex justify-between items-center bg-missionOrange/10">
+                    <h2 class="text-lg font-bold text-missionOrange font-mono">MISSION CONFIGURATION</h2>
+                    <button type="button" onclick="toggleMissionManager()" class="text-white"><i data-lucide="x"></i></button>
+                </div>
+                <div class="flex flex-col md:flex-row flex-grow overflow-hidden">
+                    <div class="w-full md:w-1/3 border-r border-gray-800 p-4 bg-black/50 overflow-y-auto">
+                        <div class="text-xs font-bold text-gray-500 mb-3">SAVED MISSIONS</div>
+                        <div id="missionListContainer" class="space-y-2"></div>
+                        <button type="button" onclick="prepareCreateNew()" class="mt-4 w-full btn-sci bg-missionTeal/20 text-missionTeal border border-missionTeal/50 py-2 text-xs font-bold">
+                            + NEW MISSION
+                        </button>
+                    </div>
+                    <div class="w-full md:w-2/3 p-6 bg-[#050505] space-y-4 overflow-y-auto">
+                        <h3 id="editorTitle" class="text-missionTeal font-bold border-b border-gray-800 pb-2">EDIT MISSION</h3>
+                        <input type="hidden" id="editId">
+                        <div><label class="text-[10px] text-gray-500 font-bold block mb-1">NAME</label><input id="editName" class="mission-input text-lg font-bold"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-[10px] text-gray-500 font-bold block mb-1">START DATE</label><input type="date" id="editStart" class="mission-input"></div>
+                            <div><label class="text-[10px] text-gray-500 font-bold block mb-1">END DATE</label><input type="date" id="editEnd" class="mission-input"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-[10px] text-gray-500 font-bold block mb-1">START WEIGHT</label><input type="number" id="editStartW" class="mission-input text-missionOrange"></div>
+                            <div><label class="text-[10px] text-gray-500 font-bold block mb-1">GOAL WEIGHT</label><input type="number" id="editGoalW" class="mission-input text-missionTeal"></div>
+                        </div>
+                        <div class="flex gap-2 pt-4">
+                            <button type="button" onclick="saveMissionFromEditor()" class="flex-1 btn-sci bg-missionTeal text-black font-bold py-3">SAVE</button>
+                            <button type="button" onclick="loadMissionFromEditor()" class="flex-1 btn-sci bg-blue-900 text-white font-bold py-3">LOAD</button>
+                            <button type="button" onclick="deleteMissionFromEditor()" class="btn-sci bg-red-900/50 text-red-500 border border-red-900 py-3 px-4"><i data-lucide="trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. STATS ROW (Updated Layout) -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            
+            <!-- Countdown (Fixed & Prominent) -->
+            <div class="md:col-span-3 glass-panel p-6 flex flex-col justify-center items-center bg-black border-l-4 border-missionOrange">
+                <div class="text-[10px] text-missionOrange uppercase mb-2 font-bold tracking-wider">MISSION T-MINUS</div>
+                <div class="flex gap-3 text-center font-mono text-white items-baseline">
+                    <div><span id="cnt-days" class="text-6xl font-black tracking-tighter">--</span><div class="text-[9px] text-gray-500 mt-1 font-bold">DAYS</div></div>
+                    <div class="text-4xl text-gray-700 -mt-4">:</div>
+                    <div><span id="cnt-hours" class="text-3xl font-bold text-gray-400">--</span><div class="text-[9px] text-gray-500 mt-1 font-bold">HRS</div></div>
+                </div>
+                <div id="countdown-context" class="text-[9px] text-gray-600 uppercase mt-2 font-bold tracking-wider">FROM SELECTED DATE</div>
+            </div>
+
+            <!-- Main Progress & Metrics -->
+            <div class="md:col-span-9 glass-panel p-6 flex flex-col justify-center relative border-r-4 border-missionTeal">
+                
+                <div class="flex flex-wrap justify-between items-end mb-6 gap-6">
+                    <!-- Start -->
+                    <div>
+                        <div class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">STARTING MASS</div>
+                        <div class="text-xl font-bold text-gray-300 font-mono">START: <span id="disp-start-weight" class="text-white">--</span></div>
+                    </div>
+                    
+                    <!-- Current (Dynamic Color) -->
+                    <div class="text-center px-8 border-x border-gray-800">
+                        <div class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">CURRENT STATUS</div>
+                        <div class="flex items-baseline gap-1 justify-center">
+                            <div id="main-weight-display" class="text-5xl font-black text-white tracking-tighter transition-colors duration-300">--</div>
+                        </div>
+                        <div id="trajectory-status" class="text-[11px] font-bold uppercase mt-2 bg-black/50 py-1 px-3 rounded border border-gray-800 inline-block">CALCULATING...</div>
+                    </div>
+                    
+                    <!-- Goal (Larger) -->
+                     <div>
+                        <div class="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">TARGET MASS</div>
+                        <div class="text-5xl font-black text-missionOrange font-mono flex items-baseline gap-1">
+                            GOAL: <span id="disp-goal-weight">--</span>
+                        </div>
+                    </div>
+
+                    <!-- Rank -->
+                    <div class="text-right hidden lg:block">
+                        <div class="text-[9px] text-gray-500 uppercase font-bold">CLASS</div>
+                        <div id="rank-display" class="text-2xl font-black text-white italic tracking-wider">RECRUIT</div>
+                    </div>
+                </div>
+
+                <!-- Bar -->
+                <div class="h-8 bg-[#0a0f1a] border border-gray-800 relative overflow-hidden rounded-sm mt-4">
+                    <div id="progress-fill" class="h-full bg-gradient-to-r from-missionTeal-dark via-missionTeal to-white transition-all duration-1000" style="width: 0%"></div>
+                    <div id="pace-marker" class="absolute top-0 h-full w-1 bg-missionOrange shadow-[0_0_10px_#FF9F00] z-20 opacity-80" style="left: 0%"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                         <span id="pct-text" class="text-[10px] font-bold text-white mix-blend-difference font-mono">0% COMPLETE</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. MAIN CONTENT -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- LEFT: LOGGING & ANALYTICS -->
+            <div class="lg:col-span-4 space-y-8">
+                <!-- Log Card -->
+                <div class="glass-panel">
+                    <div class="bg-missionTeal/10 p-3 flex justify-between items-center px-5 border-b border-missionTeal/20">
+                        <span class="text-xs font-bold text-missionTeal uppercase">DAILY LOG</span>
+                        <i data-lucide="database" class="w-4 h-4 text-missionTeal"></i>
+                    </div>
+                    <div class="p-5 space-y-5">
+                        <!-- Date with Chevrons -->
+                        <div>
+                            <label class="text-[10px] text-gray-500 font-bold block mb-2">MISSION DATE</label>
+                            <div class="flex h-12">
+                                <button type="button" onclick="adjustDate('inpDate', -1)" class="chevron-btn border-r-0"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                                <input type="date" id="inpDate" class="mission-input text-center h-full border-x-0">
+                                <button type="button" onclick="adjustDate('inpDate', 1)" class="chevron-btn border-l-0"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- Weight (CHANGED TO 'CHANGE' EVENT FOR FREE TYPING) -->
+                        <div>
+                            <label class="text-[10px] text-gray-500 font-bold block mb-2">WEIGHT (LBS)</label>
+                            <input type="number" id="inpWeight" step="0.1" class="mission-input text-center font-black text-3xl text-white border-missionOrange/50 focus:border-missionOrange py-3" placeholder="000.0">
+                        </div>
+
+                        <!-- Mood -->
+                        <div>
+                            <div class="flex justify-between text-[10px] font-bold text-gray-500 mb-2">
+                                <span>VIBE CHECK</span><span id="mood-val-display" class="text-missionOrange">5/10</span>
+                            </div>
+                            <input type="range" id="inpMood" min="1" max="10" value="5" class="w-full" oninput="handleMoodChange(this.value)">
+                        </div>
+
+                        <!-- Habits -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <button type="button" onclick="toggleHabit('carnivore')" id="h-carnivore" class="p-3 border border-gray-800 hover:border-missionTeal bg-black/40 transition group flex flex-col justify-between h-20 text-left">
+                                <div class="flex justify-between w-full">
+                                    <span class="text-[9px] text-gray-500">DIET</span>
+                                    <span class="status-icon text-[9px] text-gray-600">OFF</span>
+                                </div>
+                                <div class="text-xs font-bold text-gray-400 group-[.active]:text-missionTeal">🥩 CARNIVORE</div>
+                            </button>
+                            <button type="button" onclick="toggleHabit('walk')" id="h-walk" class="p-3 border border-gray-800 hover:border-missionTeal bg-black/40 transition group flex flex-col justify-between h-20 text-left">
+                                <div class="flex justify-between w-full">
+                                    <span class="text-[9px] text-gray-500">CARDIO</span>
+                                    <span class="status-icon text-[9px] text-gray-600">OFF</span>
+                                </div>
+                                <div class="text-xs font-bold text-gray-400 group-[.active]:text-missionTeal">🚶 WALK</div>
+                            </button>
+                            <button type="button" onclick="toggleHabit('lift')" id="h-lift" class="p-3 border border-gray-800 hover:border-missionTeal bg-black/40 transition group flex flex-col justify-between h-20 text-left">
+                                <div class="flex justify-between w-full">
+                                    <span class="text-[9px] text-gray-500">STRENGTH</span>
+                                    <span class="status-icon text-[9px] text-gray-600">OFF</span>
+                                </div>
+                                <div class="text-xs font-bold text-gray-400 group-[.active]:text-missionTeal">🏋️ LIFT</div>
+                            </button>
+                            <button type="button" onclick="toggleHabit('alcohol')" id="h-alcohol" class="p-3 border border-gray-800 hover:border-missionOrange bg-black/40 transition group flex flex-col justify-between h-20 text-left active">
+                                <div class="flex justify-between w-full">
+                                    <span class="text-[9px] text-gray-500">DISCIPLINE</span>
+                                    <span class="status-icon text-[9px] text-missionOrange">ON</span>
+                                </div>
+                                <div class="text-xs font-bold text-gray-400 group-[.active]:text-missionOrange">🚫 NO ALC</div>
+                            </button>
+                        </div>
+                        
+                        <input id="inpNotes" class="mission-input text-xs py-3" placeholder="Log notes...">
+                    </div>
+                </div>
+
+                <!-- Discipline Analytics -->
+                <div class="glass-panel p-5 border-l-2 border-missionTeal bg-black/20">
+                    <div class="flex justify-between items-center mb-5">
+                        <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">DISCIPLINE ANALYTICS</h3>
+                        <span class="text-[10px] font-bold text-missionTeal">ACTUAL %</span>
+                    </div>
+                    
+                    <div class="space-y-5">
+                        <div><div class="flex justify-between text-[10px] mb-1 text-white font-bold"><span>🥩 Carnivore</span><span id="stat-c-val">0%</span></div><div class="h-2 bg-gray-800 rounded-full"><div id="bar-c" class="h-full bg-missionTeal rounded-full w-0 transition-all"></div></div></div>
+                        <div><div class="flex justify-between text-[10px] mb-1 text-white font-bold"><span>🚶 Walking</span><span id="stat-w-val">0%</span></div><div class="h-2 bg-gray-800 rounded-full"><div id="bar-w" class="h-full bg-missionTeal rounded-full w-0 transition-all"></div></div></div>
+                        <div><div class="flex justify-between text-[10px] mb-1 text-white font-bold"><span>🏋️ Lifting</span><span id="stat-l-val">0%</span></div><div class="h-2 bg-gray-800 rounded-full"><div id="bar-l" class="h-full bg-missionTeal rounded-full w-0 transition-all"></div></div></div>
+                        <div><div class="flex justify-between text-[10px] mb-1 text-white font-bold"><span>🚫 Zero Alcohol</span><span id="stat-a-val">0%</span></div><div class="h-2 bg-gray-800 rounded-full"><div id="bar-a" class="h-full bg-missionOrange rounded-full w-0 transition-all"></div></div></div>
+                    </div>
+                </div>
+
+                <!-- PERFORMANCE STATS (Fixed Layout) -->
+                <div class="glass-panel p-5 border-l-2 border-missionOrange bg-black/20">
+                     <h3 class="text-[10px] font-bold text-gray-500 uppercase mb-4 tracking-widest border-b border-gray-700 pb-2 text-center">PERFORMANCE STATS (FILTERED)</h3>
+                     <div class="space-y-4 font-mono text-xs px-2">
+                         <div class="flex justify-between items-center border-b border-gray-800 pb-1">
+                             <span class="text-gray-500 font-bold uppercase">Rate of Loss</span>
+                             <span id="stat-rate" class="text-white font-bold text-sm">--</span>
+                         </div>
+                         <div class="flex justify-between items-center border-b border-gray-800 pb-1">
+                             <span class="text-gray-500 font-bold uppercase">Forecast</span>
+                             <span id="stat-projected" class="text-white font-bold text-sm">--</span>
+                         </div>
+                         <div class="flex justify-between items-center border-b border-gray-800 pb-1">
+                             <span class="text-gray-500 font-bold uppercase">Avg Vibe</span>
+                             <span id="stat-mood" class="text-missionOrange font-bold text-sm">--</span>
+                         </div>
+                         <div class="flex justify-between items-center pt-1">
+                             <span class="text-gray-500 font-bold uppercase">vs Goal</span>
+                             <span id="stat-diff" class="text-white font-bold text-sm">--</span>
+                         </div>
+                     </div>
+                     <div id="forecast-msg" class="mt-5 text-center text-[10px] font-bold uppercase tracking-wider p-3 border border-gray-700 rounded-sm text-gray-500">AWAITING DATA</div>
+                </div>
+            </div>
+
+            <!-- RIGHT: CALENDAR, CHART, VISUALS -->
+            <div class="lg:col-span-8 space-y-12"> <!-- Increased Gap -->
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- CALENDAR MODULE (Compact) -->
+                    <div class="glass-panel h-[300px] flex flex-col overflow-hidden">
+                        <div class="flex justify-between items-center p-3 bg-gray-900 border-b border-gray-800">
+                            <button type="button" onclick="changeMonth(-1)" class="chevron-btn w-8 h-8 text-xs"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                            <span id="calMonthYear" class="text-xs font-bold text-missionTeal font-mono uppercase">MONTH</span>
+                            <button type="button" onclick="changeMonth(1)" class="chevron-btn w-8 h-8 text-xs"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                        </div>
+                        <!-- SCROLLABLE AREA -->
+                        <div class="p-3 flex-grow flex flex-col justify-start overflow-y-auto">
+                            <div class="grid grid-cols-7 text-center text-[10px] text-gray-500 font-bold mb-2">
+                                <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                            </div>
+                            <div id="calendarGrid" class="grid grid-cols-7 gap-px text-[11px] font-mono"></div>
+                        </div>
+                    </div>
+    
+                    <!-- Visual Programming (Compact) -->
+                    <div class="glass-panel relative border-t-2 border-missionOrange overflow-hidden group h-[300px]">
+                        <div class="absolute top-0 left-0 w-full p-3 z-10 flex justify-between bg-gradient-to-b from-black/90 to-transparent">
+                            <span class="text-[10px] font-bold text-missionOrange uppercase tracking-widest">VISUAL PROGRAMMING</span>
+                            <button type="button" onclick="cycleFearImage()" class="text-gray-400 hover:text-white"><i data-lucide="refresh-ccw" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="fear-img-container w-full h-full">
+                            <img id="fear-img" src="" class="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity duration-500">
+                        </div>
+                        <div class="absolute bottom-0 left-0 w-full p-4 z-20 bg-gradient-to-t from-black via-black/80 to-transparent flex justify-between items-end">
+                            <div class="max-w-[70%]">
+                                <p id="fear-quote" class="text-white font-mono text-[10px] italic leading-tight">"LOADING..."</p>
+                                <p id="quote-author" class="text-missionOrange text-[8px] font-bold uppercase mt-1"></p>
+                            </div>
+                            <a href="https://photos.app.goo.gl/HBVGGen5bt1LmQYo8" target="_blank" class="bg-missionOrange text-black text-[10px] font-bold py-2 px-4 flex items-center gap-2 hover:bg-white transition rounded-sm">
+                                <i data-lucide="image" class="w-4 h-4"></i> OPEN GOOGLE ALBUM
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SPACER -->
+                <div class="h-4 w-full"></div> 
+
+                <!-- FILTER & GRAPH (Increased Height) -->
+                <div>
+                    <div class="flex justify-end items-center gap-2 mb-3">
+                        <span class="text-[10px] text-gray-500 font-bold uppercase mr-2">FILTER:</span>
+                        <button type="button" onclick="adjustDate('filterStart', -1)" class="chevron-btn w-8 h-8"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <input type="date" id="filterStart" onchange="applyFilter()" class="bg-black border border-gray-700 text-white text-[10px] p-1 w-24 text-center h-8">
+                        <button type="button" onclick="adjustDate('filterStart', 1)" class="chevron-btn w-8 h-8"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                        <span class="text-gray-600">-</span>
+                        <button type="button" onclick="adjustDate('filterEnd', -1)" class="chevron-btn w-8 h-8"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <input type="date" id="filterEnd" onchange="applyFilter()" class="bg-black border border-gray-700 text-white text-[10px] p-1 w-24 text-center h-8">
+                        <button type="button" onclick="adjustDate('filterEnd', 1)" class="chevron-btn w-8 h-8"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                        <button type="button" onclick="resetFilter()" class="ml-4 text-[10px] bg-missionTeal/10 text-missionTeal px-4 h-8 border border-missionTeal/30 hover:bg-missionTeal/20 tracking-wider font-bold">RESET</button>
+                    </div>
+                    
+                    <!-- Taller Graph Container -->
+                    <div class="glass-panel p-3 h-[500px] relative">
+                        <canvas id="weightChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. FOOTER -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-8">
+            <button type="button" onclick="syncGoogle()" onmouseenter="AudioEngine.playHover()" class="md:col-span-2 btn-sci bg-blue-900/50 text-blue-200 border border-blue-800 py-4 text-xs font-bold tracking-wider">SYNC CALENDAR</button>
+            <button type="button" onclick="exportFullICS()" onmouseenter="AudioEngine.playHover()" class="btn-sci bg-gray-800 text-gray-300 border border-gray-600 py-4 text-xs font-bold tracking-wider">EXPORT ICS</button>
+            <button type="button" onclick="exportJSON()" onmouseenter="AudioEngine.playHover()" class="btn-sci bg-gray-800 text-gray-300 border border-gray-600 py-4 text-xs font-bold tracking-wider">BACKUP JSON</button>
+            <button type="button" onclick="exportCSV()" onmouseenter="AudioEngine.playHover()" class="btn-sci bg-gray-800 hover:bg-gray-700 text-white border border-gray-600 py-4 font-mono font-bold text-xs tracking-wider">EXPORT .CSV</button>
+            <label class="btn-sci bg-gray-800 text-gray-300 border border-gray-600 py-4 text-xs font-bold flex justify-center items-center cursor-pointer hover:bg-gray-700 tracking-wider">
+                RESTORE <input type="file" onchange="importJSON(this)" class="hidden">
+            </label>
+        </div>
+    </div>
+
+    <script>
+        // --- AUDIO ENGINE ---
+        const AudioEngine = {
+            ctx: null, muted: false,
+            init() { window.AudioContext = window.AudioContext||window.webkitAudioContext; this.ctx = new AudioContext(); },
+            playTone(freq, type, dur, vol=0.1) {
+                if(this.muted || !this.ctx) return;
+                const osc = this.ctx.createOscillator(); const g = this.ctx.createGain();
+                osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                g.gain.setValueAtTime(vol, this.ctx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime+dur);
+                osc.connect(g); g.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime+dur);
+            },
+            playChirp() { if(!this.muted && this.ctx) this.playTone(1200, 'sine', 0.05, 0.05); },
+            playHover() { if(!this.muted && this.ctx) this.playTone(100, 'triangle', 0.02, 0.01); },
+            playVibe(v) { if(!this.muted && this.ctx) this.playTone(200+(v*100), 'sine', 0.1, 0.05); },
+            playPowerUp() { 
+                if(this.muted || !this.ctx) return;
+                this.playTone(440, 'square', 0.1); setTimeout(()=>this.playTone(880,'square',0.2), 100); 
+            },
+            playStatic() {
+                if(this.muted || !this.ctx) return;
+                const bufferSize = this.ctx.sampleRate * 0.15;
+                const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+                const noise = this.ctx.createBufferSource();
+                noise.buffer = buffer;
+                const gain = this.ctx.createGain();
+                gain.gain.value = 0.03;
+                noise.connect(gain);
+                gain.connect(this.ctx.destination);
+                noise.start();
+            }
+        };
+
+        function toggleAudio() {
+            if(!AudioEngine.ctx) AudioEngine.init();
+            AudioEngine.muted = !AudioEngine.muted;
+            const btn = document.getElementById('audioBtn');
+            btn.classList.toggle('text-red-500', AudioEngine.muted);
+            btn.classList.toggle('text-missionTeal', !AudioEngine.muted);
+            btn.innerHTML = AudioEngine.muted ? '<i data-lucide="volume-x" class="w-5 h-5"></i>' : '<i data-lucide="volume-2" class="w-5 h-5"></i>';
+            lucide.createIcons();
+        }
+
+        // --- CONSTANTS ---
+        const IMAGE_LIB = [
+            "https://github.com/KenMorganRealEstate/Home/blob/main/111.png?raw=true",
+            "https://github.com/KenMorganRealEstate/Home/blob/main/222.png?raw=true",
+            "https://github.com/KenMorganRealEstate/Home/blob/main/333.png?raw=true",
+            "https://github.com/KenMorganRealEstate/Home/blob/main/444.png?raw=true",
+            "https://github.com/KenMorganRealEstate/Home/blob/main/555.png?raw=true"
+        ];
+        const QUOTES = [
+            {t: "The buffet line sees everything.", a: "Reality"},
+            {t: "Discipline is choosing what you want most over what you want now.", a: "Unknown"},
+            {t: "A goal is a dream with a deadline.", a: "Napoleon Hill"},
+            {t: "Do not negotiate with weakness.", a: "Unknown"},
+            {t: "The ship leaves with or without your abs.", a: "Reality"},
+            {t: "Success is not final, failure is not fatal.", a: "Winston Churchill"}
+        ];
+        const RANKS = [{p:0,t:"RECRUIT"},{p:20,t:"GUARDIAN"},{p:40,t:"VANGUARD"},{p:60,t:"TITAN"},{p:80,t:"WARLORD"},{p:100,t:"LEGEND"}];
+        const DEFAULT_MISSION = { id: 1, name: "CRUISE PREP", start: "2025-11-21", end: "2026-02-01", startW: 201.6, goalW: 175.0 };
+
+        // --- STATE ---
+        let appState = { entries: [], missions: [], activeMissionId: null, filter: {start:null, end:null}, currentEntry: {}, imgIndex: 0, calendarDate: new Date() };
+
+        // --- INIT ---
+        window.onload = () => {
+            lucide.createIcons();
+            initCharts();
+            loadData();
+            startCountdown();
+            cycleFearImage();
+            renderCalendar();
+            
+            document.body.addEventListener('click', () => { if(!AudioEngine.ctx) AudioEngine.init(); }, {once:true});
+            
+            // Set Today
+            document.getElementById('inpDate').valueAsDate = new Date();
+            loadEntryForDate(document.getElementById('inpDate').value);
+
+            // Bindings
+            document.getElementById('inpWeight').addEventListener('change', saveEntry);
+            document.getElementById('inpNotes').addEventListener('input', saveEntry);
+            document.getElementById('inpDate').addEventListener('change', (e) => { 
+                loadEntryForDate(e.target.value); 
+                renderCalendar(); // Refresh calendar selection
+            });
+        };
+
+        function adjustDate(id, days) {
+            const inp = document.getElementById(id);
+            if(!inp.value) return;
+            
+            try {
+                inp.stepUp(days);
+            } catch(e) {
+                const d = new Date(inp.valueAsDate);
+                d.setDate(d.getDate() + days);
+                inp.valueAsDate = d;
+            }
+            inp.dispatchEvent(new Event('change'));
+            AudioEngine.playChirp();
+            
+            if(id === 'inpDate') { 
+                loadEntryForDate(inp.value); 
+                renderCalendar(); 
+            }
+            else {
+                applyFilter();
+            }
+        }
+
+        function changeMonth(dir) {
+            appState.calendarDate.setMonth(appState.calendarDate.getMonth() + dir);
+            renderCalendar();
+            AudioEngine.playHover();
+        }
+
+        // --- CALENDAR LOGIC ---
+        function renderCalendar() {
+            const year = appState.calendarDate.getFullYear();
+            const month = appState.calendarDate.getMonth();
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const todayStr = new Date().toISOString().split('T')[0];
+            const selectedStr = document.getElementById('inpDate').value;
+
+            document.getElementById('calMonthYear').innerText = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+            
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            for(let i=0; i<firstDay; i++) grid.appendChild(document.createElement('div'));
+
+            for(let d=1; d<=daysInMonth; d++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const entry = appState.entries.find(e => e.date === dateStr);
+                const div = document.createElement('div');
+                div.innerText = d;
+                div.className = "calendar-day rounded-sm font-bold text-gray-500";
+                
+                // Color Logic
+                if(entry) {
+                    const habitCount = (entry.carnivore?1:0) + (entry.walk?1:0) + (entry.lift?1:0) + (entry.alcohol?1:0);
+                    if(habitCount === 4) div.className = "calendar-day rounded-sm font-bold day-perfect";
+                    else if(habitCount >= 2) div.className = "calendar-day rounded-sm font-bold day-good";
+                    else div.className = "calendar-day rounded-sm font-bold day-missed";
+                } else {
+                    div.classList.add('day-unrated');
+                }
+
+                if(dateStr === selectedStr) div.classList.add('day-selected');
+                
+                div.onclick = () => {
+                    document.getElementById('inpDate').value = dateStr;
+                    loadEntryForDate(dateStr);
+                    renderCalendar();
+                    AudioEngine.playChirp();
+                };
+                grid.appendChild(div);
+            }
+        }
+
+        // --- DATA ---
+        function loadData() {
+            const savedE = localStorage.getItem('cruiseMissionData');
+            const savedM = localStorage.getItem('cruiseMissionGoals');
+            const savedId = localStorage.getItem('cruiseMissionActiveId');
+
+            appState.entries = savedE ? JSON.parse(savedE) : [];
+            appState.missions = savedM ? JSON.parse(savedM) : [JSON.parse(JSON.stringify(DEFAULT_MISSION))];
+            
+            const found = appState.missions.find(m => m.id === parseInt(savedId));
+            appState.activeMissionId = found ? found.id : appState.missions[0].id;
+
+            populateMissionSelector();
+            resetFilter();
+        }
+
+        function saveData(silent) {
+            localStorage.setItem('cruiseMissionData', JSON.stringify(appState.entries));
+            localStorage.setItem('cruiseMissionGoals', JSON.stringify(appState.missions));
+            localStorage.setItem('cruiseMissionActiveId', appState.activeMissionId);
+            if(!silent) AudioEngine.playChirp();
+        }
+
+        // --- MISSION UI ---
+        function getActiveMission() { return appState.missions.find(m => m.id === appState.activeMissionId) || DEFAULT_MISSION; }
+        
+        function populateMissionSelector() {
+            const sel = document.getElementById('missionSelector');
+            sel.innerHTML = '';
+            appState.missions.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id; opt.innerText = m.name; opt.selected = m.id === appState.activeMissionId;
+                opt.className = "bg-black text-white";
+                sel.appendChild(opt);
+            });
+        }
+
+        function switchMission() {
+            appState.activeMissionId = parseInt(document.getElementById('missionSelector').value);
+            saveData(true);
+            resetFilter();
+        }
+
+        function toggleMissionManager() {
+            const el = document.getElementById('missionManager');
+            el.classList.toggle('hidden');
+            if(!el.classList.contains('hidden')) renderMissionList();
+        }
+
+        function renderMissionList() {
+            const c = document.getElementById('missionListContainer'); c.innerHTML = '';
+            appState.missions.forEach(m => {
+                const d = document.createElement('div');
+                d.className = `p-2 border cursor-pointer text-xs font-bold ${m.id == document.getElementById('editId').value ? 'border-missionTeal text-white' : 'border-gray-800 text-gray-500'}`;
+                d.innerText = m.name;
+                d.onclick = () => loadMissionToEditor(m.id);
+                c.appendChild(d);
+            });
+        }
+
+        function loadMissionToEditor(id) {
+            const m = appState.missions.find(x => x.id === id);
+            if(!m) return;
+            document.getElementById('editId').value = m.id;
+            document.getElementById('editName').value = m.name;
+            document.getElementById('editStart').value = m.start;
+            document.getElementById('editEnd').value = m.end;
+            document.getElementById('editStartW').value = m.startW;
+            document.getElementById('editGoalW').value = m.goalW;
+            document.getElementById('editorTitle').innerText = "EDIT: " + m.name;
+            renderMissionList();
+        }
+
+        function prepareCreateNew() {
+            document.getElementById('editId').value = "NEW";
+            document.getElementById('editName').value = "";
+            document.getElementById('editStart').value = new Date().toISOString().split('T')[0];
+            document.getElementById('editEnd').value = "";
+            document.getElementById('editStartW').value = "";
+            document.getElementById('editGoalW').value = "";
+            document.getElementById('editorTitle').innerText = "NEW MISSION";
+            renderMissionList();
+        }
+
+        function saveMissionFromEditor() {
+            const id = document.getElementById('editId').value;
+            const name = document.getElementById('editName').value;
+            if(!name) return alert("NAME REQUIRED");
+            
+            const cfg = {
+                name: name.toUpperCase(),
+                start: document.getElementById('editStart').value,
+                end: document.getElementById('editEnd').value,
+                startW: parseFloat(document.getElementById('editStartW').value),
+                goalW: parseFloat(document.getElementById('editGoalW').value)
+            };
+
+            if(id === "NEW") {
+                const newId = Date.now();
+                appState.missions.push({id: newId, ...cfg});
+                appState.activeMissionId = newId;
+            } else {
+                const idx = appState.missions.findIndex(m => m.id == id);
+                if(idx > -1) appState.missions[idx] = { ...appState.missions[idx], ...cfg };
+            }
+            saveData();
+            populateMissionSelector();
+            renderMissionList();
+            resetFilter();
+        }
+
+        function loadMissionFromEditor() {
+             const idVal = document.getElementById('editId').value;
+             if(idVal === "NEW") { alert("Save first."); return; }
+             appState.activeMissionId = parseInt(idVal);
+             saveData(true);
+             populateMissionSelector();
+             loadMissionParams();
+             resetFilter();
+             toggleMissionManager();
+             alert("Mission Loaded!");
+        }
+        
+        function loadMissionParams() {
+             const m = getActiveMission();
+             loadMissionToEditor(m.id);
+        }
+
+        function deleteMissionFromEditor() {
+            const id = document.getElementById('editId').value;
+            if(id === "NEW" || appState.missions.length <= 1) return;
+            if(confirm("DELETE MISSION?")) {
+                appState.missions = appState.missions.filter(m => m.id != id);
+                if(appState.activeMissionId == id) appState.activeMissionId = appState.missions[0].id;
+                saveData();
+                populateMissionSelector();
+                renderMissionList();
+                resetFilter();
+            }
+        }
+
+        // --- ENTRY LOGIC ---
+        function loadEntryForDate(date) {
+            const entry = appState.entries.find(e => e.date === date);
+            if(entry) {
+                document.getElementById('inpWeight').value = entry.weight;
+                document.getElementById('inpNotes').value = entry.notes || "";
+                // FIX: Load vibe correctly
+                const moodVal = entry.mood || 5;
+                document.getElementById('inpMood').value = moodVal;
+                document.getElementById('mood-val-display').innerText = moodVal + '/10';
+                appState.currentEntry = {...entry};
+            } else {
+                const last = [...appState.entries].sort((a,b)=>new Date(a.date)-new Date(b.date)).reverse()[0];
+                document.getElementById('inpWeight').value = last ? last.weight : "";
+                document.getElementById('inpNotes').value = "";
+                document.getElementById('inpMood').value = 5;
+                document.getElementById('mood-val-display').innerText = "5/10";
+                appState.currentEntry = {carnivore:false, walk:false, lift:false, alcohol:true, mood:5};
+            }
+            renderChecklist();
+        }
+
+        function saveEntry() {
+            const date = document.getElementById('inpDate').value;
+            if(!date) return;
+            
+            // Get current form values
+            const weightVal = parseFloat(document.getElementById('inpWeight').value) || null;
+            const moodVal = document.getElementById('inpMood').value;
+            const notesVal = document.getElementById('inpNotes').value;
+
+            const entry = {
+                ...appState.currentEntry, // Spread existing habits first
+                date: date,
+                weight: weightVal,
+                notes: notesVal,
+                mood: moodVal // Explicitly overwrite mood with current slider
+            };
+            
+            appState.entries = appState.entries.filter(e => e.date !== date);
+            appState.entries.push(entry);
+            appState.entries.sort((a,b)=>new Date(a.date)-new Date(b.date));
+            saveData(true);
+            refreshUI();
+            renderCalendar();
+        }
+
+        function toggleHabit(k) {
+            appState.currentEntry[k] = !appState.currentEntry[k];
+            AudioEngine.playChirp();
+            saveEntry();
+            renderChecklist();
+        }
+
+        function renderChecklist() {
+            const set = (id, on, alc) => {
+                const el = document.getElementById('h-'+id);
+                const icon = el.querySelector('.status-icon');
+                if(on) {
+                    el.classList.add('bg-missionTeal/10', alc ? 'border-missionOrange' : 'border-missionTeal');
+                    el.classList.remove('bg-black/40', 'border-gray-800');
+                    icon.innerText = "ON"; icon.className = `status-icon text-[10px] ${alc?'text-missionOrange':'text-missionTeal'}`;
+                } else {
+                    el.classList.remove('bg-missionTeal/10', 'border-missionOrange', 'border-missionTeal');
+                    el.classList.add('bg-black/40', 'border-gray-800');
+                    icon.innerText = "OFF"; icon.className = "status-icon text-gray-600 text-[10px]";
+                }
+            };
+            set('carnivore', appState.currentEntry.carnivore);
+            set('walk', appState.currentEntry.walk);
+            set('lift', appState.currentEntry.lift);
+            set('alcohol', appState.currentEntry.alcohol, true);
+        }
+
+        function handleMoodChange(v) {
+            document.getElementById('mood-val-display').innerText = v + '/10';
+            AudioEngine.playVibe(v);
+            saveEntry();
+        }
+
+        // --- VISUALS & STATS ---
+        function resetFilter() {
+            const m = getActiveMission();
+            appState.filter = { start: m.start, end: m.end };
+            document.getElementById('filterStart').value = m.start;
+            document.getElementById('filterEnd').value = m.end;
+            refreshUI();
+        }
+        
+        function applyFilter() {
+            appState.filter.start = document.getElementById('filterStart').value;
+            appState.filter.end = document.getElementById('filterEnd').value;
+            refreshUI();
+        }
+
+        function refreshUI() {
+            const m = getActiveMission();
+            // Filter entries
+            const s = new Date(appState.filter.start); s.setHours(0,0,0,0);
+            const e = new Date(appState.filter.end); e.setHours(23,59,59,999);
+            const entries = appState.entries.filter(x => { const d=new Date(x.date); return d>=s && d<=e; });
+            const wEntries = entries.filter(e => e.weight);
+
+            // Update all components with null guards
+            safeUpdateDeepStats(entries, wEntries, m);
+            safeUpdateRankAndProgress(wEntries, m);
+            updateChart(entries, m);
+        }
+
+        function safeSetText(id, text) {
+            const el = document.getElementById(id);
+            if (el) el.innerText = text;
+        }
+        
+        function safeSetWidth(id, width) {
+            const el = document.getElementById(id);
+            if (el) el.style.width = width;
+        }
+
+        function safeUpdateDeepStats(entries, wEntries, m) {
+             const t = entries.length;
+             if(t > 0) {
+                ['c','w','l','a'].forEach((k, i) => {
+                    const key = ['carnivore','walk','lift','alcohol'][i];
+                    const p = Math.round((entries.filter(x=>x[key]).length/t)*100);
+                    safeSetText('stat-'+k+'-val', p+'%');
+                    safeSetWidth('bar-'+k, p+'%');
+                });
+                const mAvg = entries.reduce((a,b)=>a+(parseInt(b.mood)||5),0)/t;
+                safeSetText('stat-mood', mAvg.toFixed(1)+"/10");
+            }
+
+            if(wEntries.length >= 2) {
+                const f = wEntries[0], l = wEntries[wEntries.length-1];
+                const days = (new Date(l.date)-new Date(f.date))/86400000;
+                if(days > 0) {
+                    const rate = (f.weight - l.weight)/days;
+                    const left = (new Date(m.end)-new Date())/86400000;
+                    const proj = l.weight - (rate*left);
+                    
+                    safeSetText('stat-rate', rate.toFixed(2));
+                    safeSetText('stat-projected', proj.toFixed(1));
+                    
+                    const elMsg = document.getElementById('forecast-msg');
+                    const elDiff = document.getElementById('stat-diff');
+                    if(elMsg && elDiff) {
+                        const diff = proj - m.goalW;
+                        if (diff <= 0) {
+                            elMsg.innerText = "TRAJECTORY: SUCCESS";
+                            elMsg.className = "mt-4 w-full py-2 bg-missionTeal/20 border border-missionTeal text-missionTeal text-[10px] font-bold uppercase tracking-wider hover:bg-missionTeal hover:text-black transition";
+                            elDiff.innerText = Math.abs(diff).toFixed(1) + " lbs UNDER";
+                            elDiff.className = "text-missionGreen font-bold text-sm";
+                        } else {
+                            elMsg.innerText = `WARNING: PROJECTED MISS BY ${diff.toFixed(1)} LBS`;
+                            elMsg.className = "mt-4 w-full py-2 bg-missionOrange/20 border border-missionOrange text-missionOrange text-[10px] font-bold uppercase tracking-wider hover:bg-missionOrange hover:text-black transition animate-pulse";
+                            elDiff.innerText = diff.toFixed(1) + " lbs OVER";
+                            elDiff.className = "text-missionRed font-bold text-sm";
+                        }
+                    }
+                }
+            }
+        }
+        
+        function safeUpdateRankAndProgress(wEntries, m) {
+            const currW = wEntries.length ? wEntries[wEntries.length-1].weight : m.startW;
+            safeSetText('main-weight-display', currW);
+            safeSetText('disp-start-weight', m.startW);
+            safeSetText('disp-goal-weight', m.goalW);
+            
+            const elMainW = document.getElementById('main-weight-display');
+            const elStatLine = document.getElementById('trajectory-status');
+            
+            // COLOR CODING LOGIC
+            const partsStart = m.start.split('-');
+            const partsEnd = m.end.split('-');
+            const start = new Date(partsStart[0], partsStart[1]-1, partsStart[2]);
+            const end = new Date(partsEnd[0], partsEnd[1]-1, partsEnd[2]);
+            end.setHours(23,59,59,999); // End of day
+
+            const totalDur = end - start;
+            const elapsed = new Date() - start;
+            const timePct = Math.max(0, Math.min(1, elapsed/totalDur));
+            
+            const totalToLose = m.startW - m.goalW;
+            const targetW = m.startW - (totalToLose * timePct);
+            
+            const diff = currW - targetW; // Negative is good (under weight)
+
+            if(elMainW && elStatLine) {
+                if(diff <= 0) {
+                     // Ahead of pace (Good)
+                     elMainW.classList.remove('text-missionRed');
+                     elMainW.classList.add('text-missionGreen');
+                     elStatLine.innerText = `${Math.abs(diff).toFixed(1)} LBS AHEAD OF PACE`;
+                     elStatLine.className = "text-[10px] font-bold uppercase mt-1 text-missionGreen bg-black/50 px-2 py-1 rounded border border-missionGreen/30";
+                } else {
+                     // Behind pace (Bad)
+                     elMainW.classList.remove('text-missionGreen');
+                     elMainW.classList.add('text-missionRed');
+                     elStatLine.innerText = `${diff.toFixed(1)} LBS BEHIND PACE`;
+                     elStatLine.className = "text-[10px] font-bold uppercase mt-1 text-missionRed animate-pulse bg-black/50 px-2 py-1 rounded border border-missionRed/30";
+                }
+            }
+            
+            const lost = m.startW - currW;
+            const pct = Math.max(0, Math.min(100, (lost/totalToLose)*100));
+            safeSetWidth('progress-fill', pct + '%');
+            safeSetText('pct-text', pct.toFixed(1) + '% COMPLETE');
+            
+            // Time Pacer Visual
+            const elPace = document.getElementById('pace-marker');
+            if(elPace) elPace.style.left = (timePct*100) + '%';
+
+            let rank = "RECRUIT";
+            for(let r of RANKS) if(pct >= r.p) rank = r.t;
+            
+            const rEl = document.getElementById('rank-display');
+            if(rEl && rEl.innerText !== rank) AudioEngine.playPowerUp();
+            safeSetText('rank-display', rank);
+        }
+
+        // --- CHART ---
+        let chart;
+        function initCharts() {
+            const ctx = document.getElementById('weightChart').getContext('2d');
+            chart = new Chart(ctx, { type: 'line', data: {labels:[], datasets:[]}, options: { responsive: true, maintainAspectRatio: false, scales: { x: { grid: { display: false }, ticks: { color: '#666' } }, y: { grid: { color: '#222' }, ticks: { color: '#888' } } }, plugins: { legend: { display: false } } } });
+        }
+        function updateChart(entries, m) {
+            if(!chart) return;
+            const start = new Date(appState.filter.start);
+            const end = new Date(appState.filter.end);
+            const labels=[], goals=[], acts=[];
+            
+            // Parse Date logic again for chart axis
+            const mStartParts = m.start.split('-');
+            const mEndParts = m.end.split('-');
+            const mStart = new Date(mStartParts[0], mStartParts[1]-1, mStartParts[2]);
+            const mEnd = new Date(mEndParts[0], mEndParts[1]-1, mEndParts[2]);
+            
+            const dur = (mEnd - mStart)/86400000;
+            const perDay = (m.startW - m.goalW)/dur;
+
+            for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)) {
+                const str = d.toISOString().split('T')[0];
+                labels.push(d.toLocaleDateString(undefined, {month:'numeric', day:'numeric'}));
+                const dp = (d - mStart)/86400000;
+                goals.push(m.startW - (dp*perDay));
+                const e = entries.find(x=>x.date===str);
+                acts.push(e ? e.weight : null);
+            }
+            chart.data.labels = labels;
+            chart.data.datasets = [
+                { label: 'Goal', data: goals, borderColor: '#FF9F00', borderDash: [5,5], borderWidth: 1, pointRadius: 0 },
+                { label: 'Actual', data: acts, borderColor: '#00FFFF', backgroundColor: 'rgba(0,255,255,0.1)', borderWidth: 2, fill: true, spanGaps: true }
+            ];
+            chart.update();
+        }
+
+        function startCountdown() {
+            const tick = () => {
+                const m = getActiveMission();
+                if (!m) return;
+                
+                // Set END of target day (23:59:59) in LOCAL TIME
+                const parts = m.end.split('-');
+                const end = new Date(parts[0], parts[1]-1, parts[2]);
+                end.setHours(23,59,59,999);
+                
+                // If selected date is NOT today, switch to Static Days Remaining
+                const selectedDateVal = document.getElementById('inpDate').value;
+                const selected = new Date(selectedDateVal);
+                // Set "today" to start of day for comparison
+                const today = new Date();
+                const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                const selectedStart = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+
+                const isToday = selectedStart.getTime() === todayStart.getTime();
+                
+                const daysEl = document.getElementById('cnt-days');
+                const hoursEl = document.getElementById('cnt-hours');
+                const contextEl = document.getElementById('countdown-context');
+
+                if (!daysEl) return;
+
+                if (isToday) {
+                   const diff = end - today;
+                   if(diff<0) {
+                       daysEl.innerText = "00"; hoursEl.innerText = "00";
+                       return;
+                   }
+                   daysEl.innerText = Math.floor(diff/86400000);
+                   hoursEl.innerText = Math.floor((diff%86400000)/3600000);
+                   contextEl.innerText = "REAL-TIME REMAINING";
+                   contextEl.className = "text-[9px] text-missionOrange uppercase mt-2 font-bold tracking-wider animate-pulse";
+                } else {
+                   // Static calculation from selected date
+                   const diff = end - selected;
+                   const days = Math.floor(diff/86400000);
+                   daysEl.innerText = days > 0 ? days : 0;
+                   hoursEl.innerText = "--"; // Hide hours for static dates
+                   contextEl.innerText = "FROM SELECTED DATE";
+                   contextEl.className = "text-[9px] text-gray-600 uppercase mt-2 font-bold tracking-wider";
+                }
+            };
+            setInterval(tick, 1000); tick(); // Update every second
+        }
+
+        function cycleFearImage() {
+            AudioEngine.playStatic();
+            appState.imgIndex = (appState.imgIndex+1)%IMAGE_LIB.length;
+            document.getElementById('fear-img').src = IMAGE_LIB[appState.imgIndex];
+            const q = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+            document.getElementById('fear-quote').innerText = `"${q.t}"`;
+            // Added null check here
+            const authorEl = document.getElementById('quote-author');
+            if (authorEl) authorEl.innerText = q.a;
+        }
+
+        // --- EXPORT/IMPORT ---
+        function syncGoogle() {
+            const e = appState.currentEntry;
+            const m = getActiveMission();
+            const w = document.getElementById('inpWeight').value;
+            const left = (w - m.goalW).toFixed(1);
+            const mood = e.mood || 5;
+            
+            // Calculate days remaining from selected date
+            const parts = m.end.split('-');
+            const end = new Date(parts[0], parts[1]-1, parts[2]);
+            const selectedDate = new Date(document.getElementById('inpDate').value);
+            const daysLeft = Math.floor((end - selectedDate) / (1000 * 60 * 60 * 24));
+
+            // NEW FORMAT SPECIFIED
+            const t = encodeURIComponent(`🚢 ${m.name}: ${w} lbs (${left} lbs to go | ${daysLeft} Days Left)`);
+            const d = encodeURIComponent(`Vibe: ${mood}/10\n🥩MEAT ${e.carnivore?'✅':'❌'} 🚶WALK ${e.walk?'✅':'❌'} 🏋️LIFT ${e.lift?'✅':'❌'} 🚫NO-ALC ${e.alcohol?'✅':'❌'}\nNotes: ${document.getElementById('inpNotes').value}`);
+            const dt = document.getElementById('inpDate').value.replace(/-/g,'');
+            window.open(`https://calendar.google.com/calendar/r/eventedit?text=${t}&details=${d}&dates=${dt}/${dt}`,'_blank');
+        }
+        
+        function exportFullICS() {
+            // Simple ICS generator for active mission
+            const m = getActiveMission();
+            let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//MC//EN\n";
+            let curr = new Date(m.start); const end = new Date(m.end);
+            const rate = (m.startW - m.goalW) / ((end-curr)/86400000);
+            
+            while(curr <= end) {
+                const dateStr = curr.toISOString().split('T')[0];
+                const clean = dateStr.replace(/-/g,'');
+                const days = (curr - new Date(m.start))/86400000;
+                const tgt = (m.startW - (days*rate)).toFixed(1);
+                const e = appState.entries.find(x=>x.date===dateStr);
+                
+                let summary = `🎯 ${tgt}`;
+                if(e && e.weight) summary = `✅ ${e.weight} / 🎯 ${tgt}`;
+                
+                ics += `BEGIN:VEVENT\nDTSTART;VALUE=DATE:${clean}\nDTEND;VALUE=DATE:${clean}\nSUMMARY:${summary}\nEND:VEVENT\n`;
+                curr.setDate(curr.getDate()+1);
+            }
+            ics += "END:VCALENDAR";
+            const b = new Blob([ics], {type:'text/calendar'});
+            const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download="plan.ics"; a.click();
+        }
+
+        function exportJSON() {
+            const b = new Blob([JSON.stringify(appState)], {type:'application/json'});
+            const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download="data.json"; a.click();
+        }
+
+        function importJSON(inp) {
+            const r = new FileReader();
+            r.onload = e => {
+                try {
+                    const d = JSON.parse(e.target.result);
+                    if(d.entries) appState = d;
+                    saveData(true);
+                    location.reload();
+                } catch(e) { alert("Error"); }
+            };
+            r.readAsText(inp.files[0]);
+        }
+    </script>
+</body>
+</html>

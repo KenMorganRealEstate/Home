@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1750-18 Creek Way Drive, Burlington - Ken Morgan Real Estate</title>
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Configuration for custom fonts -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            800: '#9f1239', // rose-800 equivalent for brand consistency
+                            900: '#881337',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        /* Smooth scrolling for anchor links */
+        html { scroll-behavior: smooth; }
+        
+        /* Gallery Styles */
+        .gallery-image-container img { transition: opacity 0.3s ease-in-out, transform 0.5s ease; }
+        .gallery-item:hover .gallery-image-container img { transform: scale(1.05); }
+        .gallery-nav { opacity: 0; transition: opacity 0.2s ease-in-out; }
+        #modal-image-container:hover .gallery-nav { opacity: 1; }
+        #modal-image { transition: opacity 0.2s ease-in-out; }
+    </style>
+</head>
+<body class="min-h-screen bg-stone-50 font-sans text-slate-800">
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20 md:h-24">
+                <!-- Left Logo - Ken Morgan -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="https://www.kenmorgan.ca" target="_blank" rel="noopener noreferrer">
+                        <img 
+                            src="https://github.com/KenMorganRealEstate/Home/blob/main/KenMorganLogoBestOneTransparent.png?raw=true" 
+                            alt="Ken Morgan Real Estate" 
+                            class="h-12 md:h-16 w-auto object-contain transition-transform hover:scale-105"
+                        />
+                    </a>
+                </div>
+                
+                <!-- Right Logo - CASORA -->
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="https://www.kenmorgan.ca" target="_blank" rel="noopener noreferrer">
+                        <img 
+                            src="https://github.com/KenMorganRealEstate/Home/blob/main/CASORA%20PRIMARY%20LOGO_blue.png?raw=true" 
+                            alt="CASORA Brokerage" 
+                            class="h-8 md:h-10 w-auto object-contain opacity-90 transition-transform hover:scale-105"
+                        />
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <div class="relative h-[70vh] min-h-[500px] w-full bg-stone-900 flex items-end pb-12">
+        <!-- Background Video -->
+        <video 
+            src="https://raw.githubusercontent.com/KenMorganRealEstate/Home/main/backgroundvideoforweb.mp4" 
+            class="absolute inset-0 w-full h-full object-cover opacity-70"
+            autoplay 
+            loop 
+            muted 
+            playsinline
+        ></video>
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+        
+        <!-- Hero Property Info -->
+        <div class="relative z-10 w-full">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 text-white">
+                    <div>
+                        <span class="inline-block px-4 py-1 border border-brand-800 bg-brand-900/80 backdrop-blur-sm text-white text-sm font-semibold tracking-widest uppercase rounded-sm mb-6 shadow-lg">
+                            Featured Listing
+                        </span>
+                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-light mb-2 tracking-tight drop-shadow-lg">
+                            1750-18 Creek Way Drive
+                        </h1>
+                        <p class="text-xl text-stone-300 drop-shadow-md flex items-center gap-2">
+                            <i data-lucide="map-pin" class="w-5 h-5"></i> Burlington, ON
+                        </p>
+                    </div>
+                    <div class="md:text-right">
+                        <p class="text-3xl md:text-4xl font-semibold text-white drop-shadow-md mb-2">
+                            $3,850,000
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK ACTION BUTTONS -->
+    <div class="bg-stone-900 border-b border-stone-800">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex flex-wrap justify-center gap-4 md:gap-8">
+                <a href="#gallery" class="flex flex-col items-center gap-2 text-stone-300 hover:text-white transition group">
+                    <div class="p-3 bg-stone-800 rounded-full group-hover:bg-brand-800 transition">
+                        <i data-lucide="camera" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-sm font-medium uppercase tracking-wider">Photo Gallery</span>
+                </a>
+                <a href="#video-tour" class="flex flex-col items-center gap-2 text-stone-300 hover:text-white transition group">
+                    <div class="p-3 bg-stone-800 rounded-full group-hover:bg-brand-800 transition">
+                        <i data-lucide="video" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-sm font-medium uppercase tracking-wider">Video Tour</span>
+                </a>
+                <a href="#location" class="flex flex-col items-center gap-2 text-stone-300 hover:text-white transition group">
+                    <div class="p-3 bg-stone-800 rounded-full group-hover:bg-brand-800 transition">
+                        <i data-lucide="map" class="w-6 h-6"></i>
+                    </div>
+                    <span class="text-sm font-medium uppercase tracking-wider">Map & Street View</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        
+        <!-- INTERACTIVE GALLERY SECTION (Moved to top as requested) -->
+        <section id="gallery" class="mb-20">
+            <!-- Stunning Banner -->
+            <div class="relative p-10 md:py-20 rounded-xl shadow-lg overflow-hidden mb-8 flex flex-col items-center justify-center text-center group">
+                <div class="absolute inset-0 bg-black/50 z-10 transition duration-500 group-hover:bg-black/40"></div>
+                <img src="https://raw.githubusercontent.com/Lethalfirestorm/1750/main/Generated%20Image%20September%2005%2C%202025%20-%207_57AM.jpeg" class="absolute inset-0 w-full h-full object-cover z-0 transition duration-700 group-hover:scale-105" alt="Virtual Tour Background" />
+                <div class="relative z-20">
+                    <h2 class="font-light tracking-widest text-3xl md:text-4xl lg:text-5xl text-white uppercase mb-4 drop-shadow-md">
+                        Interactive Virtual Gallery
+                    </h2>
+                    <p class="text-stone-200 text-lg md:text-xl drop-shadow-md font-medium">
+                        Visualize the potential! Click 'Staged' or 'Empty' to transform the space.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Dynamic JavaScript Grid Injected Here -->
+            <div id="gallery-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Content generated by JS -->
+            </div>
+        </section>
+
+        <!-- PROPERTY INTRO & STATS -->
+        <div class="text-center max-w-4xl mx-auto mb-10 pt-10 border-t border-stone-200">
+            <h2 class="text-3xl font-light text-stone-900 mb-4 uppercase tracking-widest inline-block pb-4">Property Details</h2>
+            <h3 class="text-2xl font-semibold text-brand-800 mb-6">Perfect for first time home buyers or short term rental!</h3>
+            
+            <div class="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-stone-600 text-lg font-medium mb-8">
+                <span class="flex items-center"><i data-lucide="bed" class="w-6 h-6 mr-2 text-brand-800"></i> 4+1 Beds</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-stone-300"></span>
+                <span class="flex items-center"><i data-lucide="bath" class="w-6 h-6 mr-2 text-brand-800"></i> 4 Baths</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-stone-300"></span>
+                <span class="flex items-center"><i data-lucide="maximize" class="w-6 h-6 mr-2 text-brand-800"></i> ~3,026 SqFt</span>
+            </div>
+            <p class="text-stone-600 leading-relaxed text-lg text-left md:text-center">
+                This nearly fully furnished beautiful corner unit is ideally located in a quiet cul-de-sac of private townhomes. Close to restaurants, shopping, schools and parks. Open foyer with two piece Bath and convenient inside garage entry. Bright open concept, great room overlooks the huge Eat-in Kitchen.
+            </p>
+        </div>
+
+        <!-- COMPREHENSIVE PROPERTY DETAILS -->
+        <section class="mb-20 pt-4">
+            <div class="max-w-7xl mx-auto space-y-8">
+                <!-- Listing Description -->
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-stone-200">
+                    <h3 class="text-xl font-bold text-stone-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="align-left" class="w-6 h-6 text-brand-800"></i> Listing Description
+                    </h3>
+                    <p class="text-stone-600 leading-relaxed">
+                        Welcome to 28 Celano Drive - A Stunning Park-Backed Family Home in the Heart of Waterdown! DUE TO STRONG INTEREST, PRICE ADJUSTED! Experience luxury, comfort, and an exceptional lifestyle in this beautifully upgraded and meticulously maintained 4 +1 bedroom, 4-bathroom home offering approximately 3,026 sq. ft. of finished living space. Built in 2017 and perfectly positioned backing directly onto Cranberry Park with private park access, this home offers rare privacy and scenic surroundings. Step inside to a bright and elegant open-concept main level featuring rich hardwood flooring, a designer kitchen with quartz countertops, upgraded cabinetry, premium KitchenAid stainless steel appliances, along with a brand-new LG 36" refrigerator and Samsung dishwasher. The spacious Great Room with a cozy fireplace creates the perfect setting for family gatherings, while a separate den provides an ideal space for a home office or study. The second level showcases new flooring throughout, a generously sized primary suite complete with a 3-piece ensuite and walk-in closet, along with three additional bedrooms, convenient second-floor laundry, and a large family room-perfect for relaxation or entertainment. The fully finished basement adds incredible value, featuring an additional bedroom, full bathroom, recreation area, and pantry-ideal for extended family, guests, or multi-generational living. This home is further enhanced with modern LED lighting throughout and elegant marble and stone finishes in the kitchen and all bathrooms, reflecting quality and attention to detail at every turn. Step outside to your private backyard oasis, fully fenced and featuring a spacious deck and an extra-large hot tub that doubles as a swimming pool-perfect for year-round enjoyment while backing onto the tranquility of Cranberry Park. Located in one of Waterdown's most sought-after neighborhood, you are just minutes from top-rated schools, shopping, restaurants, parks, and major highways in (42612860).
+                    </p>
+                    <div class="mt-6 inline-block bg-stone-100 text-stone-800 px-4 py-2 rounded-md text-sm font-medium border border-stone-200">
+                        <i data-lucide="map-pin" class="w-4 h-4 inline-block mr-1 text-brand-800"></i> <span class="font-bold">Location:</span> Spring Creek Dr & Avonsyde Blv
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Property Summary -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h4 class="text-lg font-bold text-stone-900 mb-4 border-b border-stone-100 pb-3 flex items-center gap-2">
+                            <i data-lucide="home" class="w-5 h-5 text-brand-800"></i> Property Summary
+                        </h4>
+                        <ul class="space-y-3 text-sm text-stone-600">
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Property Type</span> <span class="text-right">Single Family / House</span></li>
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Title</span> <span class="text-right">Freehold</span></li>
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Storeys</span> <span class="text-right">2</span></li>
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Square Footage</span> <span class="text-right">2000 - 2500 sqft</span></li>
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Community Name</span> <span class="text-right">Waterdown</span></li>
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Age of Building</span> <span class="text-right">6 to 15 years</span></li>
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Annual Taxes</span> <span class="text-right">$7,951</span></li>
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Time on REALTOR.ca</span> <span class="text-right">15 days</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- Interior & Building Features -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h4 class="text-lg font-bold text-stone-900 mb-4 border-b border-stone-100 pb-3 flex items-center gap-2">
+                            <i data-lucide="layout-template" class="w-5 h-5 text-brand-800"></i> Building & Interior
+                        </h4>
+                        <ul class="space-y-3 text-sm text-stone-600">
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Bedrooms</span> <span class="text-right">4 (Above) + 1 (Below)</span></li>
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Bathrooms</span> <span class="text-right">4 (Total) / 1 (Partial)</span></li>
+                            <li class="flex flex-col gap-1 mt-2">
+                                <span class="font-semibold text-stone-900">Flooring</span> 
+                                <span class="text-right">Laminate, Hardwood, Stone, Vinyl</span>
+                            </li>
+                            <li class="flex justify-between items-center mt-2"><span class="font-semibold text-stone-900">Basement</span> <span class="text-right">Finished</span></li>
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Foundation</span> <span class="text-right">Concrete</span></li>
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Style</span> <span class="text-right">Detached</span></li>
+                            <li class="flex flex-col gap-1 mt-2">
+                                <span class="font-semibold text-stone-900">Features</span> 
+                                <span class="text-right">Carpet Free, Sump Pump, In-Law Suite</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Exterior, Land & Utilities -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h4 class="text-lg font-bold text-stone-900 mb-4 border-b border-stone-100 pb-3 flex items-center gap-2">
+                            <i data-lucide="trees" class="w-5 h-5 text-brand-800"></i> Exterior, Land & Utilities
+                        </h4>
+                        <ul class="space-y-3 text-sm text-stone-600">
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Land Size</span> <span class="text-right">39.1 x 89.7 FT</span></li>
+                            <li class="flex justify-between items-center"><span class="font-semibold text-stone-900">Frontage</span> <span class="text-right">39 ft, 1 in</span></li>
+                            <li class="flex justify-between items-center mt-2"><span class="font-semibold text-stone-900">Parking</span> <span class="text-right">Attached Garage (4 Spaces)</span></li>
+                            <li class="flex flex-col gap-1 mt-2">
+                                <span class="font-semibold text-stone-900">Exterior Finish</span> 
+                                <span class="text-right">Brick, Concrete</span>
+                            </li>
+                            <li class="flex flex-col gap-1 mt-2">
+                                <span class="font-semibold text-stone-900">Pool Type</span> 
+                                <span class="text-right">Above ground pool, Outdoor pool</span>
+                            </li>
+                            <li class="flex flex-col gap-1 mt-2">
+                                <span class="font-semibold text-stone-900">Heating & Cooling</span> 
+                                <span class="text-right">Forced air (Natural gas), Central AC</span>
+                            </li>
+                            <li class="flex flex-col gap-1 mt-2">
+                                <span class="font-semibold text-stone-900">Utilities</span> 
+                                <span class="text-right">Sanitary sewer, Municipal water</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Room Measurements & Appliances -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                    <!-- Appliances & Rental -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h4 class="text-lg font-bold text-stone-900 mb-4 border-b border-stone-100 pb-3 flex items-center gap-2">
+                            <i data-lucide="check-circle-2" class="w-5 h-5 text-brand-800"></i> Included Appliances & Features
+                        </h4>
+                        <div class="flex flex-wrap gap-2 text-sm text-stone-600 mb-6">
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Hot Tub</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Garage Door Opener</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Built-In Oven</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Range</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Dishwasher</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Dryer</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Hood Fan</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Stove</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Washer</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Refrigerator</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Smoke Detectors</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Fireplace</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Deck</span>
+                            <span class="bg-stone-100 px-3 py-1.5 rounded-full border border-stone-200">Porch</span>
+                        </div>
+                        <h5 class="font-bold text-stone-900 mb-3 text-sm">Rental Equipment:</h5>
+                        <div class="flex flex-wrap gap-2 text-sm text-stone-600">
+                            <span class="bg-rose-50 text-brand-800 px-3 py-1.5 rounded-full border border-rose-100">Water Heater</span>
+                            <span class="bg-rose-50 text-brand-800 px-3 py-1.5 rounded-full border border-rose-100">Furnace</span>
+                        </div>
+                    </div>
+
+                    <!-- Measurements -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h4 class="text-lg font-bold text-stone-900 mb-4 border-b border-stone-100 pb-3 flex items-center gap-2">
+                            <i data-lucide="ruler" class="w-5 h-5 text-brand-800"></i> Room Measurements
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm text-stone-600">
+                            <!-- Ground Level -->
+                            <div>
+                                <h5 class="font-bold text-brand-800 mb-2 uppercase text-xs tracking-wider">Ground Level</h5>
+                                <ul class="space-y-2">
+                                    <li class="flex justify-between border-b border-stone-50 pb-1"><span class="font-medium text-stone-900">Great Room</span> <span>15'8" x 12'7"</span></li>
+                                    <li class="flex justify-between border-b border-stone-50 pb-1"><span class="font-medium text-stone-900">Kitchen</span> <span>11'10" x 11'8"</span></li>
+                                    <li class="flex justify-between border-b border-stone-50 pb-1"><span class="font-medium text-stone-900">Dining Room</span> <span>12'9" x 11'1"</span></li>
+                                    <li class="flex justify-between border-b border-stone-50 pb-1"><span class="font-medium text-stone-900">Den</span> <span>9'6" x 6'5"</span></li>
+                                </ul>
+                            </div>
+                            <!-- Second Level -->
+                            <div>
+                                <h5 class="font-bold text-brand-800 mb-2 uppercase text-xs tracking-wider">Second Level</h5>
+                                <ul class="space-y-2">
+                                    <li class="flex justify-between border-b border-stone-50 pb-1"><span class="font-medium text-stone-900">Primary Bedroom</span> <span>18'2" x 12'2"</span></li>
+                                    <li class="flex justify-between border-b border-stone-50 pb-1"><span class="font-medium text-stone-900">Bedroom 2</span> <span>10'7" x 9'8"</span></li>
+                                    <li class="flex justify-between border-b border-stone-50 pb-1"><span class="font-medium text-stone-900">Bedroom 3</span> <span>10'2" x 10'2"</span></li>
+                                    <li class="flex justify-between border-b border-stone-50 pb-1"><span class="font-medium text-stone-900">Bedroom 4</span> <span>10'4" x 10'2"</span></li>
+                                    <li class="flex justify-between border-b border-stone-50 pb-1"><span class="font-medium text-stone-900">Family Room</span> <span>16'6" x 10'9"</span></li>
+                                </ul>
+                            </div>
+                            <!-- Basement -->
+                            <div class="sm:col-span-2">
+                                <h5 class="font-bold text-brand-800 mb-2 uppercase text-xs tracking-wider">Basement</h5>
+                                <ul class="space-y-2">
+                                    <li class="flex justify-between border-b border-stone-50 pb-1 w-full sm:w-1/2 pr-4"><span class="font-medium text-stone-900">Living Room</span> <span>19'8" x 13'1"</span></li>
+                                    <li class="flex justify-between border-b border-stone-50 pb-1 w-full sm:w-1/2 pr-4"><span class="font-medium text-stone-900">Recreational/Games</span> <span>16'4" x 8'2"</span></li>
+                                    <li class="flex justify-between border-b border-stone-50 pb-1 w-full sm:w-1/2 pr-4"><span class="font-medium text-stone-900">Bedroom 5</span> <span>9'10" x 8'2"</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIDEO TOUR SECTION -->
+        <section id="video-tour" class="mb-20 pt-8">
+            <h2 class="text-2xl font-light text-stone-900 mb-8 uppercase tracking-widest text-center border-b border-stone-200 pb-4 max-w-xs mx-auto">Video Walkthrough</h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- YouTube Version -->
+                <div>
+                    <h3 class="text-lg font-semibold text-brand-800 mb-3 text-center">YouTube Player</h3>
+                    <div class="relative w-full aspect-video bg-stone-900 rounded-xl overflow-hidden shadow-xl group">
+                        <iframe 
+                            class="absolute inset-0 w-full h-full z-10 relative"
+                            src="https://www.youtube.com/embed/eXaQXTJRZGA" 
+                            title="Listing 1750-18 Creek Way, Burlington" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                            referrerpolicy="strict-origin-when-cross-origin" 
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                </div>
+
+                <!-- GitHub Direct Version -->
+                <div>
+                    <h3 class="text-lg font-semibold text-brand-800 mb-3 text-center">Direct Video Player</h3>
+                    <div class="relative w-full aspect-video bg-stone-900 rounded-xl overflow-hidden shadow-xl group">
+                        <video 
+                            class="absolute inset-0 w-full h-full z-10 relative outline-none bg-black"
+                            controls 
+                            playsinline
+                            preload="metadata"
+                        >
+                            <source src="https://raw.githubusercontent.com/KenMorganRealEstate/1750/main/Listing%201750-18%20Creek%20Way,%20Burlington.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    <p class="text-xs text-stone-500 text-center mt-2">Standard HTML5 player. Supports full-screen natively.</p>
+                </div>
+            </div>
+
+            <div class="mt-10 text-center">
+                <a href="https://www.kenmorgan.ca/node/add/contactSite" target="_blank" rel="noopener noreferrer" class="inline-block bg-stone-900 hover:bg-brand-800 text-white px-10 py-4 rounded-sm text-sm font-semibold uppercase tracking-widest transition-colors shadow-lg">
+                    Book a Private Viewing
+                </a>
+            </div>
+        </section>
+
+        <!-- LOCAL RESOURCES -->
+        <section class="mb-20 pt-8">
+            <h2 class="text-2xl font-light text-stone-900 mb-8 uppercase tracking-widest text-center border-b border-stone-200 pb-4 max-w-xs mx-auto">Property Resources</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- City Link -->
+                <a href="https://www.burlington.ca/" target="_blank" rel="noopener noreferrer" class="group block bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden hover:shadow-xl transition duration-300">
+                    <div class="aspect-[4/3] overflow-hidden relative bg-stone-100">
+                        <img src="https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07421-HDR-Edit.jpg" alt="City of Burlington" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+                        <i data-lucide="external-link" class="absolute top-4 right-4 w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition duration-300"></i>
+                    </div>
+                    <div class="p-6 text-center border-t-4 border-brand-800">
+                        <h3 class="text-lg font-semibold uppercase tracking-wider mb-2 text-stone-900">About Burlington</h3>
+                        <p class="text-stone-500 text-sm">Visit the official city homepage.</p>
+                    </div>
+                </a>
+                <!-- Demographics Link -->
+                <a href="https://drive.google.com/file/d/1h7rYPrrBzmm6w-HwaUdBUSI480H86Cd6/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="group block bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden hover:shadow-xl transition duration-300">
+                    <div class="aspect-[4/3] overflow-hidden relative bg-stone-100">
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Demographics" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+                        <i data-lucide="file-text" class="absolute top-4 right-4 w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition duration-300"></i>
+                    </div>
+                    <div class="p-6 text-center border-t-4 border-brand-800">
+                        <h3 class="text-lg font-semibold uppercase tracking-wider mb-2 text-stone-900">Neighbourhood Stats</h3>
+                        <p class="text-stone-500 text-sm">View neighbourhood statistics PDF.</p>
+                    </div>
+                </a>
+                <!-- Feature Sheet Link -->
+                <a href="https://drive.google.com/file/d/15oPy6sELizlPuEzINqBYou4XURwe6A6y/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="group block bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden hover:shadow-xl transition duration-300">
+                    <div class="aspect-[4/3] overflow-hidden relative bg-stone-100">
+                        <img src="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Feature Sheet" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+                        <i data-lucide="file-down" class="absolute top-4 right-4 w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition duration-300"></i>
+                    </div>
+                    <div class="p-6 text-center border-t-4 border-brand-800">
+                        <h3 class="text-lg font-semibold uppercase tracking-wider mb-2 text-stone-900">Feature Sheet</h3>
+                        <p class="text-stone-500 text-sm">Download the property PDF.</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <!-- LOCATION & STREET VIEW SECTION -->
+        <section id="location" class="mb-10 pt-8 space-y-8">
+            <h2 class="text-2xl font-light text-stone-900 mb-8 uppercase tracking-widest text-center border-b border-stone-200 pb-4 max-w-xs mx-auto">Map & Street View</h2>
+            
+            <!-- Google Map -->
+            <div class="w-full h-[400px] bg-stone-200 rounded-xl overflow-hidden border border-stone-300 relative shadow-md">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2896.34!2d-79.7834517!3d43.3933439!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882b60def1605f57%3A0x4dac00ec76b3c247!2s1750%20Creek%20Way%2C%20Burlington%2C%20ON%20L7L%207E2!5e0!3m2!1sen!2sca!4v1610000000000!5m2!1sen!2sca" 
+                    width="100%" 
+                    height="100%" 
+                    style="border:0" 
+                    allowfullscreen="" 
+                    loading="lazy"
+                    title="Property Map"
+                    class="absolute inset-0"
+                ></iframe>
+            </div>
+
+            <!-- Street View -->
+            <div class="w-full h-[500px] rounded-xl overflow-hidden border border-stone-300 relative shadow-md">
+                <iframe 
+                    src="https://www.google.com/maps/embed?pb=!4v1680000000000!6m8!1m7!1sFYv0TYSx4eYzjrM2hnUFiQ!2m2!1d43.3940735!2d-79.7804196!3f210.59!4f-3.68!5f0.78" 
+                    width="100%" 
+                    height="100%" 
+                    style="border:0" 
+                    allowfullscreen="" 
+                    loading="lazy" 
+                    class="absolute inset-0"
+                ></iframe>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- DARK FOOTER -->
+    <footer class="bg-black text-stone-400 py-16 mt-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 items-center border-b border-stone-800 pb-12 mb-8">
+                <div class="flex justify-center md:justify-start">
+                    <a href="https://www.kenmorgan.ca" target="_blank" rel="noopener noreferrer">
+                        <img src="https://github.com/KenMorganRealEstate/Home/blob/main/KenMorganLogoBestOneTransparent.png?raw=true" alt="Ken Morgan Logo" class="h-16 w-auto opacity-80 hover:opacity-100 transition-opacity" />
+                    </a>
+                </div>
+                <div class="text-center space-y-2 flex flex-col items-center">
+                    <h4 class="text-white text-lg font-semibold tracking-wider uppercase mb-4">Ken Morgan</h4>
+                    <a href="tel:9056301225" class="flex justify-center items-center gap-2 hover:text-white transition"><i data-lucide="phone" class="w-4 h-4 text-brand-800"></i> 905 630 1225</a>
+                    <a href="mailto:ken@kenmorgan.ca" class="flex justify-center items-center gap-2 hover:text-white transition"><i data-lucide="mail" class="w-4 h-4 text-brand-800"></i> ken@kenmorgan.ca</a>
+                </div>
+                <div class="flex justify-center md:justify-end">
+                    <a href="https://www.kenmorgan.ca" target="_blank" rel="noopener noreferrer">
+                        <img src="https://github.com/KenMorganRealEstate/Home/blob/main/CASORA%20PRIMARY%20LOGO_blue.png?raw=true" alt="CASORA Logo" class="h-10 w-auto opacity-70 hover:opacity-100 transition-opacity" />
+                    </a>
+                </div>
+            </div>
+            <div class="text-sm text-center max-w-2xl mx-auto text-stone-500">
+                <p class="mb-2" id="copyright-year">© 2024 Ken Morgan Real Estate. All rights reserved.</p>
+                <p>Not intended to solicit buyers or sellers currently under contract with a brokerage. Details deemed reliable but not guaranteed.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- LIGHTBOX MODAL -->
+    <div id="modal" class="fixed inset-0 bg-stone-950/95 flex-col opacity-0 pointer-events-none transition-opacity duration-300 z-50 flex items-center justify-center p-4 md:p-8 backdrop-blur-sm">
+        <div class="w-full max-w-6xl flex flex-col relative h-full">
+            
+            <!-- Close Button -->
+            <button id="modal-close" class="absolute -top-2 right-0 md:-right-8 bg-stone-800 hover:bg-brand-800 text-white rounded-full h-10 w-10 flex items-center justify-center transition-colors shadow-lg z-50">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            
+            <!-- Image Area -->
+            <div id="modal-image-container" class="relative w-full flex-1 flex items-center justify-center min-h-0">
+                <img id="modal-image" src="" alt="Property View" class="w-auto h-auto max-w-full max-h-full object-contain rounded-md shadow-2xl">
+                
+                <button id="modal-prev-prop" class="gallery-nav absolute left-2 md:-left-8 top-1/2 -translate-y-1/2 bg-stone-800/80 hover:bg-brand-800 text-white rounded-full p-3 transition shadow-lg z-10">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </button>
+                <button id="modal-next-prop" class="gallery-nav absolute right-2 md:-right-8 top-1/2 -translate-y-1/2 bg-stone-800/80 hover:bg-brand-800 text-white rounded-full p-3 transition shadow-lg z-10">
+                    <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <!-- Controls Area (Real/Staged) -->
+            <div id="modal-buttons" class="flex justify-center p-4 mt-4 gap-3 shrink-0">
+                <!-- Dynamic Buttons Injected Here -->
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Interactive Scripts -->
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Set current year in copyright
+        document.getElementById('copyright-year').innerText = `© ${new Date().getFullYear()} Ken Morgan Real Estate. All rights reserved.`;
+
+        // ==========================================
+        // DYNAMIC GALLERY LOGIC
+        // ==========================================
+        const properties = [
+            {
+                "id": "item-1757936962498",
+                "type": "interactive",
+                "name": "Living Room HDR",
+                "images": {
+                    "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07431-HDR.jpg"],
+                    "staged": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07426-HDR.jpg"],
+                    "empty": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07426-HDR-Edit.jpg"]
+                },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07431-HDR.jpg"
+            },
+            {
+                "id": "item-1757936966458-DSC07396-HDR.jpg",
+                "type": "standard",
+                "name": "Kitchen",
+                "images": { "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07396-HDR.jpg"] },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07396-HDR.jpg"
+            },
+            {
+                "id": "item-1757936957708",
+                "type": "interactive",
+                "name": "Dining Area",
+                "images": {
+                    "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07401-HDR.jpg"],
+                    "staged": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07391-HDR.jpg"],
+                    "empty": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07396-HDR.jpg"]
+                },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07401-HDR.jpg"
+            },
+            {
+                "id": "item-1757936971879-DSC07366-HDR.jpg",
+                "type": "standard",
+                "name": "Bedroom 1",
+                "images": { "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07366-HDR.jpg"] },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07366-HDR.jpg"
+            },
+            {
+                "id": "item-1757936975932-DSC07381-HDR.jpg",
+                "type": "standard",
+                "name": "Bedroom 2",
+                "images": { "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07381-HDR.jpg"] },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07381-HDR.jpg"
+            },
+            {
+                "id": "item-1757937079020",
+                "type": "interactive",
+                "name": "Basement Area",
+                "images": {
+                    "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07266-HDR.jpg"],
+                    "staged": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07251-HDR.jpg"],
+                    "empty": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07261-HDR.jpg"]
+                },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07266-HDR.jpg"
+            },
+            {
+                "id": "item-1757937890110",
+                "type": "interactive",
+                "name": "Patio Setup",
+                "images": {
+                    "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/3.jpg"],
+                    "staged": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/1.jpg"],
+                    "empty": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/2.jpg"]
+                },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/3.jpg"
+            },
+            {
+                "id": "item-1757937673643",
+                "type": "interactive",
+                "name": "Office Area",
+                "images": {
+                    "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07391-HDR.jpg"],
+                    "staged": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07366-HDR.jpg"],
+                    "empty": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07381-HDR.jpg"]
+                },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/DSC07391-HDR.jpg"
+            },
+            {
+                "id": "item-1757938095881",
+                "type": "interactive",
+                "name": "Exterior",
+                "images": {
+                    "real": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/3real.jpg"],
+                    "staged": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/1staged.jpg"],
+                    "empty": ["https://raw.githubusercontent.com/Lethalfirestorm/1750/main/2empty.jpg"]
+                },
+                "thumbnail": "https://raw.githubusercontent.com/Lethalfirestorm/1750/main/3real.jpg"
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const galleryContainer = document.getElementById('gallery-grid');
+            const modal = document.getElementById('modal');
+            const modalImage = document.getElementById('modal-image');
+            const modalButtonsContainer = document.getElementById('modal-buttons');
+            const closeModalBtn = document.getElementById('modal-close');
+            const modalPrevPropBtn = document.getElementById('modal-prev-prop');
+            const modalNextPropBtn = document.getElementById('modal-next-prop');
+            
+            let currentProperty = null; 
+            let currentPropertyIndex = 0; 
+            let currentView = 'real';
+
+            function renderGallery() {
+                galleryContainer.innerHTML = '';
+                properties.forEach(prop => {
+                    const div = document.createElement('div');
+                    div.className = 'gallery-item relative group cursor-pointer rounded-md overflow-hidden shadow-md';
+                    
+                    let buttonsHtml = '';
+                    if (prop.type === 'interactive') {
+                        buttonsHtml = `
+                        <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                            <div class="flex justify-center space-x-2" data-prop-id="${prop.id}">
+                                <button class="view-btn bg-brand-800 text-white text-xs font-semibold py-1.5 px-4 rounded-sm shadow transition-colors uppercase tracking-wider" data-view="real">Real</button>
+                                <button class="view-btn bg-white/90 hover:bg-white text-stone-800 text-xs font-semibold py-1.5 px-4 rounded-sm shadow transition-colors uppercase tracking-wider" data-view="staged">Staged</button>
+                                <button class="view-btn bg-white/90 hover:bg-white text-stone-800 text-xs font-semibold py-1.5 px-4 rounded-sm shadow transition-colors uppercase tracking-wider" data-view="empty">Empty</button>
+                            </div>
+                        </div>`;
+                    }
+                    
+                    div.innerHTML = `
+                        <div class="gallery-image-container w-full aspect-[4/3] bg-stone-200 overflow-hidden">
+                            <img id="img-${prop.id}" src="${prop.thumbnail}" alt="${prop.name}" class="w-full h-full object-cover">
+                        </div>
+                        ${buttonsHtml}
+                    `;
+                    galleryContainer.appendChild(div);
+                });
+            }
+
+            function openModal(prop) {
+                currentProperty = prop;
+                currentPropertyIndex = properties.findIndex(p => p.id === prop.id);
+                currentView = 'real';
+                
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = 'hidden';
+                
+                updateModalContent();
+            }
+
+            function closeModal() {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                document.body.style.overflow = '';
+            }
+
+            function updateModalContent() {
+                modalImage.style.opacity = '0';
+                let imageUrl = '';
+                
+                if (currentProperty.type === 'interactive') {
+                    // Fallback to 'real' if the currently selected view doesn't exist for this property
+                    if (!currentProperty.images[currentView]) {
+                        currentView = 'real';
+                    }
+                    imageUrl = currentProperty.images[currentView][0];
+                    modalButtonsContainer.style.display = 'flex';
+                } else {
+                    imageUrl = currentProperty.images.real[0];
+                    modalButtonsContainer.style.display = 'none';
+                }
+                
+                setTimeout(() => { 
+                    modalImage.src = imageUrl; 
+                    modalImage.style.opacity = '1'; 
+                }, 200);
+                
+                modalButtonsContainer.innerHTML = '';
+                
+                if (currentProperty.type === 'interactive') {
+                    ['real', 'staged', 'empty'].forEach(view => {
+                        const button = document.createElement('button');
+                        button.textContent = view.charAt(0).toUpperCase() + view.slice(1);
+                        
+                        const isActive = currentView === view;
+                        const baseClasses = "px-6 py-2.5 rounded-sm text-sm font-semibold uppercase tracking-wider transition-all duration-300";
+                        const activeClasses = "bg-brand-800 text-white shadow-lg scale-105";
+                        const inactiveClasses = "bg-stone-800/80 text-stone-300 hover:text-white hover:bg-stone-700 border border-stone-700";
+                        
+                        button.className = `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
+                        button.onclick = (e) => { 
+                            e.stopPropagation(); // prevent modal click
+                            currentView = view; 
+                            updateModalContent(); 
+                        };
+                        modalButtonsContainer.appendChild(button);
+                    });
+                }
+            }
+
+            // Event Delegation for Gallery Grid
+            galleryContainer.addEventListener('click', (e) => {
+                const buttonGroup = e.target.closest('[data-prop-id]');
+                const view = e.target.dataset.view;
+                const galleryItem = e.target.closest('.gallery-item');
+                
+                // Clicked on a view toggle button
+                if (view && buttonGroup) {
+                    e.stopPropagation(); // Prevent opening the modal
+                    
+                    const propId = buttonGroup.dataset.propId;
+                    const prop = properties.find(p => p.id === propId);
+                    const mainImage = document.getElementById(`img-${propId}`);
+                    const allButtonsInGroup = buttonGroup.querySelectorAll('.view-btn');
+                    
+                    // Reset all buttons in this group
+                    allButtonsInGroup.forEach(btn => {
+                        btn.classList.remove('bg-brand-800', 'text-white');
+                        btn.classList.add('bg-white/90', 'text-stone-800');
+                    });
+                    
+                    // Set active button
+                    e.target.classList.add('bg-brand-800', 'text-white');
+                    e.target.classList.remove('bg-white/90', 'text-stone-800');
+                    
+                    // Crossfade image
+                    mainImage.style.opacity = '0';
+                    setTimeout(() => { 
+                        mainImage.src = prop.images[view][0]; 
+                        mainImage.style.opacity = '1'; 
+                    }, 300);
+                } 
+                // Clicked on the image container
+                else if (galleryItem) {
+                    const img = galleryItem.querySelector('img');
+                    if (!img) return;
+                    const id = img.id.replace('img-', '');
+                    const prop = properties.find(p => p.id === id);
+                    openModal(prop);
+                }
+            });
+
+            function navigateModal(direction) {
+                currentPropertyIndex = (currentPropertyIndex + direction + properties.length) % properties.length;
+                openModal(properties[currentPropertyIndex]);
+            }
+
+            closeModalBtn.addEventListener('click', closeModal);
+            
+            modal.addEventListener('click', (e) => { 
+                if (e.target === modal) closeModal(); 
+            });
+            
+            modalNextPropBtn.addEventListener('click', () => navigateModal(1));
+            modalPrevPropBtn.addEventListener('click', () => navigateModal(-1));
+            
+            if (properties.length > 0) { renderGallery(); }
+        });
+    </script>
+</body>
+</html>

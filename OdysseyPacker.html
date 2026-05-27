@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚙 Odyssey 3D Packer - Visual Van Loading Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body, html, #root { 
+            margin: 0; padding: 0; 
+            width: 100vw; height: 100vh; 
+            overflow: hidden; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+        
+        /* Smooth transitions */
+        * {
+            transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+        }
+        
+        /* Glow effect for selected items */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 5px currentColor; }
+            50% { box-shadow: 0 0 15px currentColor; }
+        }
+        
+        .glowing {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        /* Fade in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+    
+    <!-- Import Map for React and Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "react": "https://esm.sh/react@18.2.0",
+                "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+                "three": "https://esm.sh/three@0.160.0",
+                "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.15.14",
+                "@react-three/drei": "https://esm.sh/@react-three/drei@9.99.0"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useRef, useEffect, Suspense } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import * as THREE from 'three';
+        import { Canvas, useThree } from '@react-three/fiber';
+        import { OrbitControls, TransformControls, Grid, Html, Text, Sky, Environment } from '@react-three/drei';
+
+        // --- CONSTANTS (INCHES) ---
+        const VAN_WIDTH_MAX = 63; 
+        const VAN_WIDTH_MIN = 48; 
+        const VAN_LENGTH_TOTAL = 204; // Total interior length
+        const VAN_HEIGHT = 40;
+        
+        // Item Library with better categorization
+        const ITEM_LIBRARY = [
+            // Core Items (Your gear)
+            { id: 'hdx_tote', name: 'HDX Tote with Bike', size: [21.3, 19.5, 45.8], color: '#4b5563', icon: '📦', category: 'core' },
+            { id: 'lg_suitcase', name: 'Large Suitcase', size: [20, 30, 12], color: '#1e40af', icon: '🧳', category: 'core' },
+            { id: 'sm_suitcase', name: 'Small Suitcase', size: [14, 9, 22], color: '#dc2626', icon: '🎒', category: 'core' },
+            { id: 'po_bin', name: 'PO Storage Bin', size: [16, 12, 22], color: '#6b7280', icon: '📊', category: 'core' },
+            { id: 'cooler', name: 'Cooler', size: [13, 13, 13], color: '#3b82f6', icon: '🧊', category: 'core' },
+            { id: 'toilet', name: 'Portable Toilet', size: [15, 13, 17], color: '#f3f4f6', icon: '🚽', category: 'core' },
+            { id: 'folding_chair', name: 'Folding Chair', size: [4, 25, 25], color: '#10b981', icon: '🪑', category: 'core' },
+            
+            // Camping Items
+            { id: 'sleeping_pad', name: 'Sleeping Pad', size: [25, 3, 72], color: '#065f46', icon: '🛌', category: 'camping' },
+            { id: 'tent', name: 'Tent (Packed)', size: [8, 8, 24], color: '#92400e', icon: '⛺', category: 'camping' },
+            { id: 'sleeping_bag', name: 'Sleeping Bag', size: [12, 8, 20], color: '#1d4ed8', icon: '🛌', category: 'camping' },
+            
+            // Common Items
+            { id: 'duffel_bag', name: 'Duffel Bag', size: [12, 12, 24], color: '#7c3aed', icon: '🎒', category: 'common' },
+            { id: 'tool_box', name: 'Tool Box', size: [16, 10, 10], color: '#b91c1c', icon: '🔧', category: 'common' },
+            { id: 'water_jug', name: 'Water Jug', size: [12, 16, 12], color: '#0ea5e9', icon: '💧', category: 'common' },
+            { id: 'food_box', name: 'Food Box', size: [15, 12, 15], color: '#f59e0b', icon: '🍱', category: 'common' },
+        ];
+
+        // Preset configurations
+        const PRESETS = {
+            travel: {
+                name: '🚗 Travel Mode',
+                description: 'Everything packed for the journey',
+                items: [
+                    { id: 'hdx1', itemId: 'hdx_tote', pos: [-11, 10, 24], rot: 0 },
+                    { id: 'hdx2', itemId: 'hdx_tote', pos: [11, 10, 24], rot: 0 },
+                    { id: 'lg_suit1', itemId: 'lg_suitcase', pos: [-12, 15, -35], rot: 0 },
+                    { id: 'lg_suit2', itemId: 'lg_suitcase', pos: [12, 15, -35], rot: 0 },
+                    { id: 'sm_suit1', itemId: 'sm_suitcase', pos: [-11, 24, 24], rot: 0 },
+                    { id: 'sm_suit2', itemId: 'sm_suitcase', pos: [11, 24, 24], rot: 0 },
+                    { id: 'bin1', itemId: 'po_bin', pos: [-16, -6, 30], rot: 0 },
+                    { id: 'bin2', itemId: 'po_bin', pos: [0, -6, 30], rot: 0 },
+                    { id: 'bin3', itemId: 'po_bin', pos: [16, -6, 30], rot: 0 },
+                    { id: 'bin4', itemId: 'po_bin', pos: [22, 6, -20], rot: 0 },
+                    { id: 'cooler1', itemId: 'cooler', pos: [-20, 6.5, -15], rot: 0 },
+                    { id: 'toilet1', itemId: 'toilet', pos: [-5, 6.5, -15], rot: 0 },
+                    { id: 'chair1', itemId: 'folding_chair', pos: [-23, 12.5, 24], rot: 0 },
+                ]
+            },
+            camping: {
+                name: '🏕️ Camp Mode',
+                description: 'Partially unloaded for camping',
+                items: [
+                    { id: 'hdx1', itemId: 'hdx_tote', pos: [-11, 10, 40], rot: 0 },
+                    { id: 'hdx2', itemId: 'hdx_tote', pos: [11, 10, 40], rot: 0 },
+                    { id: 'sleeping_pad1', itemId: 'sleeping_pad', pos: [0, 1.5, -20], rot: Math.PI/2 },
+                    { id: 'sleeping_pad2', itemId: 'sleeping_pad', pos: [0, 1.5, 10], rot: Math.PI/2 },
+                    { id: 'tent1', itemId: 'tent', pos: [-20, 4, -40], rot: 0 },
+                    { id: 'bin1', itemId: 'po_bin', pos: [-16, -6, 30], rot: 0 },
+                    { id: 'bin2', itemId: 'po_bin', pos: [0, -6, 30], rot: 0 },
+                    { id: 'cooler1', itemId: 'cooler', pos: [20, 6.5, -40], rot: 0 },
+                ]
+            },
+            sleep: {
+                name: '🛏️ Sleep Mode',
+                description: 'Configured for sleeping inside',
+                items: [
+                    { id: 'sleeping_pad1', itemId: 'sleeping_pad', pos: [0, 1.5, -10], rot: Math.PI/2 },
+                    { id: 'sleeping_pad2', itemId: 'sleeping_pad', pos: [0, 1.5, 30], rot: Math.PI/2 },
+                    { id: 'sleeping_bag1', itemId: 'sleeping_bag', pos: [0, 8, 10], rot: 0 },
+                    { id: 'bin1', itemId: 'po_bin', pos: [-16, -6, 30], rot: 0 },
+                    { id: 'bin2', itemId: 'po_bin', pos: [0, -6, 30], rot: 0 },
+                    { id: 'cooler1', itemId: 'cooler', pos: [20, 6.5, -30], rot: 0 },
+                ]
+            }
+        };
+
+        function VanInterior({ showPlywood, showGrid }) {
+            return (
+                <group>
+                    {/* Main Van Body */}
+                    <mesh position={[0, VAN_HEIGHT/2, 0]}>
+                        <boxGeometry args={[VAN_WIDTH_MAX, VAN_HEIGHT, VAN_LENGTH_TOTAL]} />
+                        <meshStandardMaterial 
+                            color="#1a1a1a" 
+                            transparent 
+                            opacity={0.1}
+                            side={THREE.BackSide}
+                        />
+                    </mesh>
+                    
+                    {/* Floor */}
+                    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+                        <planeGeometry args={[VAN_WIDTH_MAX, VAN_LENGTH_TOTAL]} />
+                        <meshStandardMaterial color="#374151" side={THREE.DoubleSide} />
+                    </mesh>
+                    
+                    {/* Wheel Wells */}
+                    <mesh position={[-28, 10, 28]}>
+                        <cylinderGeometry args={[8, 8, 20, 16]} />
+                        <meshStandardMaterial color="#222" transparent opacity={0.7} />
+                    </mesh>
+                    <mesh position={[28, 10, 28]}>
+                        <cylinderGeometry args={[8, 8, 20, 16]} />
+                        <meshStandardMaterial color="#222" transparent opacity={0.7} />
+                    </mesh>
+
+                    {/* 3rd Row Seat Well */}
+                    <mesh position={[0, -6, 30]}>
+                        <boxGeometry args={[48, 12, 40]} />
+                        <meshStandardMaterial 
+                            color="#111827" 
+                            side={THREE.BackSide} 
+                            wireframe={showGrid}
+                            opacity={0.3} 
+                            transparent 
+                        />
+                    </mesh>
+
+                    {/* Plywood Deck */}
+                    {showPlywood && (
+                        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.1, 0]} receiveShadow>
+                            <planeGeometry args={[48, 96]} />
+                            <meshStandardMaterial 
+                                color="#d4a574" 
+                                transparent 
+                                opacity={0.8}
+                                roughness={0.8}
+                            />
+                        </mesh>
+                    )}
+
+                    {/* Reference Markers */}
+                    <mesh position={[0, 0.2, -VAN_LENGTH_TOTAL/2 + 10]}>
+                        <boxGeometry args={[2, 0.5, 2]} />
+                        <meshStandardMaterial color="#fbbf24" emissive="#fbbf24" emissiveIntensity={0.3} />
+                    </mesh>
+                    <Html position={[0, 2, -VAN_LENGTH_TOTAL/2 + 10]} center>
+                        <div className="text-xs bg-yellow-500/90 text-black px-2 py-1 rounded font-bold">Front</div>
+                    </Html>
+                    
+                    <mesh position={[0, 0.2, VAN_LENGTH_TOTAL/2 - 10]}>
+                        <boxGeometry args={[2, 0.5, 2]} />
+                        <meshStandardMaterial color="#10b981" emissive="#10b981" emissiveIntensity={0.3} />
+                    </mesh>
+                    <Html position={[0, 2, VAN_LENGTH_TOTAL/2 - 10]} center>
+                        <div className="text-xs bg-green-500/90 text-black px-2 py-1 rounded font-bold">Rear</div>
+                    </Html>
+                </group>
+            );
+        }
+
+        function DraggableItem({ item, isSelected, onSelect, onUpdate, libraryItem }) {
+            const meshRef = useRef();
+            const controlsRef = useRef();
+            const [mode, setMode] = useState('translate');
+
+            useEffect(() => {
+                if (isSelected && controlsRef.current && meshRef.current) {
+                    controlsRef.current.attach(meshRef.current);
+                } else if (controlsRef.current) {
+                    controlsRef.current.detach();
+                }
+            }, [isSelected, mode]);
+
+            const handleTransformChange = () => {
+                if (meshRef.current) {
+                    onUpdate(item.id, { 
+                        pos: [meshRef.current.position.x, meshRef.current.position.y, meshRef.current.position.z],
+                        rot: meshRef.current.rotation.y
+                    });
+                }
+            };
+
+            return (
+                <>
+                    {isSelected && (
+                        <TransformControls 
+                            ref={controlsRef}
+                            mode={mode}
+                            translationSnap={1}
+                            rotationSnap={Math.PI / 4}
+                            scaleSnap={1}
+                            onMouseUp={handleTransformChange}
+                            onObjectChange={handleTransformChange}
+                            size={1.5}
+                        />
+                    )}
+                    <mesh
+                        ref={meshRef}
+                        position={item.pos}
+                        rotation={[0, item.rot, 0]}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onSelect(item.id);
+                        }}
+                        onContextMenu={(e) => {
+                            e.stopPropagation();
+                            if (isSelected) {
+                                setMode(mode === 'translate' ? 'rotate' : mode === 'rotate' ? 'scale' : 'translate');
+                            }
+                        }}
+                        castShadow
+                        receiveShadow
+                    >
+                        <boxGeometry args={item.size} />
+                        <meshStandardMaterial 
+                            color={item.color} 
+                            roughness={0.7}
+                            metalness={0.1}
+                            emissive={isSelected ? item.color : '#000'}
+                            emissiveIntensity={isSelected ? 0.2 : 0}
+                        />
+                        {isSelected && (
+                            <lineSegments>
+                                <edgesGeometry args={[new THREE.BoxGeometry(...item.size)]} />
+                                <lineBasicMaterial color="white" linewidth={2} />
+                            </lineSegments>
+                        )}
+                        <Html 
+                            position={[0, item.size[1]/2 + 2, 0]} 
+                            center 
+                            pointerEvents="none" 
+                            occlude
+                            distanceFactor={15}
+                        >
+                            <div className={`px-2 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all duration-200 ${
+                                isSelected 
+                                ? 'bg-white text-black shadow-lg scale-110' 
+                                : 'bg-black/70 text-white'
+                            }`}>
+                                {item.name}
+                            </div>
+                        </Html>
+                    </mesh>
+                </>
+            );
+        }
+
+        function Scene({ items, updateItem, selectedId, setSelectedId, showPlywood, showGrid, library }) {
+            const orbitRef = useRef();
+            
+            return (
+                <>
+                    <ambientLight intensity={0.5} />
+                    <directionalLight 
+                        position={[20, 40, 20]} 
+                        intensity={1} 
+                        castShadow 
+                        shadow-mapSize={[2048, 2048]}
+                        shadow-camera-far={500}
+                    />
+                    <directionalLight position={[-20, 20, -20]} intensity={0.3} />
+                    
+                    <OrbitControls 
+                        ref={orbitRef} 
+                        makeDefault 
+                        minPolarAngle={0} 
+                        maxPolarAngle={Math.PI / 1.8}
+                        minDistance={20}
+                        maxDistance={200}
+                        enablePan={true}
+                        enableDamping={true}
+                        dampingFactor={0.05}
+                    />
+                    
+                    {showGrid && (
+                        <Grid 
+                            infiniteGrid 
+                            fadeDistance={100} 
+                            sectionColor="#4b5563" 
+                            cellColor="#1f2937"
+                            cellSize={10}
+                            sectionSize={50}
+                        />
+                    )}
+
+                    <Sky 
+                        distance={450000}
+                        sunPosition={[100, 20, 100]}
+                        inclination={0}
+                        azimuth={0.25}
+                    />
+                    
+                    <Environment preset="warehouse" />
+
+                    <group onPointerMissed={() => setSelectedId(null)}>
+                        <VanInterior showPlywood={showPlywood} showGrid={showGrid} />
+                        
+                        {items.map((item) => {
+                            const libraryItem = library.find(lib => lib.id === item.itemId);
+                            return libraryItem ? (
+                                <DraggableItem
+                                    key={item.id}
+                                    item={{ ...item, ...libraryItem }}
+                                    isSelected={selectedId === item.id}
+                                    onSelect={setSelectedId}
+                                    onUpdate={updateItem}
+                                    libraryItem={libraryItem}
+                                />
+                            ) : null;
+                        })}
+                    </group>
+                </>
+            );
+        }
+
+        function ItemLibraryPanel({ onAddItem, selectedCategory, setSelectedCategory }) {
+            const categories = [...new Set(ITEM_LIBRARY.map(item => item.category))];
+            
+            return (
+                <div className="bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-6 w-80 h-[85vh] overflow-hidden flex flex-col">
+                    <h2 className="text-xl font-bold mb-6 text-blue-400 flex items-center">
+                        <span className="mr-2">📦</span> Item Library
+                    </h2>
+                    
+                    {/* Category Filter */}
+                    <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                        <button
+                            onClick={() => setSelectedCategory('all')}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                                selectedCategory === 'all' 
+                                ? 'bg-blue-600 text-white' 
+                                : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                            }`}
+                        >
+                            All Items
+                        </button>
+                        {categories.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setSelectedCategory(cat)}
+                                className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+                                    selectedCategory === cat 
+                                    ? 'bg-blue-600 text-white' 
+                                    : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                                }`}
+                            >
+                                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                            </button>
+                        ))}
+                    </div>
+                    
+                    {/* Item Grid */}
+                    <div className="flex-1 overflow-y-auto pr-2">
+                        <div className="grid grid-cols-2 gap-3">
+                            {ITEM_LIBRARY
+                                .filter(item => selectedCategory === 'all' || item.category === selectedCategory)
+                                .map((item) => (
+                                    <button
+                                        key={item.id}
+                                        onClick={() => onAddItem(item)}
+                                        className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-3 text-left transition-all hover:scale-[1.02] active:scale-[0.98] group"
+                                    >
+                                        <div className="flex items-start mb-2">
+                                            <div className="text-2xl mr-2 group-hover:scale-110 transition-transform">
+                                                {item.icon}
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-sm text-white">{item.name}</div>
+                                                <div className="text-xs text-gray-400 mt-1">
+                                                    {item.size[0]}×{item.size[1]}×{item.size[2]} in
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div 
+                                            className="h-2 rounded-full w-full"
+                                            style={{ backgroundColor: item.color }}
+                                        />
+                                    </button>
+                                ))
+                            }
+                        </div>
+                    </div>
+                    
+                    <div className="mt-6 pt-4 border-t border-white/10 text-xs text-gray-400">
+                        <p className="flex items-center">
+                            <span className="mr-1">💡</span> Click an item to add it to the van
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [items, setItems] = useState(PRESETS.travel.items);
+            const [selectedId, setSelectedId] = useState(null);
+            const [showPlywood, setShowPlywood] = useState(true);
+            const [showGrid, setShowGrid] = useState(true);
+            const [selectedCategory, setSelectedCategory] = useState('all');
+            const [activePreset, setActivePreset] = useState('travel');
+            
+            const updateItem = (id, changes) => {
+                setItems(prev => prev.map(item => item.id === id ? { ...item, ...changes } : item));
+            };
+
+            const addItemFromLibrary = (libraryItem) => {
+                const id = `${libraryItem.id}_${Date.now()}`;
+                const newItem = {
+                    id,
+                    itemId: libraryItem.id,
+                    pos: [0, libraryItem.size[1]/2 + 5, 0],
+                    rot: 0
+                };
+                setItems(prev => [...prev, newItem]);
+                setSelectedId(id);
+            };
+
+            const deleteSelectedItem = () => {
+                if (!selectedId) return;
+                setItems(prev => prev.filter(i => i.id !== selectedId));
+                setSelectedId(null);
+            };
+
+            const duplicateSelectedItem = () => {
+                if (!selectedId) return;
+                const item = items.find(i => i.id === selectedId);
+                if (item) {
+                    const newId = `${item.itemId}_copy_${Date.now()}`;
+                    setItems(prev => [...prev, {
+                        ...item,
+                        id: newId,
+                        pos: [item.pos[0] + 5, item.pos[1], item.pos[2]]
+                    }]);
+                    setSelectedId(newId);
+                }
+            };
+
+            const loadPreset = (presetKey) => {
+                setItems(PRESETS[presetKey].items);
+                setActivePreset(presetKey);
+                setSelectedId(null);
+            };
+
+            const exportLayout = () => {
+                const layout = {
+                    preset: activePreset,
+                    items: items,
+                    timestamp: new Date().toISOString(),
+                    plywood: showPlywood
+                };
+                const dataStr = JSON.stringify(layout, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                const exportFileDefaultName = `odyssey_layout_${new Date().toISOString().slice(0,10)}.json`;
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+            };
+
+            const importLayout = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const layout = JSON.parse(e.target.result);
+                        setItems(layout.items || []);
+                        if (layout.plywood !== undefined) setShowPlywood(layout.plywood);
+                        setSelectedId(null);
+                    } catch (error) {
+                        alert('Error loading layout file');
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            const selectedItem = items.find(i => i.id === selectedId);
+            const selectedLibraryItem = selectedItem ? ITEM_LIBRARY.find(lib => lib.id === selectedItem.itemId) : null;
+
+            return (
+                <div className="relative w-full h-full bg-gradient-to-br from-gray-900 to-gray-950 text-white overflow-hidden">
+                    
+                    {/* Top Header */}
+                    <div className="absolute top-4 left-4 right-4 z-20 flex justify-between items-start pointer-events-none">
+                        <div className="bg-black/80 backdrop-blur-xl p-5 rounded-2xl border border-white/10 shadow-2xl pointer-events-auto w-96 fade-in">
+                            <div className="flex items-center mb-3">
+                                <div className="text-3xl mr-3">🚙</div>
+                                <div>
+                                    <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+                                        Odyssey 3D Packer
+                                    </h1>
+                                    <p className="text-sm text-gray-400">2008 Honda Odyssey Interior Planner</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between bg-white/5 rounded-lg p-3">
+                                <div>
+                                    <div className="text-sm font-medium">Plywood Deck</div>
+                                    <div className="text-xs text-gray-400">48" × 96" platform</div>
+                                </div>
+                                <button 
+                                    onClick={() => setShowPlywood(!showPlywood)}
+                                    className={`px-4 py-2 rounded-lg font-bold transition-all ${
+                                        showPlywood 
+                                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white' 
+                                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                                    }`}
+                                >
+                                    {showPlywood ? 'ON' : 'OFF'}
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {/* Presets Panel */}
+                        <div className="bg-black/80 backdrop-blur-xl p-5 rounded-2xl border border-white/10 shadow-2xl pointer-events-auto w-96 fade-in">
+                            <h2 className="text-lg font-bold mb-4 text-emerald-400 flex items-center">
+                                <span className="mr-2">⚡</span> Quick Presets
+                            </h2>
+                            <div className="space-y-3">
+                                {Object.entries(PRESETS).map(([key, preset]) => (
+                                    <button
+                                        key={key}
+                                        onClick={() => loadPreset(key)}
+                                        className={`w-full text-left p-4 rounded-xl transition-all ${
+                                            activePreset === key
+                                            ? 'bg-blue-600/30 border-2 border-blue-500'
+                                            : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="font-bold text-lg">{preset.name}</div>
+                                                <div className="text-sm text-gray-300 mt-1">{preset.description}</div>
+                                            </div>
+                                            <div className="text-2xl">{preset.name.charAt(0)}</div>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Left Side - Item Library */}
+                    <div className="absolute top-24 left-4 z-20 pointer-events-none">
+                        <div className="pointer-events-auto fade-in">
+                            <ItemLibraryPanel 
+                                onAddItem={addItemFromLibrary}
+                                selectedCategory={selectedCategory}
+                                setSelectedCategory={setSelectedCategory}
+                            />
+                        </div>
+                    </div>
+                    
+                    {/* Bottom Controls */}
+                    <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20 pointer-events-none">
+                        <div className="flex items-center gap-4 pointer-events-auto fade-in">
+                            {/* Stats */}
+                            <div className="bg-black/90 backdrop-blur-xl px-6 py-3 rounded-2xl border border-white/10 shadow-2xl">
+                                <div className="flex items-center gap-6">
+                                    <div className="text-center">
+                                        <div className="text-2xl font-bold text-blue-400">{items.length}</div>
+                                        <div className="text-xs text-gray-400">Items</div>
+                                    </div>
+                                    <div className="h-8 w-px bg-white/20"></div>
+                                    <div className="text-center">
+                                        <div className="text-2xl font-bold text-emerald-400">
+                                            {Math.round(items.reduce((acc, item) => {
+                                                const libItem = ITEM_LIBRARY.find(lib => lib.id === item.itemId);
+                                                return acc + (libItem ? libItem.size[0] * libItem.size[1] * libItem.size[2] : 0);
+                                            }, 0) / 1728)} {/* Convert to cubic feet */}
+                                        </div>
+                                        <div className="text-xs text-gray-400">Cubic Feet</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Grid Toggle */}
+                            <button 
+                                onClick={() => setShowGrid(!showGrid)}
+                                className="bg-black/90 backdrop-blur-xl p-4 rounded-2xl border border-white/10 shadow-2xl hover:bg-white/5 transition-all"
+                            >
+                                <div className="text-2xl">{showGrid ? '⏹️' : '⬜'}</div>
+                            </button>
+                            
+                            {/* Import/Export */}
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={exportLayout}
+                                    className="bg-black/90 backdrop-blur-xl px-6 py-4 rounded-2xl border border-white/10 shadow-2xl hover:bg-emerald-600/20 hover:border-emerald-500 transition-all flex items-center gap-2"
+                                >
+                                    <span className="text-xl">💾</span>
+                                    <span className="font-bold">Save</span>
+                                </button>
+                                <label className="bg-black/90 backdrop-blur-xl px-6 py-4 rounded-2xl border border-white/10 shadow-2xl hover:bg-blue-600/20 hover:border-blue-500 transition-all flex items-center gap-2 cursor-pointer">
+                                    <span className="text-xl">📂</span>
+                                    <span className="font-bold">Load</span>
+                                    <input 
+                                        type="file" 
+                                        accept=".json" 
+                                        onChange={importLayout} 
+                                        className="hidden"
+                                    />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Selected Item Controls */}
+                    {selectedId && selectedLibraryItem && (
+                        <div className="absolute top-24 right-4 z-20 pointer-events-none">
+                            <div className="bg-black/90 backdrop-blur-xl p-6 rounded-2xl border border-white/10 shadow-2xl w-80 pointer-events-auto fade-in">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center">
+                                        <div className="text-2xl mr-3">{selectedLibraryItem.icon}</div>
+                                        <div>
+                                            <h3 className="font-bold text-lg">{selectedLibraryItem.name}</h3>
+                                            <div className="text-sm text-gray-400">
+                                                {selectedLibraryItem.size[0]}×{selectedLibraryItem.size[1]}×{selectedLibraryItem.size[2]} in
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => setSelectedId(null)}
+                                        className="text-gray-400 hover:text-white text-2xl"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                                
+                                <div className="space-y-3">
+                                    <div className="bg-white/5 rounded-lg p-3">
+                                        <div className="text-sm text-gray-400 mb-1">Position</div>
+                                        <div className="font-mono text-sm">
+                                            X: {selectedItem.pos[0].toFixed(1)}" 
+                                            Y: {selectedItem.pos[1].toFixed(1)}" 
+                                            Z: {selectedItem.pos[2].toFixed(1)}"
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex gap-2">
+                                        <button 
+                                            onClick={duplicateSelectedItem}
+                                            className="flex-1 bg-blue-600/30 hover:bg-blue-500 border border-blue-500/50 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <span>⎘</span> Duplicate
+                                        </button>
+                                        <button 
+                                            onClick={deleteSelectedItem}
+                                            className="flex-1 bg-red-600/30 hover:bg-red-500 border border-red-500/50 py-3 rounded-lg font-bold transition-all flex items-center justify-center gap-2"
+                                        >
+                                            <span>🗑️</span> Delete
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="text-xs text-gray-400 pt-2 border-t border-white/10">
+                                        <p className="flex items-center">
+                                            <span className="mr-1">🖱️</span> Right-click to change transform mode
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* 3D Canvas */}
+                    <Canvas 
+                        shadows 
+                        camera={{ 
+                            position: [60, 50, 60], 
+                            fov: 50,
+                            near: 0.1,
+                            far: 1000 
+                        }}
+                        className="!absolute !inset-0"
+                    >
+                        <Suspense fallback={
+                            <Html center>
+                                <div className="text-white text-lg">Loading 3D environment...</div>
+                            </Html>
+                        }>
+                            <Scene 
+                                items={items} 
+                                updateItem={updateItem}
+                                selectedId={selectedId}
+                                setSelectedId={setSelectedId}
+                                showPlywood={showPlywood}
+                                showGrid={showGrid}
+                                library={ITEM_LIBRARY}
+                            />
+                        </Suspense>
+                    </Canvas>
+                    
+                    {/* Help Modal */}
+                    <div className="absolute bottom-4 left-4 z-20 pointer-events-none">
+                        <div className="bg-black/80 backdrop-blur-xl p-4 rounded-2xl border border-white/10 shadow-2xl pointer-events-auto fade-in">
+                            <div className="flex items-center gap-3">
+                                <div className="text-2xl">💡</div>
+                                <div>
+                                    <div className="font-bold">Controls</div>
+                                    <div className="text-xs text-gray-400">Click & drag items • Right-click to switch modes</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

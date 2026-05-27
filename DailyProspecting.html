@@ -1,0 +1,1400 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Estate Goal & Performance Dashboard V2.1</title>
+    
+    <!-- Tailwind & Config for Dark Mode -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#111827',
+                        darkCard: '#1f2937',
+                        darkText: '#f3f4f6',
+                        darkBorder: '#374151'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Chart.js & Date Adapter -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    
+    <!-- FontAwesome -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+    
+    <!-- html2pdf for direct PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        /* Custom styles for polish */
+        body { transition: background-color 0.3s, color 0.3s; }
+        .tab-button { transition: color 0.2s, border-color 0.2s; }
+        .tab-button.active { border-color: #4f46e5; color: #4f46e5; }
+        .dark .tab-button.active { border-color: #818cf8; color: #818cf8; }
+        .progress-bar-bg { background-color: #e5e7eb; }
+        .dark .progress-bar-bg { background-color: #374151; }
+        .progress-bar-fill { transition: width 0.5s ease-in-out; }
+        .modal-backdrop { background-color: rgba(0, 0, 0, 0.6); transition: opacity 0.3s ease-in-out; backdrop-filter: blur(2px); }
+        .modal-content { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        /* Hide number input spinners */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        
+        .kpi-header {
+            grid-column: 1 / -1; padding-bottom: 0.5rem; border-bottom: 2px solid #e5e7eb;
+            font-size: 1rem; font-weight: 600; color: #4f46e5; margin-top: 1rem; margin-bottom: 0.5rem;
+        }
+        .dark .kpi-header { border-bottom-color: #374151; color: #818cf8; }
+        .kpi-header:first-child { margin-top: 0; }
+        
+        /* Toast Notification System */
+        #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            min-width: 250px; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex; items-center; justify-content: space-between; gap: 12px;
+            transform: translateX(120%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: white; color: #1f2937; border-left: 4px solid #4f46e5;
+        }
+        .dark .toast { background: #1f2937; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .toast.show { transform: translateX(0); }
+        .toast-success { border-left-color: #10b981; }
+        .toast-error { border-left-color: #ef4444; }
+        .toast-warning { border-left-color: #f59e0b; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans dark:bg-darkBg dark:text-darkText transition-colors duration-200">
+
+    <div id="toast-container"></div>
+
+    <div id="goalModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="bg-white dark:bg-darkCard rounded-2xl shadow-2xl w-full max-w-2xl transform scale-95 modal-content">
+            <div class="p-6 border-b border-gray-200 dark:border-darkBorder flex justify-between items-center">
+                <h2 class="text-2xl font-bold"><i class="fas fa-bullseye mr-3 text-indigo-600 dark:text-indigo-400"></i>Set Your Annual Goals</h2>
+                <button onclick="closeModal('goalModal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl">&times;</button>
+            </div>
+            <div class="p-6">
+                <form id="goalForm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label class="block text-sm font-medium">Gross Income Goal ($)</label><input type="number" id="goalGrossIncome" class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 shadow-sm p-2"></div>
+                        <div><label class="block text-sm font-medium">Net Income Goal ($)</label><input type="number" id="goalNetIncome" class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 shadow-sm p-2"></div>
+                        <div><label class="block text-sm font-medium">Listings Sold Goal</label><input type="number" id="goalListingsSold" class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 shadow-sm p-2"></div>
+                        <div><label class="block text-sm font-medium">Buyer Sales Goal</label><input type="number" id="goalBuyersSold" class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 shadow-sm p-2"></div>
+                        <div class="md:col-span-2"><label class="block text-sm font-medium">Total Contacts Goal</label><input type="number" id="goalContacts" class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 shadow-sm p-2"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 rounded-b-2xl flex justify-end space-x-3">
+                <button onclick="closeModal('goalModal')" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">Cancel</button>
+                <button onclick="saveGoals()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Save Goals</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="bg-white dark:bg-darkCard rounded-2xl shadow-2xl w-full max-w-2xl transform scale-95 modal-content max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 dark:border-darkBorder flex justify-between items-center sticky top-0 bg-white dark:bg-darkCard z-10">
+                <h2 class="text-2xl font-bold"><i class="fas fa-edit mr-3 text-indigo-600 dark:text-indigo-400"></i>Edit Log Entry</h2>
+                <button onclick="closeModal('editModal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl">&times;</button>
+            </div>
+            <div class="p-6" id="editModalBody">
+                <!-- Dynamically populated fields will go here to match logForm -->
+            </div>
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 rounded-b-2xl flex justify-end space-x-3 sticky bottom-0">
+                <button onclick="closeModal('editModal')" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md">Cancel</button>
+                <button onclick="saveEdit()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="importReviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop hidden">
+        <div class="bg-white dark:bg-darkCard rounded-2xl shadow-2xl w-full max-w-6xl h-5/6 flex flex-col transform scale-95 modal-content">
+            <div class="p-6 border-b border-gray-200 dark:border-darkBorder flex justify-between items-center">
+                <h2 class="text-2xl font-bold"><i class="fas fa-tasks mr-3 text-indigo-600 dark:text-indigo-400"></i>Review Imports (Duplicates Flagged)</h2>
+                <button onclick="closeModal('importReviewModal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl">&times;</button>
+            </div>
+            <div class="p-6 flex-grow overflow-y-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-darkBorder">
+                    <thead class="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Recur</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status/Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="importReviewTableBody" class="bg-white dark:bg-darkCard divide-y divide-gray-200 dark:divide-darkBorder"></tbody>
+                </table>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 dark:bg-gray-800 rounded-b-2xl flex justify-end space-x-3">
+                <button onclick="closeModal('importReviewModal')" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md">Cancel</button>
+                <button onclick="confirmImport()" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Confirm & Add</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8" id="main-content">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-center text-center md:text-left relative">
+            <div>
+                <h1 class="text-4xl font-bold text-indigo-800 dark:text-indigo-400 mb-2">Real Estate Performance Dashboard</h1>
+                <p class="text-xl text-gray-600 dark:text-gray-400">Track activity, analyze performance, and achieve your goals.</p>
+            </div>
+            <button onclick="toggleDarkMode()" class="mt-4 md:mt-0 p-3 rounded-full bg-white dark:bg-gray-800 shadow-md hover:shadow-lg transition-all focus:outline-none" title="Toggle Dark Mode">
+                <i id="theme-icon" class="fas fa-moon text-indigo-600 dark:text-yellow-400 text-xl"></i>
+            </button>
+        </header>
+
+        <div class="bg-white dark:bg-darkCard p-4 rounded-xl shadow-md mb-8">
+             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+                <div>
+                    <label class="block text-sm font-medium">Start Date</label>
+                    <input type="date" id="filterStartDate" onchange="updateAll()" class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 p-2">
+                </div>
+                 <div>
+                    <label class="block text-sm font-medium">End Date</label>
+                    <input type="date" id="filterEndDate" onchange="updateAll()" class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 p-2">
+                </div>
+                <div class="flex items-center pb-2">
+                    <label class="flex items-center cursor-pointer group" title="Compare against exact same date range last year">
+                        <input type="checkbox" id="compareYoY" onchange="updateAll()" class="h-4 w-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500">
+                        <span class="ml-2 text-sm font-medium group-hover:text-indigo-600">YoY Compare</span>
+                    </label>
+                </div>
+                <div>
+                    <button class="w-full bg-gray-600 dark:bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-700 text-sm" onclick="clearFilters()">Clear</button>
+                </div>
+                <div class="flex space-x-2 lg:col-span-2">
+                    <button class="w-full bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 text-sm" onclick="exportToPDF()"><i class="fas fa-file-pdf mr-1"></i>PDF</button>
+                    <button class="w-full bg-teal-600 text-white px-3 py-2 rounded-md hover:bg-teal-700 text-sm" onclick="importCSV()"><i class="fas fa-upload mr-1"></i>Import</button>
+                    <button class="w-full bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 text-sm" onclick="exportCSV()"><i class="fas fa-download mr-1"></i>Backup</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-indigo-700 dark:text-indigo-400 flex items-center">
+                    <i class="fas fa-flag-checkered mr-3"></i>Annual Goal Progress
+                </h2>
+                <button onclick="openModal('goalModal')" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-md hover:bg-indigo-700 text-sm shadow-sm"><i class="fas fa-cog mr-2"></i>Set Goals</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <!-- Goal Cards -->
+                <div class="bg-white dark:bg-darkCard p-5 rounded-xl shadow-md relative">
+                    <h3 class="font-semibold text-gray-700 dark:text-gray-300">Gross Income</h3>
+                    <p class="text-sm text-gray-500 mb-1"><span id="gross-income-current">$0</span> / <span id="gross-income-goal">$0</span></p>
+                    <div class="w-full progress-bar-bg rounded-full h-2.5 mb-1"><div id="gross-income-progress" class="bg-green-500 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div></div>
+                    <p id="pace-gross" class="text-xs text-right font-medium"></p>
+                </div>
+                <div class="bg-white dark:bg-darkCard p-5 rounded-xl shadow-md">
+                    <h3 class="font-semibold text-gray-700 dark:text-gray-300">Net Income</h3>
+                    <p class="text-sm text-gray-500 mb-1"><span id="net-income-current">$0</span> / <span id="net-income-goal">$0</span></p>
+                    <div class="w-full progress-bar-bg rounded-full h-2.5 mb-1"><div id="net-income-progress" class="bg-emerald-500 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div></div>
+                    <p id="pace-net" class="text-xs text-right font-medium"></p>
+                </div>
+                <div class="bg-white dark:bg-darkCard p-5 rounded-xl shadow-md">
+                    <h3 class="font-semibold text-gray-700 dark:text-gray-300">Total Sales</h3>
+                    <p class="text-sm text-gray-500 mb-1"><span id="sales-current">0</span> / <span id="sales-goal">0</span></p>
+                    <div class="w-full progress-bar-bg rounded-full h-2.5 mb-1"><div id="sales-progress" class="bg-blue-500 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div></div>
+                    <p id="pace-sales" class="text-xs text-right font-medium"></p>
+                </div>
+                <div class="bg-white dark:bg-darkCard p-5 rounded-xl shadow-md">
+                    <h3 class="font-semibold text-gray-700 dark:text-gray-300">Listings Sold</h3>
+                    <p class="text-sm text-gray-500 mb-1"><span id="listings-sold-current">0</span> / <span id="listings-sold-goal">0</span></p>
+                    <div class="w-full progress-bar-bg rounded-full h-2.5 mb-1"><div id="listings-sold-progress" class="bg-purple-500 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div></div>
+                    <p id="pace-listings" class="text-xs text-right font-medium"></p>
+                </div>
+                <div class="bg-white dark:bg-darkCard p-5 rounded-xl shadow-md">
+                    <h3 class="font-semibold text-gray-700 dark:text-gray-300">Contacts</h3>
+                    <p class="text-sm text-gray-500 mb-1"><span id="contacts-current">0</span> / <span id="contacts-goal">0</span></p>
+                    <div class="w-full progress-bar-bg rounded-full h-2.5 mb-1"><div id="contacts-progress" class="bg-sky-500 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div></div>
+                    <p id="pace-contacts" class="text-xs text-right font-medium"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="border-b border-gray-200 dark:border-darkBorder mb-6">
+            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                <button class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg" onclick="openTab(event, 'tabDashboard')">Dashboard</button>
+                <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" onclick="openTab(event, 'tabPipeline')">Active Deals Pipeline</button>
+                <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg text-gray-500 hover:text-gray-700 dark:hover:text-gray-300" onclick="openTab(event, 'tabLog')">Full Log</button>
+            </nav>
+        </div>
+
+        <div>
+            <div id="tabDashboard" class="tab-content">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    
+                    <!-- Left Column: Forms -->
+                    <div class="lg:col-span-1 space-y-8">
+                        <div class="bg-white dark:bg-darkCard p-6 rounded-xl shadow-md relative">
+                            <h2 class="text-xl font-semibold mb-4 text-indigo-700 dark:text-indigo-400 flex justify-between items-center">
+                                <span><i class="fas fa-edit mr-3"></i>Log an Event</span>
+                                <span class="text-xs text-gray-400 font-normal">Shortcut: Ctrl+Enter</span>
+                            </h2>
+                            <form id="logForm" class="space-y-4">
+                                <!-- Common Fields -->
+                                <div><label class="block text-sm font-medium">Date</label><input type="date" id="date" required class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 p-2"></div>
+                                <div><label class="block text-sm font-medium">Event Type</label>
+                                    <select id="eventType" onchange="toggleEventFields('logForm')" class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 p-2">
+                                        <option>Daily Contacts</option><option>Appointment</option><option>Presentation</option><option>Buyer Contract Signed</option><option>Listing</option><option>Sale</option><option>General Expense</option>
+                                    </select>
+                                </div>
+                                <div id="logForm-contactFields"><label class="block text-sm font-medium">Number of Contacts</label><input type="number" id="contacts" value="0" class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 p-2"></div>
+                                <div id="logForm-leadSourceFields"><label class="block text-sm font-medium">Lead Source</label>
+                                    <select id="leadSource" class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 p-2">
+                                        <option>Referral</option><option>Online Ad</option><option>Open House</option><option>Cold Call</option><option>Social Media</option><option>Other</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Sale Fields -->
+                                <div id="logForm-saleTypeFields" class="hidden pt-2">
+                                    <label class="block text-sm font-medium">Sale Type</label>
+                                    <div class="mt-2 flex space-x-4">
+                                        <label class="flex items-center"><input type="radio" name="saleType" value="listing" class="text-indigo-600" checked><span class="ml-2">My Listing</span></label>
+                                        <label class="flex items-center"><input type="radio" name="saleType" value="buyer" class="text-indigo-600"><span class="ml-2">My Buyer</span></label>
+                                    </div>
+                                </div>
+                                <div id="logForm-saleFields" class="hidden space-y-4 pt-4 border-t dark:border-darkBorder relative bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                                    <p class="text-center font-semibold text-gray-600 dark:text-gray-300 mb-2">Financial Details</p>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div><label class="block text-xs font-medium">Sale Price ($)</label><input type="number" id="homeValue" class="mt-1 w-full p-2 border rounded-md dark:bg-gray-700 dark:border-darkBorder"></div>
+                                        <div><label class="block text-xs font-medium">Comm. Rate (%)</label><input type="number" id="commissionRate" step="0.01" class="mt-1 w-full p-2 border rounded-md dark:bg-gray-700 dark:border-darkBorder"></div>
+                                        <div><label class="block text-xs font-medium">Broker Split (%)</label><input type="number" id="brokerSplit" step="0.01" value="0" class="mt-1 w-full p-2 border rounded-md dark:bg-gray-700 dark:border-darkBorder"></div>
+                                        <div><label class="block text-xs font-medium">Broker Fee ($)</label><input type="number" id="brokerFee" value="0" class="mt-1 w-full p-2 border rounded-md dark:bg-gray-700 dark:border-darkBorder"></div>
+                                        <div class="col-span-2"><label class="block text-xs font-medium">Other Expenses ($)</label><input type="number" id="expenses" value="0" class="mt-1 w-full p-2 border rounded-md dark:bg-gray-700 dark:border-darkBorder"></div>
+                                    </div>
+                                    <!-- Live Calculator Display -->
+                                    <div class="mt-3 p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded border border-indigo-100 dark:border-indigo-800 text-sm">
+                                        <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Gross:</span> <strong id="liveCalcGross" class="text-indigo-700 dark:text-indigo-300">$0.00</strong></div>
+                                        <div class="flex justify-between"><span class="text-gray-500 dark:text-gray-400">Broker/Fees:</span> <strong id="liveCalcFees" class="text-red-600 dark:text-red-400">-$0.00</strong></div>
+                                        <div class="flex justify-between mt-1 pt-1 border-t border-indigo-200 dark:border-indigo-800"><span class="font-bold">Estimated Net:</span> <strong id="liveCalcNet" class="text-emerald-600 dark:text-emerald-400 text-lg">$0.00</strong></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Expense Fields -->
+                                <div id="logForm-expenseFields" class="hidden space-y-4 pt-4 border-t dark:border-darkBorder bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                                    <p class="text-center font-semibold text-gray-600 dark:text-gray-300 mb-2">Expense Details</p>
+                                    <div><label class="block text-sm font-medium">Expense Category</label><select id="expenseCategory" class="mt-1 w-full p-2 border rounded-md dark:bg-gray-700 dark:border-darkBorder"></select></div>
+                                    <div><label class="block text-sm font-medium">Amount ($)</label><input type="number" id="expenseAmount" class="mt-1 w-full p-2 border rounded-md dark:bg-gray-700 dark:border-darkBorder"></div>
+                                    <div class="flex items-center mt-2">
+                                        <input type="checkbox" id="expenseRecurring" class="h-4 w-4 text-indigo-600 rounded">
+                                        <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Mark as Recurring Monthly Subscription</label>
+                                    </div>
+                                    <div class="mt-2"><label class="block text-sm font-medium">For</label>
+                                        <div class="mt-1 flex space-x-4">
+                                            <label class="flex items-center"><input type="radio" name="expenseFor" value="general" class="text-indigo-600" checked><span class="ml-2 text-sm">General</span></label>
+                                            <label class="flex items-center"><input type="radio" name="expenseFor" value="listing" class="text-indigo-600"><span class="ml-2 text-sm">Listing</span></label>
+                                            <label class="flex items-center"><input type="radio" name="expenseFor" value="buyer" class="text-indigo-600"><span class="ml-2 text-sm">Buyer</span></label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div><label class="block text-sm font-medium">Notes</label><textarea id="notes" rows="2" class="mt-1 block w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 p-2"></textarea></div>
+                                <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-md hover:bg-indigo-700 shadow-md transition-transform active:scale-95">Log This Event</button>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: KPIs & Charts -->
+                    <div class="lg:col-span-2">
+                         <h2 class="text-xl font-semibold mb-4 text-indigo-700 dark:text-indigo-400 flex items-center">
+                            <i class="fas fa-chart-bar mr-3"></i>Key Performance Indicators 
+                            <span id="glance-period" class="text-sm text-gray-500 ml-2">(All Time)</span>
+                        </h2>
+                        <!-- KPIs -->
+                        <div id="kpi-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="kpi-header">Financials</div>
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-xl shadow-md text-center"><h3 class="text-sm font-medium text-gray-500">Gross Income</h3><p id="totalGrossIncome" class="text-xl font-bold text-green-600 mt-1">$0.00</p><div id="yoy-totalGrossIncome" class="text-xs mt-1 h-4"></div></div>
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-xl shadow-md text-center"><h3 class="text-sm font-medium text-gray-500">Total Expenses</h3><p id="totalExpenses" class="text-xl font-bold text-red-600 mt-1">$0.00</p><div id="yoy-totalExpenses" class="text-xs mt-1 h-4"></div></div>
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-xl shadow-md text-center col-span-2 border border-indigo-100 dark:border-indigo-900 bg-indigo-50/30 dark:bg-indigo-900/10"><h3 class="text-sm font-bold text-gray-500">Net Income</h3><p id="totalNetCommission" class="text-2xl font-bold text-emerald-600 mt-1">$0.00</p><div id="yoy-totalNetCommission" class="text-xs mt-1 h-4"></div></div>
+                            
+                            <div class="kpi-header">Activity & Conversion</div>
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-xl shadow-md text-center"><h3 class="text-sm font-medium text-gray-500">Total Sales</h3><p id="totalSales" class="text-xl font-bold text-green-600 mt-1">0</p><div id="yoy-totalSales" class="text-xs mt-1 h-4"></div></div>
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-xl shadow-md text-center"><h3 class="text-sm font-medium text-gray-500">Total Contacts</h3><p id="totalContacts" class="text-xl font-bold text-blue-600 mt-1">0</p><div id="yoy-totalContacts" class="text-xs mt-1 h-4"></div></div>
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-xl shadow-md text-center"><h3 class="text-sm font-medium text-gray-500">Listings Taken</h3><p id="totalListings" class="text-xl font-bold text-purple-600 mt-1">0</p></div>
+                            <div class="bg-white dark:bg-darkCard p-3 rounded-xl shadow-md text-center"><h3 class="text-sm font-medium text-gray-500">Buyer Contracts</h3><p id="totalBuyerContracts" class="text-xl font-bold text-sky-600 mt-1">0</p></div>
+                        </div>
+
+                        <!-- Charts row -->
+                        <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white dark:bg-darkCard p-6 rounded-xl shadow-md">
+                                <h3 class="font-semibold mb-2">Monthly Activity Trends</h3>
+                                <div class="h-64"><canvas id="monthlyActivityChart"></canvas></div>
+                            </div>
+                            <div class="bg-white dark:bg-darkCard p-6 rounded-xl shadow-md">
+                                <h3 class="font-semibold mb-2">Sales Funnel Efficiency</h3>
+                                <div class="h-64"><canvas id="efficiencyChart"></canvas></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Section: Planners -->
+                <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Scenario Planner -->
+                    <div id="whatIfPlanner" class="bg-white dark:bg-darkCard p-6 rounded-xl shadow-md">
+                        <h2 class="text-xl font-semibold mb-4 text-indigo-700 dark:text-indigo-400 flex items-center"><i class="fas fa-magic mr-3"></i>"What If" Scenario Planner</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="block text-xs text-gray-500">Target Gross ($)</label><input type="number" id="wifIncomeGoal" value="200000" oninput="calculateScenario()" class="mt-1 w-full p-2 border rounded dark:bg-gray-700 dark:border-darkBorder"></div>
+                            <div><label class="block text-xs text-gray-500">Avg. Comm. ($)</label><input type="number" id="wifAvgCommission" value="10000" oninput="calculateScenario()" class="mt-1 w-full p-2 border rounded dark:bg-gray-700 dark:border-darkBorder"></div>
+                            <div><label class="block text-xs text-gray-500">Conv. Rate (%)</label><input type="number" id="wifConversionRate" value="1" step="0.1" oninput="calculateScenario()" class="mt-1 w-full p-2 border rounded dark:bg-gray-700 dark:border-darkBorder"></div>
+                            <div><label class="block text-xs text-gray-500">Days to Work</label><input type="number" id="wifDaysWorked" value="250" oninput="calculateScenario()" class="mt-1 w-full p-2 border rounded dark:bg-gray-700 dark:border-darkBorder"></div>
+                        </div>
+                        <div class="mt-6 text-center bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg">
+                            <h3 class="font-semibold text-gray-600 dark:text-gray-300">Daily Target</h3>
+                            <p class="text-5xl font-bold text-indigo-600 dark:text-indigo-400" id="wifResult">0</p>
+                            <p class="text-sm text-gray-500">contacts per workday</p>
+                        </div>
+                    </div>
+                    <!-- Expense Summary -->
+                    <div class="bg-white dark:bg-darkCard p-6 rounded-xl shadow-md flex flex-col">
+                        <h2 class="text-xl font-semibold mb-4 text-indigo-700 dark:text-indigo-400 flex items-center"><i class="fas fa-receipt mr-3"></i>Expenses by Category</h2>
+                        <div class="flex-grow flex items-center justify-center h-48 mb-4"><canvas id="expenseSummaryPieChart"></canvas></div>
+                        <div id="expenseSummaryContainer" class="max-h-32 overflow-y-auto text-sm bg-gray-50 dark:bg-gray-800 p-2 rounded"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tabPipeline" class="tab-content hidden">
+                <div class="bg-white dark:bg-darkCard p-6 rounded-xl shadow-md mb-6">
+                    <h2 class="text-xl font-semibold mb-4 text-indigo-700 dark:text-indigo-400"><i class="fas fa-funnel-dollar mr-2"></i>Add Deal to Pipeline</h2>
+                    <form id="pipelineForm" class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+                        <div class="md:col-span-2"><label class="block text-xs">Property Address / Client</label><input type="text" id="pipeAddress" required class="w-full p-2 border rounded dark:bg-gray-700 dark:border-darkBorder"></div>
+                        <div><label class="block text-xs">Expected Close Date</label><input type="date" id="pipeDate" required class="w-full p-2 border rounded dark:bg-gray-700 dark:border-darkBorder"></div>
+                        <div><label class="block text-xs">Expected Comm. ($)</label><input type="number" id="pipeComm" required class="w-full p-2 border rounded dark:bg-gray-700 dark:border-darkBorder"></div>
+                        <div><button type="submit" class="w-full bg-indigo-600 text-white p-2 rounded hover:bg-indigo-700 shadow"><i class="fas fa-plus mr-1"></i>Track Deal</button></div>
+                    </form>
+                </div>
+                <div class="bg-white dark:bg-darkCard p-6 rounded-xl shadow-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-indigo-700 dark:text-indigo-400">Active Pipeline</h2>
+                        <div class="text-sm font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200 px-3 py-1 rounded-full" id="pipeTotal">Potential: $0</div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-left border-collapse">
+                            <thead><tr class="border-b-2 dark:border-darkBorder"><th class="py-2">Address/Client</th><th>Expected Close</th><th>Est. Commission</th><th>Action</th></tr></thead>
+                            <tbody id="pipelineBody" class="divide-y dark:divide-darkBorder"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tabLog" class="tab-content hidden">
+                <div class="bg-white dark:bg-darkCard p-6 rounded-xl shadow-md">
+                     <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                        <h2 class="text-xl font-semibold text-indigo-700 dark:text-indigo-400 whitespace-nowrap"><i class="fas fa-list mr-2"></i>Complete Event Log</h2>
+                        <div class="flex flex-wrap items-center justify-end w-full space-x-2 space-y-2 md:space-y-0">
+                            <div class="relative flex-grow max-w-xs">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                <input type="text" id="searchLog" placeholder="Search notes, category..." class="pl-10 pr-3 py-2 w-full rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 shadow-sm text-sm" oninput="renderFullLog()">
+                            </div>
+                            <select id="sortLogBy" onchange="renderFullLog()" class="rounded-md border-gray-300 dark:border-darkBorder dark:bg-gray-700 shadow-sm p-2 text-sm">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                                <option value="eventType">Event Type</option>
+                                <option value="amount">Amount (High to Low)</option>
+                            </select>
+                            <button onclick="resetLogsAndKeepRules()" class="bg-orange-500 text-white px-3 py-2 rounded-md hover:bg-orange-600 text-xs font-bold" title="Keep settings, clear logs"><i class="fas fa-eraser"></i></button>
+                            <button onclick="resetAllData()" class="bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 text-xs font-bold" title="Nuke everything"><i class="fas fa-bomb"></i></button>
+                        </div>
+                    </div>
+                    <div id="fullLogContainer" class="space-y-3 mt-4 max-h-[80vh] overflow-y-auto pr-2"></div>
+                </div>
+            </div>
+        </div>
+        <div id="saveStatus" class="text-center text-xs text-gray-400 dark:text-gray-500 mt-8"></div>
+    </div>
+
+<script>
+// State Management
+const STATE_KEY = 'realEstateDashboardState_v8'; // Bumped version for new schema
+let logEntries = [];
+let pipelineDeals = [];
+let recurringSubscriptions = []; // Store hashes/categories of recurring expenses
+let goals = { grossIncome: 0, netIncome: 0, listingsSold: 0, buyersSold: 0, contacts: 0 };
+let categorizationRules = {};
+let isDarkMode = false;
+
+// Charts References
+let efficiencyChart, monthlyActivityChart, expenseSummaryPieChart;
+
+window.onload = () => {
+    // Basic setup
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    populateExpenseDropdown();
+    
+    // Check system preference / local storage for theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        toggleDarkMode(true);
+    }
+
+    // Load Data
+    loadState();
+    
+    // Auto-generate recurring expenses for current month
+    checkAndApplyRecurringExpenses();
+
+    // Init UI
+    initializeCharts();
+    updateAll();
+    toggleEventFields('logForm');
+    renderPipeline();
+    
+    // Event Listeners
+    setupEventListeners();
+};
+
+function setupEventListeners() {
+    // Keyboard Shortcut (Ctrl/Cmd + Enter to submit Log Form)
+    document.getElementById('logForm').addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            document.getElementById('logForm').dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+    });
+
+    // Live Calculator Inputs
+    const calcInputs = ['homeValue', 'commissionRate', 'brokerSplit', 'brokerFee', 'expenses'];
+    calcInputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', updateLiveCalc);
+    });
+}
+
+// --- TOAST NOTIFICATIONS ---
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icon = type === 'success' ? '<i class="fas fa-check-circle text-green-500"></i>' : 
+                 type === 'error' ? '<i class="fas fa-exclamation-circle text-red-500"></i>' : 
+                 '<i class="fas fa-info-circle text-yellow-500"></i>';
+                 
+    toast.innerHTML = `
+        <div class="flex items-center gap-3">
+            ${icon}
+            <span class="text-sm font-medium">${message}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Auto remove
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+// --- UI HELPERS ---
+function toggleDarkMode(forceDark = null) {
+    const html = document.documentElement;
+    const icon = document.getElementById('theme-icon');
+    
+    if (forceDark !== null) isDarkMode = !forceDark; // invert so toggle works correctly
+    
+    if (isDarkMode) {
+        html.classList.remove('dark');
+        icon.classList.replace('fa-sun', 'fa-moon');
+        icon.classList.replace('text-yellow-400', 'text-indigo-600');
+        localStorage.setItem('theme', 'light');
+        isDarkMode = false;
+    } else {
+        html.classList.add('dark');
+        icon.classList.replace('fa-moon', 'fa-sun');
+        icon.classList.replace('text-indigo-600', 'text-yellow-400');
+        localStorage.setItem('theme', 'dark');
+        isDarkMode = true;
+    }
+    
+    // Re-render charts to adjust text color based on theme
+    if(efficiencyChart) initializeCharts(); 
+    if(logEntries.length > 0) updateAll();
+}
+
+function openTab(evt, tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove("active"));
+    document.getElementById(tabName).classList.remove('hidden');
+    evt.currentTarget.classList.add("active");
+}
+
+function openModal(id) {
+    const modal = document.getElementById(id);
+    modal.classList.remove('hidden');
+    setTimeout(() => modal.querySelector('.modal-content').classList.remove('scale-95'), 10);
+}
+
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    modal.querySelector('.modal-content').classList.add('scale-95');
+    setTimeout(() => modal.classList.add('hidden'), 300);
+}
+
+function formatCurrency(num) {
+    return `$${(num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function toggleEventFields(formPrefix) {
+    const prefix = formPrefix ? `${formPrefix}-` : '';
+    const eventTypeStr = document.getElementById(formPrefix ? (formPrefix==='logForm'?'eventType':'editEventType') : 'eventType').value;
+    const isSale = eventTypeStr === 'Sale';
+    const isExpense = eventTypeStr === 'General Expense';
+    const showContacts = !isSale && !isExpense && eventTypeStr !== 'Daily Contacts';
+    const showLeadSource = eventTypeStr !== 'General Expense';
+
+    const byId = (id) => document.getElementById(prefix + id);
+    
+    if(byId('saleFields')) byId('saleFields').classList.toggle('hidden', !isSale);
+    if(byId('saleTypeFields')) byId('saleTypeFields').classList.toggle('hidden', !isSale);
+    if(byId('expenseFields')) byId('expenseFields').classList.toggle('hidden', !isExpense);
+    if(byId('contactFields')) byId('contactFields').classList.toggle('hidden', !showContacts && eventTypeStr !== 'Daily Contacts');
+    if(byId('leadSourceFields')) byId('leadSourceFields').classList.toggle('hidden', !showLeadSource);
+    
+    if(isSale && formPrefix === 'logForm') updateLiveCalc();
+}
+
+function updateLiveCalc() {
+    const hv = parseFloat(document.getElementById('homeValue').value) || 0;
+    const cr = parseFloat(document.getElementById('commissionRate').value) || 0;
+    const bs = parseFloat(document.getElementById('brokerSplit').value) || 0;
+    const bf = parseFloat(document.getElementById('brokerFee').value) || 0;
+    const ex = parseFloat(document.getElementById('expenses').value) || 0;
+    
+    const gross = (hv * cr) / 100;
+    const brokerCut = (gross * (bs/100)) + bf;
+    const net = gross - brokerCut - ex;
+    
+    document.getElementById('liveCalcGross').innerText = formatCurrency(gross);
+    document.getElementById('liveCalcFees').innerText = `-${formatCurrency(brokerCut)}`;
+    document.getElementById('liveCalcNet').innerText = formatCurrency(net);
+}
+
+document.getElementById('logForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const eventType = document.getElementById('eventType').value;
+    let entry = buildEntryFromForm('logForm', eventType);
+    
+    logEntries.push(entry);
+    
+    // Handle Recurring
+    if (eventType === 'General Expense' && document.getElementById('expenseRecurring').checked) {
+        // Add to recurring list if not exists by category/notes
+        const subId = `${entry.expenseCategory}_${entry.notes.toLowerCase()}`;
+        if(!recurringSubscriptions.some(s => s.id === subId)) {
+            recurringSubscriptions.push({
+                id: subId, category: entry.expenseCategory, notes: entry.notes, amount: entry.expenseAmount
+            });
+            showToast("Expense marked as recurring monthly.");
+        }
+    }
+    
+    saveState();
+    updateAll();
+    
+    // Reset specific fields but keep date
+    const currentDate = document.getElementById('date').value;
+    e.target.reset();
+    document.getElementById('date').value = currentDate;
+    toggleEventFields('logForm');
+    showToast('Event logged successfully!');
+});
+
+function buildEntryFromForm(prefix, eventType) {
+    const isEdit = prefix === 'editModal';
+    const getId = (name) => document.getElementById(isEdit ? `edit_${name}` : name);
+    
+    let entry = {
+        id: isEdit ? document.getElementById('edit_id').value : Date.now(),
+        date: getId('date').value,
+        eventType,
+        notes: getId('notes').value,
+        leadSource: getId('leadSource') ? getId('leadSource').value : null,
+        contacts: 0, homeValue: 0, commissionRate: 0, grossCommission: 0,
+        expenses: 0, saleType: null, brokerSplit: 0, brokerFee: 0,
+        expenseCategory: null, expenseAmount: 0, expenseFor: 'general'
+    };
+
+    if (eventType === 'General Expense') {
+        entry.expenseCategory = getId('expenseCategory').value;
+        entry.expenseAmount = parseFloat(getId('expenseAmount').value) || 0;
+        // Handle radio buttons properly
+        const selector = isEdit ? 'input[name="edit_expenseFor"]:checked' : 'input[name="expenseFor"]:checked';
+        entry.expenseFor = document.querySelector(selector)?.value || 'general';
+        entry.leadSource = null; 
+    } else if (eventType === 'Sale') {
+        entry.homeValue = parseFloat(getId('homeValue').value) || 0;
+        entry.commissionRate = parseFloat(getId('commissionRate').value) || 0;
+        entry.expenses = parseFloat(getId('expenses').value) || 0;
+        entry.grossCommission = (entry.homeValue * entry.commissionRate) / 100;
+        const selector = isEdit ? 'input[name="edit_saleType"]:checked' : 'input[name="saleType"]:checked';
+        entry.saleType = document.querySelector(selector)?.value || 'listing';
+        entry.brokerSplit = parseFloat(getId('brokerSplit').value) || 0;
+        entry.brokerFee = parseFloat(getId('brokerFee').value) || 0;
+    } else if (eventType === 'Daily Contacts') {
+        entry.contacts = parseInt(getId('contacts').value) || 0;
+    }
+    return entry;
+}
+
+function getFilteredEntries(yearOffset = 0) {
+    let startDate = document.getElementById('filterStartDate').value;
+    let endDate = document.getElementById('filterEndDate').value;
+    
+    let filtered = logEntries;
+    
+    // Apply YoY offset logic
+    if (yearOffset !== 0) {
+        if (!startDate && !endDate) {
+            // If no filter, compare YTD this year vs YTD last year
+            const today = new Date();
+            startDate = new Date(today.getFullYear() + yearOffset, 0, 1).toISOString().split('T')[0];
+            endDate = new Date(today.getFullYear() + yearOffset, today.getMonth(), today.getDate()).toISOString().split('T')[0];
+        } else {
+            if (startDate) {
+                const d = new Date(startDate);
+                d.setFullYear(d.getFullYear() + yearOffset);
+                startDate = d.toISOString().split('T')[0];
+            }
+            if (endDate) {
+                const d = new Date(endDate);
+                d.setFullYear(d.getFullYear() + yearOffset);
+                endDate = d.toISOString().split('T')[0];
+            }
+        }
+    }
+
+    if (startDate) filtered = filtered.filter(entry => entry.date >= startDate);
+    if (endDate) filtered = filtered.filter(entry => entry.date <= endDate);
+    
+    if(yearOffset === 0) {
+        document.getElementById('glance-period').textContent = (startDate || endDate) ? `(${startDate || 'Start'} to ${endDate || 'Today'})` : '(All Time)';
+    }
+    return filtered;
+}
+
+function calculateTotals(entries) {
+    const totals = entries.reduce((acc, entry) => {
+        const splitAmount = (entry.grossCommission || 0) * ((entry.brokerSplit || 0) / 100);
+
+        if (entry.eventType === 'Daily Contacts') acc.contacts += entry.contacts || 0;
+        if (entry.eventType === 'Appointment') acc.appointments++;
+        if (entry.eventType === 'Presentation') acc.presentations++;
+        if (entry.eventType === 'Listing') acc.listings++;
+        if (entry.eventType === 'Buyer Contract Signed') acc.buyerContracts++;
+        if (entry.eventType === 'General Expense') acc.totalExpenses += (entry.expenseAmount || 0);
+
+        if (entry.eventType === 'Sale') {
+            if (entry.saleType === 'listing') acc.listingsSold++;
+            else if (entry.saleType === 'buyer') acc.buyersSold++;
+            
+            acc.totalGross += entry.grossCommission || 0;
+            acc.totalExpenses += (entry.expenses || 0) + splitAmount + (entry.brokerFee || 0);
+        }
+        return acc;
+    }, {
+        contacts: 0, appointments: 0, presentations: 0, listings: 0, buyerContracts: 0,
+        listingsSold: 0, buyersSold: 0, totalExpenses: 0, totalGross: 0
+    });
+
+    totals.netCommission = totals.totalGross - totals.totalExpenses;
+    totals.totalSales = totals.listingsSold + totals.buyersSold;
+    return totals;
+}
+
+function updateAll() {
+    const displayEntries = getFilteredEntries();
+    const totals = calculateTotals(displayEntries);
+    
+    // Update KPI UI
+    document.getElementById('totalGrossIncome').textContent = formatCurrency(totals.totalGross);
+    document.getElementById('totalExpenses').textContent = formatCurrency(totals.totalExpenses);
+    document.getElementById('totalNetCommission').textContent = formatCurrency(totals.netCommission);
+    document.getElementById('totalSales').textContent = totals.totalSales.toLocaleString();
+    document.getElementById('totalContacts').textContent = totals.contacts.toLocaleString();
+    document.getElementById('totalListings').textContent = totals.listings.toLocaleString();
+    document.getElementById('totalBuyerContracts').textContent = totals.buyerContracts.toLocaleString();
+
+    // YoY Logic
+    const useYoY = document.getElementById('compareYoY').checked;
+    const yoyElements = ['totalGrossIncome', 'totalExpenses', 'totalNetCommission', 'totalSales', 'totalContacts'].map(id => `yoy-${id}`);
+    
+    if (useYoY) {
+        const lastYearEntries = getFilteredEntries(-1);
+        const lastYearTotals = calculateTotals(lastYearEntries);
+        
+        updateYoYDelta('yoy-totalGrossIncome', totals.totalGross, lastYearTotals.totalGross, true);
+        updateYoYDelta('yoy-totalExpenses', totals.totalExpenses, lastYearTotals.totalExpenses, false); // expenses up = red
+        updateYoYDelta('yoy-totalNetCommission', totals.netCommission, lastYearTotals.netCommission, true);
+        updateYoYDelta('yoy-totalSales', totals.totalSales, lastYearTotals.totalSales, true);
+        updateYoYDelta('yoy-totalContacts', totals.contacts, lastYearTotals.contacts, true);
+    } else {
+        yoyElements.forEach(id => document.getElementById(id).innerHTML = '');
+    }
+
+    updateGoalProgress(totals);
+    updateAllCharts(displayEntries, totals);
+    renderFullLog();
+    renderExpenseSummary(displayEntries);
+}
+
+function updateYoYDelta(elementId, current, previous, higherIsBetter = true) {
+    const el = document.getElementById(elementId);
+    if(previous === 0 && current === 0) { el.innerHTML = ''; return; }
+    
+    let percentChange = 0;
+    if (previous === 0) percentChange = 100;
+    else percentChange = ((current - previous) / previous) * 100;
+    
+    const isPositive = percentChange >= 0;
+    const isGood = higherIsBetter ? isPositive : !isPositive;
+    
+    const colorClass = isGood ? 'text-green-500' : 'text-red-500';
+    const icon = isPositive ? '↑' : '↓';
+    
+    el.innerHTML = `<span class="font-semibold ${colorClass}">${icon} ${Math.abs(percentChange).toFixed(1)}% YoY</span>`;
+}
+
+function updateGoalProgress(totals) {
+    document.getElementById('gross-income-goal').textContent = formatCurrency(goals.grossIncome);
+    document.getElementById('net-income-goal').textContent = formatCurrency(goals.netIncome);
+    const totalSalesGoal = (goals.listingsSold || 0) + (goals.buyersSold || 0);
+    document.getElementById('sales-goal').textContent = totalSalesGoal;
+    document.getElementById('listings-sold-goal').textContent = goals.listingsSold || 0;
+    document.getElementById('contacts-goal').textContent = goals.contacts || 0;
+
+    // Calculate time pacing
+    const today = new Date();
+    const startOfYear = new Date(today.getFullYear(), 0, 1);
+    const dayOfYear = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24)) + 1;
+    const yearCompletion = dayOfYear / 365;
+
+    const updateBarAndPace = (current, goal, barId, paceId) => {
+        const percentage = goal > 0 ? (current / goal) * 100 : 0;
+        document.getElementById(barId).style.width = `${Math.min(percentage, 100)}%`;
+        
+        const paceEl = document.getElementById(paceId);
+        if (goal > 0) {
+            const expectedAtThisPoint = goal * yearCompletion;
+            if (current >= expectedAtThisPoint) {
+                paceEl.innerHTML = `<span class="text-green-500">↑ On Pace</span>`;
+            } else {
+                const deficit = expectedAtThisPoint - current;
+                // Formatter based on context (money vs numbers)
+                let textDeficit = paceId.includes('income') ? formatCurrency(deficit) : Math.ceil(deficit);
+                paceEl.innerHTML = `<span class="text-red-500">↓ Behind (${textDeficit})</span>`;
+            }
+        } else {
+            paceEl.innerHTML = '';
+        }
+    };
+
+    updateBarAndPace(totals.totalGross, goals.grossIncome, 'gross-income-progress', 'pace-gross');
+    updateBarAndPace(totals.netCommission, goals.netIncome, 'net-income-progress', 'pace-net');
+    updateBarAndPace(totals.totalSales, totalSalesGoal, 'sales-progress', 'pace-sales');
+    updateBarAndPace(totals.listingsSold, goals.listingsSold, 'listings-sold-progress', 'pace-listings');
+    updateBarAndPace(totals.contacts, goals.contacts, 'contacts-progress', 'pace-contacts');
+
+    document.getElementById('gross-income-current').textContent = formatCurrency(totals.totalGross);
+    document.getElementById('net-income-current').textContent = formatCurrency(totals.netCommission);
+    document.getElementById('sales-current').textContent = totals.totalSales;
+    document.getElementById('listings-sold-current').textContent = totals.listingsSold;
+    document.getElementById('contacts-current').textContent = totals.contacts;
+}
+
+function saveGoals() {
+    goals.grossIncome = parseFloat(document.getElementById('goalGrossIncome').value) || 0;
+    goals.netIncome = parseFloat(document.getElementById('goalNetIncome').value) || 0;
+    goals.listingsSold = parseInt(document.getElementById('goalListingsSold').value) || 0;
+    goals.buyersSold = parseInt(document.getElementById('goalBuyersSold').value) || 0;
+    goals.contacts = parseInt(document.getElementById('goalContacts').value) || 0;
+
+    saveState();
+    updateAll();
+    closeModal('goalModal');
+    showToast('Goals updated successfully.');
+}
+
+function clearFilters() {
+    document.getElementById('filterStartDate').value = '';
+    document.getElementById('filterEndDate').value = '';
+    document.getElementById('compareYoY').checked = false;
+    updateAll();
+}
+
+document.getElementById('pipelineForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const deal = {
+        id: Date.now(),
+        address: document.getElementById('pipeAddress').value,
+        date: document.getElementById('pipeDate').value,
+        comm: parseFloat(document.getElementById('pipeComm').value) || 0,
+    };
+    pipelineDeals.push(deal);
+    saveState();
+    renderPipeline();
+    e.target.reset();
+    showToast("Deal added to pipeline.");
+});
+
+function renderPipeline() {
+    const tbody = document.getElementById('pipelineBody');
+    // Sort by soonest close date
+    pipelineDeals.sort((a,b) => new Date(a.date) - new Date(b.date));
+    
+    let totalPotential = 0;
+    tbody.innerHTML = pipelineDeals.length === 0 ? '<tr><td colspan="4" class="text-center py-4 text-gray-500">No active deals.</td></tr>' : '';
+    
+    pipelineDeals.forEach(deal => {
+        totalPotential += deal.comm;
+        tbody.innerHTML += `
+            <tr class="border-b dark:border-darkBorder hover:bg-gray-50 dark:hover:bg-gray-800">
+                <td class="py-3 font-medium">${deal.address}</td>
+                <td class="py-3">${deal.date}</td>
+                <td class="py-3 text-green-600 dark:text-green-400 font-semibold">${formatCurrency(deal.comm)}</td>
+                <td class="py-3 text-right">
+                    <button onclick="logPipelineDeal(${deal.id})" class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 mr-2" title="Mark as Sold (moves to Log)"><i class="fas fa-check"></i></button>
+                    <button onclick="deletePipelineDeal(${deal.id})" class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200" title="Delete Deal"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `;
+    });
+    document.getElementById('pipeTotal').textContent = `Potential: ${formatCurrency(totalPotential)}`;
+}
+
+function deletePipelineDeal(id) {
+    if(confirm('Remove this deal from pipeline?')) {
+        pipelineDeals = pipelineDeals.filter(d => d.id !== id);
+        saveState();
+        renderPipeline();
+    }
+}
+
+function logPipelineDeal(id) {
+    const deal = pipelineDeals.find(d => d.id === id);
+    if(deal) {
+        // Pre-fill log form and jump to dashboard
+        document.getElementById('eventType').value = 'Sale';
+        toggleEventFields('logForm');
+        document.getElementById('homeValue').value = 0; // unknown
+        document.getElementById('commissionRate').value = 0; // user needs to fill
+        document.getElementById('notes').value = `Sale of ${deal.address}`;
+        // we can't pre-fill gross directly due to calculation logic, user has to enter details.
+        showToast("Form prepopulated. Please fill in exact numbers.");
+        document.querySelector('button[onclick="openTab(event, \'tabDashboard\')"]').click();
+        
+        // Remove from pipeline
+        pipelineDeals = pipelineDeals.filter(d => d.id !== id);
+        saveState();
+        renderPipeline();
+    }
+}
+
+function renderFullLog() {
+    const container = document.getElementById('fullLogContainer');
+    const sortBy = document.getElementById('sortLogBy').value;
+    const searchTerm = document.getElementById('searchLog').value.toLowerCase();
+    
+    let sortedEntries = [...getFilteredEntries()];
+    
+    // Search filter
+    if(searchTerm) {
+        sortedEntries = sortedEntries.filter(e => 
+            (e.notes || '').toLowerCase().includes(searchTerm) || 
+            (e.expenseCategory || '').toLowerCase().includes(searchTerm) ||
+            e.eventType.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    switch(sortBy) {
+        case 'oldest': sortedEntries.sort((a,b) => new Date(a.date) - new Date(b.date)); break;
+        case 'eventType': sortedEntries.sort((a,b) => a.eventType.localeCompare(b.eventType)); break;
+        case 'amount': sortedEntries.sort((a,b) => (b.grossCommission || b.expenseAmount || 0) - (a.grossCommission || a.expenseAmount || 0)); break;
+        default: sortedEntries.sort((a,b) => new Date(b.date) - new Date(a.date)); break;
+    }
+
+    container.innerHTML = sortedEntries.length === 0 ? '<p class="text-center text-gray-500 py-8">No log entries found.</p>' : sortedEntries.map(entry => {
+        let details = '';
+        if (entry.eventType === 'Daily Contacts') details = `Logged <strong>${entry.contacts}</strong> contacts. Source: <strong>${entry.leadSource || 'N/A'}</strong>.`;
+        else if (entry.eventType === 'Sale') details = `<strong>Gross:</strong> ${formatCurrency(entry.grossCommission)} | <strong>Net:</strong> <span class="text-emerald-600">${formatCurrency((entry.grossCommission || 0) - ((entry.grossCommission || 0) * ((entry.brokerSplit || 0)/100)) - (entry.brokerFee || 0) - (entry.expenses || 0))}</span>`;
+        else if (entry.eventType === 'General Expense') details = `<strong>Category:</strong> ${entry.expenseCategory} | <strong>Amount:</strong> <span class="text-red-500">${formatCurrency(entry.expenseAmount)}</span>`;
+        else details = `Lead Source: <strong>${entry.leadSource || 'N/A'}</strong>`;
+        
+        const badgeType = entry.eventType === 'Sale' ? `${entry.eventType} (${entry.saleType})` : entry.eventType;
+        
+        return `<div class="p-4 border dark:border-darkBorder rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-750 transition relative group">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+                <div>
+                    <span class="font-semibold text-indigo-700 dark:text-indigo-400">${entry.date}</span>
+                    <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">${badgeType}</span>
+                </div>
+                <div class="space-x-2">
+                    <button onclick="editLogEntry('${entry.id}')" class="text-blue-500 hover:text-blue-700 text-sm font-medium"><i class="fas fa-edit mr-1"></i>Edit</button>
+                    <button onclick="deleteLogEntry('${entry.id}')" class="text-red-500 hover:text-red-700 text-sm font-medium"><i class="fas fa-trash-alt mr-1"></i>Del</button>
+                </div>
+            </div>
+            <p class="mt-2 text-sm text-gray-700 dark:text-gray-300">${details}</p>
+            ${entry.notes ? `<p class="mt-1 text-sm text-gray-500 italic bg-white dark:bg-darkCard p-2 rounded">"${entry.notes}"</p>` : ''}
+        </div>`;
+    }).join('');
+}
+
+function editLogEntry(id) {
+    const entry = logEntries.find(e => String(e.id) === String(id));
+    if(!entry) return;
+
+    // Create a shadow copy of the form HTML inside the modal
+    const originalForm = document.getElementById('logForm').innerHTML;
+    const modalBody = document.getElementById('editModalBody');
+    
+    // Replace IDs to avoid conflict, remove the submit button
+    let editFormHtml = originalForm.replace(/id="/g, 'id="edit_').replace(/name="/g, 'name="edit_');
+    editFormHtml = editFormHtml.replace(/<button type="submit".*?<\/button>/, ''); // Remove submit button
+    editFormHtml = editFormHtml.replace(/toggleEventFields\('logForm'\)/g, "toggleEventFields('editModal')");
+    
+    modalBody.innerHTML = `<input type="hidden" id="edit_id" value="${entry.id}"> <div id="editFormWrapper">${editFormHtml}</div>`;
+    
+    // Populate data
+    document.getElementById('edit_date').value = entry.date;
+    document.getElementById('edit_eventType').value = entry.eventType;
+    document.getElementById('edit_notes').value = entry.notes || '';
+    
+    // Need to trigger the toggle manually to show right fields
+    toggleEventFields('editModal');
+    
+    if (entry.eventType === 'Sale') {
+        document.getElementById('edit_homeValue').value = entry.homeValue || '';
+        document.getElementById('edit_commissionRate').value = entry.commissionRate || '';
+        document.getElementById('edit_brokerSplit').value = entry.brokerSplit || '';
+        document.getElementById('edit_brokerFee').value = entry.brokerFee || '';
+        document.getElementById('edit_expenses').value = entry.expenses || '';
+        document.querySelector(`input[name="edit_saleType"][value="${entry.saleType}"]`).checked = true;
+    } else if (entry.eventType === 'General Expense') {
+        document.getElementById('edit_expenseCategory').value = entry.expenseCategory || '';
+        document.getElementById('edit_expenseAmount').value = entry.expenseAmount || '';
+        document.querySelector(`input[name="edit_expenseFor"][value="${entry.expenseFor || 'general'}"]`).checked = true;
+        
+        // Hide recurring checkbox in edit mode for simplicity
+        const recDiv = document.getElementById('edit_expenseRecurring')?.parentElement;
+        if(recDiv) recDiv.style.display = 'none';
+    } else {
+        if(document.getElementById('edit_leadSource')) document.getElementById('edit_leadSource').value = entry.leadSource || 'Referral';
+        if(entry.eventType === 'Daily Contacts') document.getElementById('edit_contacts').value = entry.contacts || 0;
+    }
+    
+    openModal('editModal');
+}
+
+function saveEdit() {
+    const id = document.getElementById('edit_id').value;
+    const eventType = document.getElementById('edit_eventType').value;
+    const updatedEntry = buildEntryFromForm('editModal', eventType);
+    
+    // Replace in array
+    const index = logEntries.findIndex(e => String(e.id) === String(id));
+    if(index > -1) {
+        logEntries[index] = updatedEntry;
+        saveState();
+        updateAll();
+        closeModal('editModal');
+        showToast("Entry updated successfully.");
+    }
+}
+
+function deleteLogEntry(id) { 
+    if (confirm('Are you sure you want to delete this log entry?')) { 
+        logEntries = logEntries.filter(e => String(e.id) !== String(id)); 
+        saveState();
+        updateAll(); 
+        showToast("Entry deleted.", 'warning');
+    } 
+}
+
+function initializeCharts() {
+    // Determine colors based on theme
+    const isDark = document.documentElement.classList.contains('dark');
+    const textColor = isDark ? '#e5e7eb' : '#374151';
+    const gridColor = isDark ? '#374151' : '#e5e7eb';
+    const chartColors = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#3B82F6', '#EC4899'];
+    
+    Chart.defaults.color = textColor;
+    Chart.defaults.scale.grid.color = gridColor;
+
+    if (efficiencyChart) efficiencyChart.destroy();
+    if (monthlyActivityChart) monthlyActivityChart.destroy();
+    if (expenseSummaryPieChart) expenseSummaryPieChart.destroy();
+
+    const ctxEff = document.getElementById('efficiencyChart').getContext('2d');
+    efficiencyChart = new Chart(ctxEff, {
+        type: 'bar',
+        data: { labels: ['C-to-A', 'A-to-P', 'L-to-S', 'BC-to-S'], datasets: [{ label: 'Rate (%)', data: [], backgroundColor: chartColors.slice(0, 4) }] },
+        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, max: 100 } } }
+    });
+
+    const ctxMonth = document.getElementById('monthlyActivityChart').getContext('2d');
+    monthlyActivityChart = new Chart(ctxMonth, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [
+                { label: 'Contacts', data: [], borderColor: '#3B82F6', tension: 0.3, fill: false },
+                { label: 'Appointments', data: [], borderColor: '#10B981', tension: 0.3, fill: false },
+                { label: 'Sales', data: [], borderColor: '#EF4444', tension: 0.3, fill: false, borderWidth: 3 }
+            ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false } }
+    });
+
+    const ctxExp = document.getElementById('expenseSummaryPieChart').getContext('2d');
+    expenseSummaryPieChart = new Chart(ctxExp, { 
+        type: 'doughnut', 
+        data: { datasets: [{ data: [], backgroundColor: chartColors }] }, 
+        options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } } 
+    });
+}
+
+function updateAllCharts(displayEntries, totals) {
+    if(!efficiencyChart) return; // Not initialized yet
+    
+    // Efficiency
+    efficiencyChart.data.datasets[0].data = [
+        totals.contacts > 0 ? (totals.appointments / totals.contacts) * 100 : 0,
+        totals.appointments > 0 ? (totals.presentations / totals.appointments) * 100 : 0,
+        totals.listings > 0 ? (totals.listingsSold / totals.listings) * 100 : 0,
+        totals.buyerContracts > 0 ? (totals.buyersSold / totals.buyerContracts) * 100 : 0
+    ];
+    efficiencyChart.update();
+
+    // Monthly Line Chart
+    const monthlyData = { contacts: Array(12).fill(0), appointments: Array(12).fill(0), sales: Array(12).fill(0) };
+    displayEntries.forEach(entry => {
+        const month = new Date(entry.date).getMonth();
+        if(month >= 0 && month <= 11) {
+            if (entry.eventType === 'Daily Contacts') monthlyData.contacts[month] += entry.contacts || 0;
+            if (entry.eventType === 'Appointment') monthlyData.appointments[month]++;
+            if (entry.eventType === 'Sale') monthlyData.sales[month]++;
+        }
+    });
+    monthlyActivityChart.data.datasets[0].data = monthlyData.contacts;
+    monthlyActivityChart.data.datasets[1].data = monthlyData.appointments;
+    monthlyActivityChart.data.datasets[2].data = monthlyData.sales;
+    monthlyActivityChart.update();
+
+    // Expenses Doughnut
+    const expData = displayEntries.filter(e => e.eventType === 'General Expense').reduce((acc, e) => {
+        acc[e.expenseCategory] = (acc[e.expenseCategory] || 0) + (e.expenseAmount || 0); return acc;
+    }, {});
+    
+    expenseSummaryPieChart.data.labels = Object.keys(expData);
+    expenseSummaryPieChart.data.datasets[0].data = Object.values(expData);
+    expenseSummaryPieChart.update();
+}
+
+function renderExpenseSummary(entries) {
+    const container = document.getElementById('expenseSummaryContainer');
+    const expData = entries.filter(e => e.eventType === 'General Expense').reduce((acc, e) => {
+        acc[e.expenseCategory] = (acc[e.expenseCategory] || 0) + (e.expenseAmount || 0); return acc;
+    }, {});
+    
+    const sorted = Object.entries(expData).sort((a,b) => b[1]-a[1]);
+    container.innerHTML = sorted.map(([cat, amt]) => `
+        <div class="flex justify-between py-1 border-b dark:border-darkBorder last:border-0">
+            <span class="text-gray-600 dark:text-gray-400">${cat}</span>
+            <span class="font-medium">${formatCurrency(amt)}</span>
+        </div>
+    `).join('') || '<p class="text-center text-gray-500 py-2">No expenses logged.</p>';
+}
+
+function calculateScenario() {
+    const goal = parseFloat(document.getElementById('wifIncomeGoal').value) || 0;
+    const avg = parseFloat(document.getElementById('wifAvgCommission').value) || 0;
+    const conv = parseFloat(document.getElementById('wifConversionRate').value) || 0;
+    const days = parseInt(document.getElementById('wifDaysWorked').value) || 0;
+
+    const salesNeeded = avg > 0 ? goal / avg : 0;
+    const contactsNeeded = conv > 0 ? salesNeeded / (conv / 100) : 0;
+    const perDay = days > 0 ? contactsNeeded / days : 0;
+
+    document.getElementById('wifResult').textContent = perDay.toFixed(1);
+}
+
+function checkAndApplyRecurringExpenses() {
+    const today = new Date();
+    const currentMonthPrefix = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+    
+    let addedCount = 0;
+    recurringSubscriptions.forEach(sub => {
+        // Check if an entry for this category/note exists in the current month
+        const existsThisMonth = logEntries.some(e => 
+            e.eventType === 'General Expense' && 
+            e.expenseCategory === sub.category &&
+            e.date.startsWith(currentMonthPrefix)
+        );
+        
+        if (!existsThisMonth) {
+            logEntries.push({
+                id: Date.now() + Math.random(),
+                date: today.toISOString().split('T')[0],
+                eventType: 'General Expense',
+                expenseCategory: sub.category,
+                expenseAmount: sub.amount,
+                notes: `[Auto-Recurring] ${sub.notes}`,
+                expenseFor: 'general'
+            });
+            addedCount++;
+        }
+    });
+    
+    if (addedCount > 0) {
+        saveState();
+        console.log(`Auto-added ${addedCount} recurring expenses for ${currentMonthPrefix}`);
+    }
+}
+
+function loadState() {
+    try {
+        // Try v8 first, fallback to v7
+        let savedState = localStorage.getItem(STATE_KEY);
+        if (!savedState) {
+            savedState = localStorage.getItem('realEstateDashboardState_v7');
+            if(savedState) console.log("Migrating state from v7 to v8");
+        }
+        
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            logEntries = state.logEntries || [];
+            goals = state.goals || { grossIncome: 0, netIncome: 0, listingsSold: 0, buyersSold: 0, contacts: 0 };
+            categorizationRules = state.categorizationRules || {};
+            pipelineDeals = state.pipelineDeals || [];
+            recurringSubscriptions = state.recurringSubscriptions || [];
+        }
+        
+        // Populate Goal UI
+        Object.keys(goals).forEach(key => {
+            const el = document.getElementById(`goal${key.charAt(0).toUpperCase() + key.slice(1)}`);
+            if (el) el.value = goals[key] || '';
+        });
+    } catch(e) { console.error("Error loading state:", e); }
+}
+
+function saveState() {
+    try {
+        const state = { logEntries, goals, categorizationRules, pipelineDeals, recurringSubscriptions };
+        localStorage.setItem(STATE_KEY, JSON.stringify(state));
+        
+        const now = new Date();
+        document.getElementById('saveStatus').textContent = `Last saved locally: ${now.toLocaleTimeString()}`;
+    } catch (e) {
+        console.error("Save failed:", e);
+        showToast("Storage error. Might be out of space.", "error");
+    }
+}
+
+// Reset functions
+const resetLogsAndKeepRules = () => { if (confirm('Clear ALL log entries but keep your goals, rules, and pipeline?')) { logEntries = []; saveState(); updateAll(); showToast("Logs cleared."); }};
+const resetAllData = () => { if (confirm('Permanently DELETE EVERYTHING?')) { localStorage.removeItem(STATE_KEY); location.reload(); }};
+
+// Export CSV
+const exportCSV = () => {
+    if (logEntries.length === 0 && pipelineDeals.length === 0) { showToast("No data to export.", "warning"); return; }
+    
+    const metaRow = `METADATA_V8,"${JSON.stringify({goals, categorizationRules, pipelineDeals, recurringSubscriptions}).replace(/"/g, '""')}"`;
+    const headers = ['id', 'date', 'eventType', 'leadSource', 'notes', 'contacts', 'homeValue', 'commissionRate', 'grossCommission', 'expenses', 'saleType', 'brokerSplit', 'brokerFee', 'expenseCategory', 'expenseAmount', 'expenseFor'];
+    
+    const logRows = logEntries.map(rec => headers.map(h => `"${String(rec[h] ?? '').replace(/"/g, '""')}"`).join(','));
+    const csvContent = [metaRow, headers.join(','), ...logRows].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `RE_Dashboard_Backup_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+    showToast("Backup exported.");
+};
+
+let tempImports = [];
+
+const importCSV = () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv';
+    input.onchange = e => {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = rev => {
+            const contentRows = rev.target.result.trim().split(/\r?\n/).filter(r => r.trim());
+            if(!contentRows.length) return showToast("Empty file", "error");
+            
+            const firstRow = contentRows[0].toUpperCase().replace(/"/g, '').replace(/\s/g, '');
+            if (firstRow.startsWith('METADATA_V8,') || firstRow.startsWith('GOALS,')) {
+                handleBackupImport(contentRows);
+            } else {
+                handleBankImport(contentRows); // Assuming bank/CC format
+            }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+};
+
+function handleBackupImport(rows) {
+    try {
+        let metaString = rows[0].substring(rows[0].indexOf(',') + 1).replace(/^"|"$/g, '').replace(/""/g, '"');
+        let meta = JSON.parse(metaString);
+        let headers = rows[1].split(',').map(h => h.replace(/"/g, ''));
+        
+        let newLogs = rows.slice(2).map(row => {
+            const vals = row.match(/(?<=,|^)(?:"(?:[^"]|"")*"|[^,]*)(?=,|$)/g) || [];
+            let entry = {};
+            headers.forEach((h, i) => {
+                let v = (vals[i] || '').replace(/^"|"$/g, '').replace(/""/g, '"');
+                entry[h] = ['id', 'contacts', 'homeValue', 'commissionRate', 'grossCommission', 'expenses', 'brokerSplit', 'brokerFee', 'expenseAmount'].includes(h) ? parseFloat(v)||0 : (v==='null'?null:v);
+            });
+            return entry;
+        }).filter(e => e.id);
+        
+        if (confirm(`Restore from backup? (Overwrites current data)`)) {
+            logEntries = newLogs;
+            if(meta.goals) goals = meta.goals;
+            if(meta.pipelineDeals) pipelineDeals = meta.pipelineDeals;
+            if(meta.recurringSubscriptions) recurringSubscriptions = meta.recurringSubscriptions;
+            saveState(); updateAll(); renderPipeline();
+            showToast("Backup restored successfully.");
+        }
+    } catch(e) {
+        showToast("Error parsing backup file.", "error");
+        console.error(e);
+    }
+}
+
+function handleBankImport(rows) {
+    // Generate hashes of existing general expenses to detect duplicates
+    const existingHashes = new Set(logEntries.filter(e => e.eventType === 'General Expense').map(e => `${e.date}|${Math.abs(e.expenseAmount)}|${(e.notes||'').toUpperCase().substring(0,10)}`));
+    
+    // Very basic heuristic parse, looking for Date, Desc, Amount in first 3 cols
+    tempImports = rows.slice(1).map(row => {
+        const cols = row.match(/(?<=,|^)(?:"(?:[^"]|"")*"|[^,]*)(?=,|$)/g)?.map(c => c.replace(/^"|"$/g, '').trim());
+        if(!cols || cols.length < 3) return null;
+        
+        // Try to parse amount from cols 2 or 3
+        let amt = parseFloat(cols[2]);
+        if(isNaN(amt)) amt = parseFloat(cols[3]); // sometimes it's 4th col
+        if(isNaN(amt) || amt === 0) return null;
+        
+        // Date parsing (assume YYYY-MM-DD or MM/DD/YYYY)
+        let date = cols[0];
+        if(date.includes('/')) {
+            let p = date.split('/');
+            if(p.length === 3) date = `${p[2]}-${p[0].padStart(2,'0')}-${p[1].padStart(2,'0')}`;
+        }
+        
+        let notes = cols[1] || 'Imported Expense';
+        let cat = categorizationRules[notes.toUpperCase()] || 'Other';
+        
+        let hash = `${date}|${Math.abs(amt)}|${notes.toUpperCase().substring(0,10)}`;
+        let isDup = existingHashes.has(hash);
+        
+        return { date, notes, expenseAmount: Math.abs(amt), expenseCategory: cat, expenseFor: 'general', eventType: 'General Expense', id: Date.now()+Math.random(), isDup };
+    }).filter(Boolean);
+    
+    if(!tempImports.length) return showToast("No valid transactions found.", "warning");
+    
+    // Render review modal
+    const tbody = document.getElementById('importReviewTableBody');
+    const catOpts = Array.from(document.getElementById('expenseCategory').options).map(o => `<option value="${o.value}">${o.text}</option>`).join('');
+    
+    tbody.innerHTML = tempImports.map((item, i) => `
+        <tr data-index="${i}" class="${item.isDup ? 'bg-red-50 dark:bg-red-900/20' : ''}">
+            <td class="px-3 py-2 text-sm">${item.date}</td>
+            <td class="px-3 py-2 text-sm truncate max-w-xs" title="${item.notes}">${item.notes}</td>
+            <td class="px-3 py-2 text-sm font-medium ${item.isDup ? 'text-red-600' : ''}">${formatCurrency(item.expenseAmount)}</td>
+            <td class="px-3 py-2"><select class="w-full text-sm p-1 rounded dark:bg-gray-700">${catOpts.replace(`value="${item.expenseCategory}"`, `value="${item.expenseCategory}" selected`)}</select></td>
+            <td class="px-3 py-2 text-center"><input type="checkbox" class="rec-check h-4 w-4 rounded"></td>
+            <td class="px-3 py-2">
+                ${item.isDup ? '<span class="text-xs bg-red-100 text-red-700 px-1 rounded mr-2 font-bold">DUP?</span>' : ''}
+                <button onclick="this.closest('tr').remove()" class="text-red-500 hover:text-red-700 text-sm font-medium"><i class="fas fa-trash"></i> Drop</button>
+            </td>
+        </tr>
+    `).join('');
+    
+    openModal('importReviewModal');
+}
+
+function confirmImport() {
+    const rows = document.getElementById('importReviewTableBody').querySelectorAll('tr');
+    let added = 0;
+    rows.forEach(tr => {
+        let idx = parseInt(tr.dataset.index);
+        let entry = { ...tempImports[idx] };
+        delete entry.isDup; // clean up
+        
+        entry.expenseCategory = tr.querySelector('select').value;
+        logEntries.push(entry);
+        added++;
+        
+        // Handle rule learning & recurring
+        categorizationRules[entry.notes.toUpperCase()] = entry.expenseCategory;
+        if(tr.querySelector('.rec-check').checked) {
+            const subId = `${entry.expenseCategory}_${entry.notes.toLowerCase()}`;
+            if(!recurringSubscriptions.some(s => s.id === subId)) {
+                recurringSubscriptions.push({id: subId, category: entry.expenseCategory, notes: entry.notes, amount: entry.expenseAmount});
+            }
+        }
+    });
+    
+    saveState(); updateAll(); closeModal('importReviewModal');
+    showToast(`Successfully imported ${added} expenses.`);
+}
+
+function exportToPDF() {
+    // Switch to Dashboard tab just to be safe
+    document.querySelector('button[onclick="openTab(event, \'tabDashboard\')"]').click();
+    showToast("Generating PDF... Please wait.");
+    
+    // Temporarily adjust UI for printing
+    const wasDark = document.documentElement.classList.contains('dark');
+    if (wasDark) toggleDarkMode(false); // Force light mode for clean PDF
+    
+    // Hide controls
+    const controls = document.querySelector('.bg-white.p-4.rounded-xl.shadow-md.mb-8');
+    if(controls) controls.style.display = 'none';
+    
+    const element = document.getElementById('main-content');
+    const opt = {
+      margin:       0.2,
+      filename:     `Dashboard_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().set(opt).from(element).save().then(() => {
+        // Restore UI
+        if(controls) controls.style.display = '';
+        if(wasDark) toggleDarkMode(true);
+        showToast("PDF Exported successfully.");
+    });
+}
+
+function populateExpenseDropdown() {
+    const categories = ["Alcohol", "Auto & Travel", "Auto Maintenance", "Brokerage Fees", "Car Insurance", "Cell Phone", "Client Gifts", "Dining Out", "Education & Coaching", "Entertainment", "Gasoline", "Groceries", "Healthcare", "Home Insurance", "Marketing & Advertising", "MLS & Board Fees", "Monthly Brokerage Fee", "Office Supplies", "Other", "Property Taxes", "Technology & Software", "Website Hosting"].sort();
+    document.getElementById('expenseCategory').innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+}
+</script>
+</body>
+</html>

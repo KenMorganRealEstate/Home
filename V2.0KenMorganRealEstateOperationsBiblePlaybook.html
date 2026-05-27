@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ken Morgan's Real Estate Playbook</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg-dark: #1f2937;
+            --bg-light: #374151;
+            --bg-lighter: #4b5563;
+            --text-light: #f3f4f6;
+            --text-dim: #9ca3af;
+            --accent-blue: #3b82f6;
+            --accent-green: #10b981;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+        }
+        .playbook-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            height: 100vh;
+        }
+        nav {
+            background-color: var(--bg-light);
+            padding: 1.5rem;
+            overflow-y: auto;
+            border-right: 1px solid var(--bg-lighter);
+        }
+        .nav-button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            color: var(--text-dim);
+            transition: all 0.2s ease-in-out;
+        }
+        .nav-button:hover {
+            background-color: var(--bg-lighter);
+            color: var(--text-light);
+        }
+        .nav-button.active {
+            background-color: var(--accent-blue);
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        main {
+            overflow-y: auto;
+            padding: 2rem;
+        }
+        .phase-content {
+            display: none;
+        }
+        .phase-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .section {
+            background-color: var(--bg-light);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border: 1px solid var(--bg-lighter);
+        }
+        .section h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--bg-lighter);
+            padding-bottom: 0.5rem;
+        }
+        .tool-link {
+            display: block;
+            background-color: var(--bg-lighter);
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+        .tool-link:hover {
+            background-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+        .checklist li {
+            list-style: none;
+            margin-bottom: 0.75rem;
+        }
+        .checklist label {
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .checklist input[type="checkbox"] {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.75rem;
+            accent-color: var(--accent-green);
+        }
+        .checklist li.completed label {
+            text-decoration: line-through;
+            color: var(--text-dim);
+        }
+        .progress-bar {
+            background-color: var(--bg-lighter);
+            border-radius: 99px;
+            height: 10px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        .progress-bar-inner {
+            background-color: var(--accent-green);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .data-buttons button, .data-buttons label {
+            background-color: var(--bg-lighter);
+            color: var(--text-light);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .data-buttons button:hover, .data-buttons label:hover {
+            background-color: var(--accent-blue);
+        }
+        .data-buttons .danger:hover {
+            background-color: #ef4444;
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="playbook-container">
+        <nav>
+            <h2 class="text-2xl font-bold text-white mb-6">Ken's Playbook</h2>
+            <div class="space-y-2">
+                <button class="nav-button active" data-phase="phase0">Phase 0: CEO Operations</button>
+                <button class="nav-button" data-phase="phase1">Phase 1: Lead Generation</button>
+                <button class="nav-button" data-phase="phase2">Phase 2: Listing Prep</button>
+                <button class="nav-button" data-phase="phase3">Phase 3: The Listing Appointment</button>
+                <button class="nav-button" data-phase="phase4">Phase 4: Marketing a Listing</button>
+                <button class="nav-button" data-phase="phase5">Phase 5: Working with Buyers</button>
+                <button class="nav-button" data-phase="phase6">Phase 6: The Offer</button>
+                <button class="nav-button" data-phase="phase7">Phase 7: Transaction Mgt.</button>
+                <button class="nav-button" data-phase="phase8">Phase 8: Post-Closing</button>
+            </div>
+            
+            <div class="mt-10 pt-6 border-t border-gray-700 data-buttons space-y-3">
+                <button id="exportJson" class="w-full">Export Progress (JSON)</button>
+                <label for="importJson" class="w-full block text-center">Import Progress (JSON)</label>
+                <input type="file" id="importJson" class="hidden" accept=".json">
+                <button id="resetApp" class="w-full danger">Reset All Checklists</button>
+            </div>
+        </nav>
+
+        <main>
+            <div id="phase0" class="phase-content active">
+                <h1 class="text-3xl font-bold mb-2">Phase 0: CEO Operations</h1>
+                <p class="text-lg text-gray-400 mb-6">Run your business, manage your finances, and track your personal goals.</p>
+                
+                <div class="section">
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase0"></div></div>
+                    <ul class="checklist" id="checklist-phase0">
+                        <li><label><input type="checkbox" data-task-id="p0-1">Complete daily habits in CEO Scorecard</label></li>
+                        <li><label><input type="checkbox" data-task-id="p0-2">Log business mileage in Travel Log</label></li>
+                        <li><label><input type="checkbox" data-task-id="p0-3">Log/Import expenses into Expense Tracker</label></li>
+                        <li><label><input type="checkbox" data-task-id="p0-4">Review KPIs in Performance Dashboard</label></li>
+                        <li><label><input type="checkbox" data-task-id="p0-5">Review 12-Month Plan in CEO Scorecard</label></li>
+                    </ul>
+                </div>
+                
+                <div class="section">
+                    <h3>Tools for this Phase</h3>
+                    <a href="https://kenmorganrealestate.github.io/Home/CEOCommandCenterDashboardV2.2.html" target="_blank" class="tool-link">CEO Scorecard (Daily Habits & Plan)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/UpdatedFullCompleteDashboardPerfected2025.html" target="_blank" class="tool-link">Real Estate Performance Dashboard (Financials & KPIs)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/FinalRevisedBusinessTravelLog2025.html" target="_blank" class="tool-link">Business Travel Log</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/V2.0-ExpenseTrackerHSTincludedAug2025.html" target="_blank" class="tool-link">Vacation/Personal Expense Tracker</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/CSV_Reader.html" target="_blank" class="tool-link">CSV File Reader (Utility for Expense Tracker)</a>
+                </div>
+            </div>
+
+            <div id="phase1" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 1: Lead Generation & Prospecting</h1>
+                <p class="text-lg text-gray-400 mb-6">Find new clients through prospecting, open houses, and your sphere of influence.</p>
+                
+                <div class="section">
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase1"></div></div>
+                    <ul class="checklist" id="checklist-phase1">
+                        <li><label><input type="checkbox" data-task-id="p1-1">Add new lead to Real Estate Business Hub (CRM)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p1-2">Assign new lead to an "Action Plan" in the CRM</label></li>
+                        <li><label><input type="checkbox" data-task-id="p1-3">Use "Market Pulse" to find an item of value (e.g., local stats)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p1-4">Make prospecting calls/send texts (use CRM scripts)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p1-5">Log all call/email activity in the CRM</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Tools for this Phase</h3>
+                    <a href="https://kenmorganrealestate.github.io/Home/KenMorganCRMFinalintegratedl2025.html" target="_blank" class="tool-link">Real Estate Business Hub (CRM)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1hopgQ3NUDACB6MWpPdH6xYENLDXcrDOo?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Real Estate Intelligence Assistant (for Market Pulse)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/7PerfectedOpenHouseMortgagePrintoutToolBrandedTabbedCalculators.html" target="_blank" class="tool-link">Home Financing Toolkit (for Open Houses)</a>
+                </div>
+            </div>
+
+            <div id="phase2" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 2: Listing Presentation (Preparation)</h1>
+                <p class="text-lg text-gray-400 mb-6">Prepare all materials to win the listing appointment.</p>
+                
+                <div class="section">
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase2"></div></div>
+                    <ul class="checklist" id="checklist-phase2">
+                        <li><label><input type="checkbox" data-task-id="p2-1">Pre-research area, sales, and actives (Brain Dump)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-2">Call seller to confirm: Key, Survey, All decision-makers present (Brain Dump)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-3">Gather comparables (PDFs/DOCX)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-4">Use "Deep Data CMA" to generate full report (Seller Report & Buyer Strategy)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-5">Use "Improvement Analyzer" if ROI is a key seller concern</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-6">Prepare listing paperwork (use "CASORA Guide" as checklist)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-7">Print/Load CMA report and all required OREA forms</label></li>
+                        <li><label><input type="checkbox" data-task-id="p2-8">Drop off pre-listing package one day prior (Brain Dump)</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Tools for this Phase</h3>
+                    <a href="https://aistudio.google.com/app/apps/drive/1jvfta3v85lj5HKepXQlikvslq-IDsf-g?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Deep Data CMA & Marketer (Primary Tool)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1HykQcFIqQ3-TUbDvma584FDIiNATYHl0?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Real Estate Improvement Analyzer (Standalone)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/V8CMAGENERATOR9222025.html" target="_blank" class="tool-link">AI Real Estate Agent Toolkit (Simpler/Offline CMA)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true" target="_blank" class="tool-link">CASORA Transaction Guide (for paperwork list)</a>
+                </div>
+            </div>
+
+            <div id="phase3" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 3: The Listing Appointment (Execution)</h1>
+                <p class="text-lg text-gray-400 mb-6">Present your value, handle objections, and sign the listing agreement.</p>
+                
+                <div class="section">
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase3"></div></div>
+                    <ul class="checklist" id="checklist-phase3">
+                        <li><label><input type="checkbox" data-task-id="p3-1">Tour the house, build rapport (Brain Dump)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p3-2">Present the "Seller Report" from the "Deep Data CMA" tool</label></li>
+                        <li><label><input type="checkbox" data-task-id="p3-3">Present your Marketing Plan (using generated toolkit)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p3-4">Handle objections (use generated scripts and Brain Dump)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p3-5">Use "CASORA Transaction Guide" to fill out and sign all paperwork (Listing Agreement, FINTRAC, etc.)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p3-6">Discuss showing instructions, lockbox, and get a key (Brain Dump)</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Tools for this Phase</h3>
+                    <a href="https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true" target="_blank" class="tool-link">CASORA Transaction Guide (Primary Paperwork Tool)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1jvfta3v85lj5HKepXQlikvslq-IDsf-g?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Deep Data CMA & Marketer (To present the report)</a>
+                </div>
+            </div>
+
+            <div id="phase4" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 4: Marketing the Listing</h1>
+                <p class="text-lg text-gray-400 mb-6">Create and launch all marketing assets for the new listing.</p>
+                
+                <div class="section">
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase4"></div></div>
+                    <ul class="checklist" id="checklist-phase4">
+                        <li><label><input type="checkbox" data-task-id="p4-1">Order professional photography</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-2">Use "Photo Styler" to empty, enhance, or virtually stage key photos</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-3">Use "Realty Visualizer" to create virtual renovation/video assets</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-4">Use "Microsite Builder" to create the single-property website</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-5">Generate MLS description (use "Property Description Gen." or "Deep Data" toolkit)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-6">Generate all social media posts (use "Social Media Strategist" or "Deep Data" toolkit)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-7">Upload to MLS, attach microsite link, post to all social channels</label></li>
+                        <li><label><input type="checkbox" data-task-id="p4-8">Enter new listing into "Master Listing Checklist" tool</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Tools for this Phase</h3>
+                    <a href="https://aistudio.google.com/apps/drive/1wkT5SZnKa2BuwNXaxFv7matjCxLRTvLd?showPreview=true&showAssistant=true" target="_blank" class="tool-link">AI-Powered Photo Styler</a>
+                    <a href="https://aistudio.google.com/apps/drive/1QSJDiovbix1g-PM6l9B8Hz-yTDb9WD_r?showAssistant=true&showPreview=true&resourceKey=" target="_blank" class="tool-link">Realty Visualizer AI (Advanced Images/Video)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/VirtualGalleryWizard-9-27-2025.html" target="_blank" class="tool-link">Ultimate Real Estate Microsite Builder</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1hopgQ3NUDACB6MWpPdH6xYENLDXcrDOo?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Real Estate Intelligence Assistant (Social Media)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1jvfta3v85lj5HKepXQlikvslq-IDsf-g?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Deep Data CMA & Marketer (for Marketing Toolkit)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/propertydescriptiongenerator.html" target="_blank" class="tool-link">Property Description Generator</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/FullTransactionChecklist2.html" target="_blank" class="tool-link">Master Listing Checklist</a>
+                </div>
+            </div>
+
+            <div id="phase5" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 5: Working with Buyers</h1>
+                <p class="text-lg text-gray-400 mb-6">Find, qualify, and sign a new buyer client.</p>
+                
+                <div class="section">
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase5"></div></div>
+                    <ul class="checklist" id="checklist-phase5">
+                        <li><label><input type="checkbox" data-task-id="p5-1">Add buyer to "Real Estate Business Hub" (CRM)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p5-2">Meet for initial consultation (Needs, Wants, Motivation)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p5-3">Use "Home Financing Toolkit" to pre-qualify and explain costs</label></li>
+                        <li><label><input type="checkbox" data-task-id="p5-4">Refer to mortgage broker for pre-approval</label></li>
+                        <li><label><input type="checkbox" data-task-id="p5-5">Use "CASORA Transaction Guide" to fill out and sign BRA, WWaR, and FINTRAC</label></li>
+                        <li><label><input type="checkbox" data-task-id="p5-6">Set up property search in CRM</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Tools for this Phase</h3>
+                    <a href="https://kenmorganrealestate.github.io/Home/7PerfectedOpenHouseMortgagePrintoutToolBrandedTabbedCalculators.html" target="_blank" class="tool-link">Home Financing Toolkit (Crucial for Qualification)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true" target="_blank" class="tool-link">CASORA Transaction Guide (for BRA/FINTRAC)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/KenMorganCRMFinalintegratedl2025.html" target="_blank" class="tool-link">Real Estate Business Hub (CRM)</a>
+                </div>
+            </div>
+
+            <div id="phase6" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 6: The Offer (Drafting & Negotiating)</h1>
+                <p class="text-lg text-gray-400 mb-6">Prepare, present, and negotiate an Agreement of Purchase and Sale.</p>
+                
+                <div class="section">
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase6"></div></div>
+                    <ul class="checklist" id="checklist-phase6">
+                        <li><label><input type="checkbox" data-task-id="p6-1">Request MLS sheet and any disclosures from listing agent</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-2">Pull comparables for the subject property</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-3">Use "REALegal Assist - Architect Offer" to generate a complete offer strategy (price, comps, clauses)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-4">Use "CASORA Transaction Guide" to guide filling out the APS (Form 100), 801, and other forms</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-5">Use "REALegal Assist - Find Clauses" for any unusual conditions</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-6">Review and sign all documents with clients</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-7">Register and submit offer (follow "Offer Procedure" from Brain Dump)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-8">Negotiate as needed (use "Brain Dump" scripts)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p6-9">Once accepted, circulate documents and update CRM/Master Checklist</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Tools for this Phase</h3>
+                    <a href="https://aistudio.google.com/app/apps/drive/1mHgLRHS0MYgln8JCPde64y_f_o_JXkRp?showPreview=true&showAssistant=true" target="_blank" class="tool-link">REALegal Assist (Primary Offer Drafting Tool)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1TvnIwiI5orI7-e02cg_jEAM7wmaNb11u?showAssistant=true&showPreview=true" target="_blank" class="tool-link">CASORA Transaction Guide (Paperwork Flow)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1jvfta3v85lj5HKepXQlikvslq-IDsf-g?showPreview=true&showAssistant=true" target="_blank" class="tool-link">Deep Data CMA (for "Anticipated Offer Strategy")</a>
+                </div>
+            </div>
+
+            <div id="phase7" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 7: Transaction Management (Firm to Close)</h1>
+                <p class="text-lg text-gray-400 mb-6">Manage all tasks, deadlines, and compliance from accepted offer to closing day.</p>
+                
+                <div class="section">
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase7"></div></div>
+                    <ul class="checklist" id="checklist-phase7">
+                        <li><label><input type="checkbox" data-task-id="p7-1">Create new transaction in "Master Listing Checklist" and "Business Hub" (CRM)</label></li>
+                        <li><label><input type="checkbox" data-task-id="p7-2">Send all paperwork to brokerage admin, lawyers, and mortgage broker</label></li>
+                        <li><label><input type="checkbox" data-task-id="p7-3">Track all conditional deadlines (financing, inspection) in "Master Checklist"</label></li>
+                        <li><label><input type="checkbox" data-task-id="p7-4">Use "REALegal Assist" to compliance-check waivers and amendments</label></li>
+                        <li><label><input type="checkbox" data-task-id="p7-5">Coordinate final walk-through</label></li>
+                        <li><label><input type="checkbox" data-task-id="p7-6">Confirm closing, key transfer, and update "Master Checklist" to "Closed"</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Tools for this Phase</h3>
+                    <a href="https://kenmorganrealestate.github.io/Home/FullTransactionChecklist2.html" target="_blank" class="tool-link">Ken's Master Listing and Selling Checklist (Primary Tool)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/KenMorganCRMFinalintegratedl2025.html" target="_blank" class="tool-link">Real Estate Business Hub (CRM)</a>
+                    <a href="https://aistudio.google.com/app/apps/drive/1mHgLRHS0MYgln8JCPde64y_f_o_JXkRp?showPreview=true&showAssistant=true" target="_blank" class="tool-link">REALegal Assist (for compliance checks)</a>
+                </div>
+            </div>
+
+            <div id="phase8" class="phase-content">
+                <h1 class="text-3xl font-bold mb-2">Phase 8: Post-Closing & Nurture</h1>
+                <p class="text-lg text-gray-400 mb-6">Convert the client into a long-term relationship and source for referrals.</p>
+                
+                <div class="section">
+                    <div class="progress-bar"><div class="progress-bar-inner" id="progress-phase8"></div></div>
+                    <ul class="checklist" id="checklist-phase8">
+                        <li><label><input type="checkbox" data-task-id="p8-1">Log "Sale" in "Real Estate Performance Dashboard"</label></li>
+                        <li><label><input type="checkbox" data-task-id="p8-2">Send "Congratulations" gift/card</label></li>
+                        <li><label><input type="checkbox" data-task-id="p8-3">Update contact status in "Business Hub" (CRM) to "Past Client"</label></li>
+                        <li><label><input type="checkbox" data-task-id="p8-4">Apply "Past Client" Action Plan (e.g., 5-Year Circle of Life) in CRM</label></li>
+                        <li><label><input type="checkbox" data-task-id="p8-5">Request a review/testimonial</label></li>
+                    </ul>
+                </div>
+
+                <div class="section">
+                    <h3>Tools for this Phase</h3>
+                    <a href="https://kenmorganrealestate.github.io/Home/KenMorganCRMFinalintegratedl2025.html" target="_blank" class="tool-link">Real Estate Business Hub (CRM)</a>
+                    <a href="https://kenmorganrealestate.github.io/Home/UpdatedFullCompleteDashboardPerfected2025.html" target="_blank" class="tool-link">Real Estate Performance Dashboard (Log Sale)</a>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const navButtons = document.querySelectorAll('.nav-button');
+        const phaseContents = document.querySelectorAll('.phase-content');
+        const checklists = document.querySelectorAll('.checklist');
+        const storageKey = 'kenMorganPlaybookState';
+
+        // --- Navigation ---
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const phase = button.getAttribute('data-phase');
+
+                navButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                phaseContents.forEach(content => {
+                    content.classList.toggle('active', content.id === phase);
+                });
+            });
+        });
+
+        // --- State Management ---
+        let state = {};
+
+        function saveState() {
+            state = {};
+            document.querySelectorAll('.checklist input[type="checkbox"]').forEach(cb => {
+                state[cb.dataset.taskId] = cb.checked;
+            });
+            localStorage.setItem(storageKey, JSON.stringify(state));
+            updateAllProgress();
+        }
+
+        function loadState(importedState = null) {
+            state = importedState || JSON.parse(localStorage.getItem(storageKey) || '{}');
+            document.querySelectorAll('.checklist input[type="checkbox"]').forEach(cb => {
+                const isChecked = state[cb.dataset.taskId] || false;
+                cb.checked = isChecked;
+                cb.closest('li').classList.toggle('completed', isChecked);
+            });
+            updateAllProgress();
+        }
+
+        function updateProgressForPhase(phaseId) {
+            const checklist = document.getElementById(phaseId);
+            if (!checklist) return;
+
+            const tasks = checklist.querySelectorAll('input[type="checkbox"]');
+            const completedTasks = checklist.querySelectorAll('input[type="checkbox"]:checked');
+            const total = tasks.length;
+            const completed = completedTasks.length;
+
+            const percentage = total > 0 ? (completed / total) * 100 : 0;
+            
+            const progressBar = document.getElementById(`progress-${phaseId.replace('checklist-', '')}`);
+            if (progressBar) {
+                progressBar.style.width = `${percentage}%`;
+            }
+        }
+
+        function updateAllProgress() {
+            checklists.forEach(checklist => {
+                updateProgressForPhase(checklist.id);
+            });
+        }
+
+        // --- Event Listeners ---
+        checklists.forEach(checklist => {
+            checklist.addEventListener('change', (e) => {
+                if (e.target.type === 'checkbox') {
+                    e.target.closest('li').classList.toggle('completed', e.target.checked);
+                    saveState();
+                }
+            });
+        });
+
+        // --- Data Portability ---
+        document.getElementById('exportJson').addEventListener('click', () => {
+            const data = localStorage.getItem(storageKey) || '{}';
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'playbook_progress.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('importJson').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedState = JSON.parse(e.target.result);
+                    loadState(importedState);
+                    saveState(); // Save the imported state to localStorage
+                    alert('Progress imported successfully!');
+                } catch (err) {
+                    alert('Error importing file. Make sure it is a valid JSON backup.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = null; // Clear input
+        });
+        
+        document.getElementById('resetApp').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset all checklist progress? This cannot be undone.')) {
+                localStorage.removeItem(storageKey);
+                loadState({});
+            }
+        });
+
+        // Initial Load
+        loadState();
+    });
+</script>
+
+</body>
+</html>

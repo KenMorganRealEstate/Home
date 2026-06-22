@@ -1,0 +1,1551 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ken Morgan | Master League Portal</title>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,900;1,900&family=Inter:wght@400;600;900&family=JetBrains+Mono:wght@500;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --golf-gold: #D4AF37;
+            --golf-bg: #050710;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            color: #ffffff;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            background-color: var(--golf-bg);
+            background-image: linear-gradient(rgba(5, 7, 16, 0.5), rgba(5, 7, 16, 0.5)), url('https://raw.githubusercontent.com/KenMorganRealEstate/Home/main/KenMorganGolf2.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .glass {
+            background: rgba(5, 7, 16, 0.98);
+            backdrop-filter: blur(50px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 40px;
+        }
+        .gold-border { border-color: rgba(212, 175, 55, 0.3); }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-up { animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.3); border-radius: 10px; }
+        .tab-btn.active { background: white; color: black; box-shadow: 0 20px 60px rgba(0,0,0,0.8); }
+        
+        #backToTop {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        #backToTop:hover {
+            box-shadow: 0 10px 40px rgba(212, 175, 55, 0.4);
+            border-color: var(--golf-gold);
+        }
+        
+        /* New Layout Constraints */
+        .header-content { display: flex; justify-content: flex-end; width: 100%; }
+
+        #intelPopup {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(20px);
+        }
+        #intelPopup.active { display: flex; animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="min-h-screen selection:bg-golf-gold/30">
+    <div id="intelPopup" onclick="hideIntelPopup()">
+        <div class="glass p-12 max-w-2xl w-full gold-border shadow-[0_0_100px_rgba(212,175,55,0.2)] animate-up" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-start mb-8">
+                <div id="intelHeader"></div>
+                <button onclick="hideIntelPopup()" class="p-2 hover:bg-white/10 rounded-full transition-all">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+            </div>
+            <div id="intelBody" class="space-y-6"></div>
+        </div>
+    </div>
+    <div class="max-w-[1500px] mx-auto px-6 py-12 md:py-24">
+        <!-- Brand Header: Pushed Right -->
+        <header class="flex flex-col items-end mb-40 animate-up opacity-0" style="animation-fill-mode: forwards">
+            <div class="space-y-12 max-w-4xl text-right">
+                <div class="space-y-6 flex flex-col items-end">
+                    <div class="inline-flex items-center gap-4 px-6 py-3 bg-golf-gold/10 border border-golf-gold/20 rounded-full backdrop-blur-xl mb-4">
+                        <span class="w-2.5 h-2.5 rounded-full bg-golf-gold animate-pulse shadow-[0_0_15px_#D4AF37]"></span>
+                        <span class="text-sm font-black uppercase tracking-[0.5em] text-golf-gold italic">Precision League Intel Matrix</span>
+                    </div>
+
+                    <!-- Relocated Navigation: Career Intelligence Access -->
+                    <nav class="flex gap-4 p-2 glass gold-border overflow-x-auto custom-scrollbar mb-12 rounded-[40px]">
+                        <button onclick="showTab('leaderboard', this)" class="tab-btn active px-10 py-4 rounded-[30px] text-sm font-black uppercase tracking-[0.3em] transition-all whitespace-nowrap">Global Standing</button>
+                        <button onclick="showTab('history', this)" class="tab-btn px-10 py-4 rounded-[30px] text-sm font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all whitespace-nowrap">Career Database</button>
+                        <button onclick="showTab('analytics', this)" class="tab-btn px-10 py-4 rounded-[30px] text-sm font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-all whitespace-nowrap">League Intel</button>
+                    </nav>
+                    <img src="https://kenmorganrealestate.github.io/Home/KenMorganLogoBestOneTransparent.png" class="w-64 mb-8 grayscale brightness-200 contrast-200 opacity-80" alt="Ken Morgan">
+                    <h1 class="text-7xl md:text-[12rem] font-serif font-black text-white italic tracking-tighter leading-[0.7] drop-shadow-[0_30px_60px_rgba(0,0,0,0.9)]">
+                        Extraction<br/><span class="text-golf-gold">Vault</span>
+                    </h1>
+                    <p class="text-sm md:text-lg font-serif text-white/40 italic mt-10 max-w-2xl leading-relaxed">
+                        Synthesizing raw performance metrics into executive-tier career intelligence. <br/>Every round. Every yard. Every extraction.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap justify-end gap-6 mt-20">
+                <div onclick="showFieldAvgIntel()" class="glass p-10 gold-border text-center min-w-[200px] shadow-2xl cursor-pointer hover:scale-105 transition-all">
+                    <p class="text-sm uppercase font-black text-white/30 tracking-[0.6em] mb-4 font-mono">Field Avg</p>
+                    <p class="text-7xl font-mono font-black text-white italic tracking-tighter drop-shadow-2xl">90.0</p>
+                </div>
+                <div onclick="showBirdieIntel()" class="glass p-10 gold-border text-center min-w-[200px] shadow-2xl cursor-pointer hover:scale-105 transition-all">
+                    <p class="text-sm uppercase font-black text-white/30 tracking-[0.6em] mb-4 font-mono">Total Birdies</p>
+                    <p class="text-7xl font-mono font-black text-green-400 italic tracking-tighter drop-shadow-2xl">1</p>
+                </div>
+                <div class="glass p-10 gold-border text-center min-w-[200px] shadow-2xl cursor-pointer hover:scale-105 transition-all">
+                    <p class="text-sm uppercase font-black text-white/30 tracking-[0.6em] mb-4 font-mono">Total Pars</p>
+                    <p class="text-7xl font-mono font-black text-blue-400 italic tracking-tighter drop-shadow-2xl">4</p>
+                </div>
+                <div class="glass p-10 gold-border text-center min-w-[200px] shadow-2xl cursor-pointer hover:scale-105 transition-all">
+                    <p class="text-sm uppercase font-black text-white/30 tracking-[0.6em] mb-4 font-mono">Total Eagles</p>
+                    <p class="text-7xl font-mono font-black text-golf-gold italic tracking-tighter drop-shadow-2xl">0</p>
+                </div>
+                <div class="glass p-10 gold-border text-center min-w-[200px] shadow-2xl border-white/20">
+                    <p class="text-sm uppercase font-black text-white/30 tracking-[0.6em] mb-4 font-mono">Archived Rounds</p>
+                    <p class="text-7xl font-mono font-black text-white/60 italic tracking-tighter drop-shadow-2xl">1</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Matrix Area -->
+        <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-6 gap-12 animate-up">
+            <div class="hidden md:block md:col-span-1 lg:col-span-1">
+                <!-- Atmospheric Left Space -->
+            </div>
+
+            <div class="md:col-span-3 lg:col-span-5 space-y-12">
+                <main id="portalContent" class="animate-up">
+                    <!-- Dynamic Content -->
+                </main>
+
+                <div id="drillDownContainer" class="hidden mt-12 animate-up">
+                    <!-- Deep Round Drill Down -->
+                </div>
+
+                <div id="playerStatsContainer" class="hidden mt-12 animate-up">
+                       <!-- Deep Player Stats -->
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-64 pt-24 border-t border-white/5 flex flex-col items-center text-center opacity-30">
+             <img src="https://kenmorganrealestate.github.io/Home/KenMorganLogoBestOneTransparent.png" class="w-48 mb-12 grayscale brightness-200 contrast-200" alt="Ken Morgan">
+             <div class="space-y-6">
+                <p class="text-[12px] font-black uppercase tracking-[0.6em] text-golf-gold italic">Automated Statistical Synthesis Matrix</p>
+                <p class="text-xs font-mono tracking-[0.3em] text-white/40 italic uppercase">SECURED BY KM PRECISION GOLF © 2024</p>
+             </div>
+        </footer>
+    </div>
+
+    <script>
+        const roundsRaw = "%5B%7B%22id%22%3A%22rock-chapel-2023-extraction%22%2C%22meta_data%22%3A%7B%22extraction_timestamp%22%3A%222024-05-22%2014%3A30%3A00%22%2C%22course_name%22%3A%22Rock%20Chapel%20Golf%20Centre%22%2C%22date_played%22%3A%2206%2F21%2F2026%22%2C%22environmental_notes%22%3A%22a%20perfect%20day%20weather%20wise%20on%20Father's%20Day%202026%20and%20a%20newcomer%20to%20the%20traditional%20father's%20day%20tournament%20was%20owen%20Ken's%20daughter's%20boyfriend.%20Kevin%20ran%20into%20trouble%20on%20hole%20number%20two%20where%20he%20actually%20took%20on%20a%20Soaker%20playing%20a%20ball%20close%20to%20the%20water.%20It%20was%20a%20perfect%20day%20with%20low%20and%20great%20clouds%20in%20the%20sky%20that%20could%20be%20seen%20nice%20and%20clearly%20as%20was%20mentioned%20by%20Ken%20and%20Kevin%20wearing%20their%20Maui%20Jims.%20and%20of%20course%20the%20traditional%20beers%20afterwards%20at%20waterdowns%20Royal%20coachmen%20patio%20where%20the%20dad%20was%20unfortunately%20unable%20to%20join%20Ken%20Kevin%20and%20owen.%20then%20it%20was%20back%20to%20Ken's%20house%20for%20pork%20belly%20and%20Father's%20Day%20festivities%20complete%20with%20cornhole%20games%20end%20music%20and%20family%22%2C%22round_name%22%3A%22The%202026%20Father's%20Day%20Invitational%22%2C%22audio_url%22%3A%22https%3A%2F%2Fgithub.com%2FKenMorganRealEstate%2FHome%2Fblob%2Fmain%2Ffathersdaygolfnarrative.mp3%22%7D%2C%22round_data%22%3A%5B%7B%22player_id%22%3A%22ken%22%2C%22player_name%22%3A%22KEN%22%2C%22total_score%22%3A38%2C%22verified_total%22%3Afalse%2C%22scores%22%3A%7B%22h1%22%3A5%2C%22h2%22%3A4%2C%22h3%22%3A4%2C%22h4%22%3A3%2C%22h5%22%3A6%2C%22h6%22%3A8%2C%22h7%22%3A2%2C%22h8%22%3A3%2C%22h9%22%3A3%2C%22h10%22%3Anull%2C%22h11%22%3Anull%2C%22h12%22%3Anull%2C%22h13%22%3Anull%2C%22h14%22%3Anull%2C%22h15%22%3Anull%2C%22h16%22%3Anull%2C%22h17%22%3Anull%2C%22h18%22%3Anull%7D%2C%22secondary_stats%22%3A%7B%22h5%22%3A%7B%22water_hazard%22%3Atrue%7D%2C%22h6%22%3A%7B%22water_hazard%22%3Atrue%7D%7D%7D%2C%7B%22player_id%22%3A%22dad%22%2C%22player_name%22%3A%22DAD%22%2C%22total_score%22%3A53%2C%22verified_total%22%3Afalse%2C%22scores%22%3A%7B%22h1%22%3A7%2C%22h2%22%3A5%2C%22h3%22%3A4%2C%22h4%22%3A6%2C%22h5%22%3A8%2C%22h6%22%3A8%2C%22h7%22%3A4%2C%22h8%22%3A5%2C%22h9%22%3A6%2C%22h10%22%3Anull%2C%22h11%22%3Anull%2C%22h12%22%3Anull%2C%22h13%22%3Anull%2C%22h14%22%3Anull%2C%22h15%22%3Anull%2C%22h16%22%3Anull%2C%22h17%22%3Anull%2C%22h18%22%3Anull%7D%2C%22secondary_stats%22%3A%7B%22h6%22%3A%7B%22water_hazard%22%3Atrue%7D%2C%22h8%22%3A%7B%22water_hazard%22%3Atrue%7D%7D%7D%2C%7B%22player_id%22%3A%22owen%22%2C%22player_name%22%3A%22OWEN%22%2C%22total_score%22%3A50%2C%22verified_total%22%3Afalse%2C%22scores%22%3A%7B%22h1%22%3A7%2C%22h2%22%3A4%2C%22h3%22%3A4%2C%22h4%22%3A5%2C%22h5%22%3A4%2C%22h6%22%3A7%2C%22h7%22%3A5%2C%22h8%22%3A7%2C%22h9%22%3A7%2C%22h10%22%3Anull%2C%22h11%22%3Anull%2C%22h12%22%3Anull%2C%22h13%22%3Anull%2C%22h14%22%3Anull%2C%22h15%22%3Anull%2C%22h16%22%3Anull%2C%22h17%22%3Anull%2C%22h18%22%3Anull%7D%2C%22secondary_stats%22%3A%7B%22h1%22%3A%7B%22water_hazard%22%3Atrue%7D%7D%7D%2C%7B%22player_id%22%3A%22kevin%22%2C%22player_name%22%3A%22KEVIN%22%2C%22total_score%22%3A39%2C%22verified_total%22%3Afalse%2C%22scores%22%3A%7B%22h1%22%3A3%2C%22h2%22%3A6%2C%22h3%22%3A4%2C%22h4%22%3A4%2C%22h5%22%3A4%2C%22h6%22%3A5%2C%22h7%22%3A4%2C%22h8%22%3A5%2C%22h9%22%3A4%2C%22h10%22%3Anull%2C%22h11%22%3Anull%2C%22h12%22%3Anull%2C%22h13%22%3Anull%2C%22h14%22%3Anull%2C%22h15%22%3Anull%2C%22h16%22%3Anull%2C%22h17%22%3Anull%2C%22h18%22%3Anull%7D%2C%22secondary_stats%22%3A%7B%22h2%22%3A%7B%22water_hazard%22%3Atrue%7D%7D%7D%5D%2C%22unidentified_rows%22%3A%5B%5D%2C%22ai_commentary%22%3A%22%3Cp%3E%3Cstrong%3ELIVE%20FROM%20THE%20THEATER%20OF%20COMPETITION%3A%20THE%202026%20FATHER%E2%80%99S%20DAY%20EXTRACTION%3C%2Fstrong%3E%3C%2Fp%3E%5Cn%5Cn%3Cp%3EWelcome%20to%20the%20digital%20recap%20of%20the%20high-stakes%20Father's%20Day%20Invitational%20at%20%3Cstrong%3ERock%20Chapel%20Golf%20Centre%3C%2Fstrong%3E.%20I%E2%80%99m%20your%20lead%20analyst%2C%20and%20today%20we%20witnessed%20a%20surgical%20display%20of%20sport%20and%20survival.%20The%20date%3A%20June%2021%2C%202026.%20The%20mission%3A%20A%209-hole%20tactical%20engagement%20across%20a%20par-28%20landscape.%20Under%20a%20sky%20filled%20with%20low%2C%20crystalline%20clouds%E2%80%94rendered%20in%20high-definition%20clarity%20through%20the%20%3Cstrong%3EMaui%20Jim%3C%2Fstrong%3E%20optics%20worn%20by%20Ken%20and%20Kevin%E2%80%94the%20atmosphere%20was%20nothing%20short%20of%20cinematic.%20But%20beneath%20that%20perfect%20weather%20lurked%20a%20course%20ready%20to%20punish%20the%20slightest%20lapse%20in%20concentration.%3C%2Fp%3E%5Cn%5Cn%3Cp%3EThe%20headline%20of%20the%20day%20belongs%20to%20the%20veteran%2C%20%3Cstrong%3EKen%3C%2Fstrong%3E.%20Operating%20with%20a%20%5C%22Ken%20Morgan%20Precision%5C%22%20mindset%2C%20he%20navigated%20the%20first%20nine%20with%20elite%20poise.%20While%20others%20faltered%2C%20Ken%20delivered%20the%20shot%20of%20the%20tournament%20on%20the%20par-3%207th%20hole%2C%20carding%20the%20field's%20only%20%3Cstrong%3Ebirdie%3C%2Fstrong%3E%E2%80%94a%20masterclass%20in%20green-reading%20and%20execution.%20Despite%20encountering%20two%20treacherous%20water%20hazards%20that%20ballooned%20his%20score%20on%20the%20par-4%206th%2C%20Ken%20remained%20%5C%22dialed%20in%2C%5C%22%20finishing%20with%20a%20total%20of%2038%20(%2B10).%20His%20three%20pars%20on%20Holes%204%2C%208%2C%20and%209%20showcased%20a%20domestic%20dominance%20that%20secured%20him%20the%20low-medal%20honors%20for%20the%20afternoon.%3C%2Fp%3E%5Cn%5Cn%3Cp%3EIn%20the%20%5C%22Heart-Rate%20Monitor%5C%22%20segment%20of%20our%20report%2C%20we%20look%20at%20%3Cstrong%3EKevin%3C%2Fstrong%3E.%20Kevin%E2%80%99s%20day%20was%20defined%20by%20a%20high-drama%20%5C%22tactical%20error%5C%22%20on%20Hole%202.%20Attempting%20to%20play%20a%20ball%20dangerously%20close%20to%20the%20water%E2%80%99s%20edge%2C%20he%20took%20on%20a%20full-blown%20%3Cstrong%3E%5C%22Soaker%2C%5C%22%3C%2Fstrong%3E%20a%20moment%20of%20aquatic%20chaos%20that%20resulted%20in%20a%20triple-bogey.%20However%2C%20Kevin's%20resilience%20was%20palpable.%20He%20opened%20the%20round%20with%20a%20clutch%20par%20on%20Hole%201%20and%20battled%20through%20six%20bogeys%20to%20finish%20just%20one%20stroke%20behind%20the%20leader%20with%20a%2039%20(%2B11).%20His%20ability%20to%20stabilize%20the%20mission%20after%20the%20H2%20disaster%20was%20a%20testament%20to%20his%20grit.%3C%2Fp%3E%5Cn%5Cn%3Cp%3EThe%20field%20was%20rounded%20out%20by%20the%20newcomer%2C%20%3Cstrong%3EOwen%3C%2Fstrong%3E%2C%20making%20his%20high-pressure%20debut%20in%20the%20traditional%20Father's%20Day%20rotation.%20Facing%20a%20steep%20learning%20curve%2C%20Owen%20fought%20through%20a%20series%20of%20double-bogeys%20but%20managed%20three%20respectable%20bogeys%20on%20Holes%202%2C%203%2C%20and%205.%20He%20finished%20with%20a%20total%20of%2050%20(%2B22)%2C%20surviving%20one%20water%20hazard%20and%20proving%20he%20has%20the%20temperament%20for%20future%20extractions.%20Meanwhile%2C%20%3Cstrong%3EDad%3C%2Fstrong%3E%20displayed%20the%20ultimate%20endurance%20profile.%20Despite%20the%20psychological%20toll%20of%20two%20water%20hazards%20and%20a%20series%20of%20difficult%20bunkers%2C%20he%20navigated%20the%209-hole%20gauntlet%20with%20a%2053%20(%2B25)%2C%20contributing%20two%20critical%20bogeys%20on%20the%203rd%20and%207th%20holes.%3C%2Fp%3E%5Cn%5Cn%3Cp%3EAs%20the%20primary%20extraction%20concluded%2C%20the%20squad%20transitioned%20to%20the%20%3Cstrong%3ERoyal%20Coachman%3C%2Fstrong%3E%20patio%20in%20Waterdown.%20While%20Dad%20was%20unfortunately%20unable%20to%20join%20the%20tactical%20debrief%20over%20beers%2C%20the%20remaining%20trio%20toasted%20to%20a%20mission%20accomplished.%20The%20day%20culminated%20at%20Ken%E2%80%99s%20residence%E2%80%94a%20celebratory%20atmosphere%20of%20%3Cstrong%3Epork%20belly%3C%2Fstrong%3E%2C%20competitive%20cornhole%2C%20and%20family-driven%20festivities%20that%20solidified%20this%20Father's%20Day%20as%20a%20cornerstone%20of%20the%202026%20season.%3C%2Fp%3E%5Cn%5Cn%3Cp%3E%3Cstrong%3ETHE%20FINAL%20VERDICT%3C%2Fstrong%3E%3Cbr%2F%3E%5Cn%3Cstrong%3EKen%3C%2Fstrong%3E%20takes%20the%20gold%20with%20a%20%2B10%20performance%2C%20highlighted%20by%20that%20surgical%20birdie%20on%20Hole%207.%20%3Cstrong%3EKevin%3C%2Fstrong%3E%20earns%20the%20%5C%22Resilience%20Badge%5C%22%20for%20recovering%20from%20a%20literal%20%5C%22Soaker%5C%22%20to%20finish%20only%20one%20shot%20back.%20%3Cstrong%3EOwen%3C%2Fstrong%3E%20successfully%20completed%20his%20first%20mission%2C%20and%20%3Cstrong%3EDad%3C%2Fstrong%3E%20anchored%20the%20group%20with%20veteran%20tenacity.%20Total%20damage%20to%20the%20course%3A%20Minimal.%20Total%20memories%20extracted%3A%20Maximum.%20We%E2%80%99ll%20see%20you%20back%20on%20the%20links%20for%20the%20next%20high-stakes%20engagement.%3C%2Fp%3E%22%7D%5D";
+        const playersRaw = "%5B%7B%22id%22%3A%22ken%22%2C%22name%22%3A%22KEN%22%2C%22total_rounds%22%3A1%2C%22avg_score%22%3A76%2C%22avg_putts%22%3A0%2C%22avg_gir%22%3A0%2C%22avg_scramble%22%3A0%2C%22best_score%22%3A76%2C%22round_ids%22%3A%5B%22rock-chapel-2023-extraction%22%5D%2C%22rounds_with_putts%22%3A0%2C%22rounds_with_gir%22%3A0%2C%22rounds_with_scramble%22%3A0%2C%22total_pars%22%3A3%2C%22total_birdies%22%3A1%2C%22total_eagles%22%3A0%2C%22total_bogeys%22%3A2%2C%22total_doubles%22%3A1%2C%22total_others%22%3A2%2C%22total_sand_saves%22%3A0%2C%22total_sand_attempts%22%3A0%2C%22total_water_hazards%22%3A2%2C%22total_lost_balls%22%3A0%2C%22total_holes_played%22%3A9%7D%2C%7B%22id%22%3A%22dad%22%2C%22name%22%3A%22DAD%22%2C%22total_rounds%22%3A1%2C%22avg_score%22%3A106%2C%22avg_putts%22%3A0%2C%22avg_gir%22%3A0%2C%22avg_scramble%22%3A0%2C%22best_score%22%3A106%2C%22round_ids%22%3A%5B%22rock-chapel-2023-extraction%22%5D%2C%22rounds_with_putts%22%3A0%2C%22rounds_with_gir%22%3A0%2C%22rounds_with_scramble%22%3A0%2C%22total_pars%22%3A0%2C%22total_birdies%22%3A0%2C%22total_eagles%22%3A0%2C%22total_bogeys%22%3A2%2C%22total_doubles%22%3A2%2C%22total_others%22%3A5%2C%22total_sand_saves%22%3A0%2C%22total_sand_attempts%22%3A0%2C%22total_water_hazards%22%3A2%2C%22total_lost_balls%22%3A0%2C%22total_holes_played%22%3A9%7D%2C%7B%22id%22%3A%22owen%22%2C%22name%22%3A%22OWEN%22%2C%22total_rounds%22%3A1%2C%22avg_score%22%3A100%2C%22avg_putts%22%3A0%2C%22avg_gir%22%3A0%2C%22avg_scramble%22%3A0%2C%22best_score%22%3A100%2C%22round_ids%22%3A%5B%22rock-chapel-2023-extraction%22%5D%2C%22rounds_with_putts%22%3A0%2C%22rounds_with_gir%22%3A0%2C%22rounds_with_scramble%22%3A0%2C%22total_pars%22%3A0%2C%22total_birdies%22%3A0%2C%22total_eagles%22%3A0%2C%22total_bogeys%22%3A3%2C%22total_doubles%22%3A2%2C%22total_others%22%3A4%2C%22total_sand_saves%22%3A0%2C%22total_sand_attempts%22%3A0%2C%22total_water_hazards%22%3A1%2C%22total_lost_balls%22%3A0%2C%22total_holes_played%22%3A9%7D%2C%7B%22id%22%3A%22kevin%22%2C%22name%22%3A%22KEVIN%22%2C%22total_rounds%22%3A1%2C%22avg_score%22%3A78%2C%22avg_putts%22%3A0%2C%22avg_gir%22%3A0%2C%22avg_scramble%22%3A0%2C%22best_score%22%3A78%2C%22round_ids%22%3A%5B%22rock-chapel-2023-extraction%22%5D%2C%22rounds_with_putts%22%3A0%2C%22rounds_with_gir%22%3A0%2C%22rounds_with_scramble%22%3A0%2C%22total_pars%22%3A1%2C%22total_birdies%22%3A0%2C%22total_eagles%22%3A0%2C%22total_bogeys%22%3A6%2C%22total_doubles%22%3A1%2C%22total_others%22%3A1%2C%22total_sand_saves%22%3A0%2C%22total_sand_attempts%22%3A0%2C%22total_water_hazards%22%3A1%2C%22total_lost_balls%22%3A0%2C%22total_holes_played%22%3A9%7D%5D";
+        const registryRaw = "%7B%22Hidden%20Lake%20Golf%20Club%22%3A%7B%22course_name%22%3A%22Hidden%20Lake%20Golf%20Club%22%2C%22location%22%3A%22Burlington%2C%20Ontario%22%2C%22par%22%3A71%2C%22slope%22%3A125%2C%22rating%22%3A71.5%2C%22last_verified%22%3A%222026-05-09T16%3A50%3A34.077Z%22%7D%2C%229%20Hole%20Golf%20Course%22%3A%7B%22course_name%22%3A%229%20Hole%20Golf%20Course%22%2C%22location%22%3A%22Rock%20Chapel%22%2C%22par%22%3A36%2C%22slope%22%3A122%2C%22rating%22%3A35.1%2C%22hole_pars%22%3A%5B4%2C4%2C4%2C3%2C5%2C4%2C4%2C3%2C5%5D%2C%22last_verified%22%3A%222026-06-22T11%3A59%3A39.643Z%22%7D%2C%22Rock%20Chapel%20Golf%20Centre%22%3A%7B%22course_name%22%3A%22Rock%20Chapel%20Golf%20Centre%22%2C%22location%22%3A%22167%20ON-5%2C%20Dundas%2C%20ON%20L9H%205E2%22%2C%22par%22%3A52%2C%22slope%22%3A84%2C%22rating%22%3A27.4%2C%22hole_pars%22%3A%5B3%2C3%2C3%2C3%2C3%2C4%2C3%2C3%2C3%2C3%2C3%2C3%2C3%2C3%2Cnull%2C3%2C3%2C3%5D%2C%22last_verified%22%3A%222026-06-22T17%3A56%3A33.537Z%22%7D%7D";
+        const commentariesRaw = "%7B%7D";
+        const rounds = JSON.parse(decodeURIComponent(roundsRaw));
+        const players = JSON.parse(decodeURIComponent(playersRaw));
+        const registry = JSON.parse(decodeURIComponent(registryRaw));
+        const roundCommentaries = JSON.parse(decodeURIComponent(commentariesRaw));
+        
+        let masterMatrixChart = null;
+        let intelPopupTimeout = null;
+
+        function showIntelPopup(title, subTitle, contentHtml) {
+            const popup = document.getElementById('intelPopup');
+            const header = document.getElementById('intelHeader');
+            const body = document.getElementById('intelBody');
+            
+            header.innerHTML = `
+                <div class="space-y-1">
+                    <h3 class="text-3xl font-serif font-black italic text-white tracking-tight">${title}</h3>
+                    <p class="text-[10px] font-mono text-golf-gold uppercase tracking-[0.4em] italic">${subTitle}</p>
+                </div>
+            `;
+            body.innerHTML = contentHtml;
+            
+            popup.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideIntelPopup() {
+            const popup = document.getElementById('intelPopup');
+            popup.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function formatAudioTime(secs) {
+            if (isNaN(secs)) return '0:00';
+            const m = Math.floor(secs / 60);
+            const s = Math.floor(secs % 60);
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        function initAudioPlayer(id) {
+            const player = document.getElementById('audio-player-' + id);
+            if (!player) return;
+            const durSpan = document.getElementById('time-dur-' + id);
+            const rnge = document.getElementById('seek-range-' + id);
+            if (durSpan) durSpan.innerText = formatAudioTime(player.duration);
+            if (rnge) rnge.max = player.duration || 100;
+        }
+
+        function updateAudioProgress(id) {
+            const player = document.getElementById('audio-player-' + id);
+            if (!player) return;
+            const currSpan = document.getElementById('time-curr-' + id);
+            const rnge = document.getElementById('seek-range-' + id);
+            if (currSpan) currSpan.innerText = formatAudioTime(player.currentTime);
+            if (rnge) {
+                rnge.value = player.currentTime;
+                const pct = (player.currentTime / (player.duration || 1)) * 100;
+                rnge.style.background = 'linear-gradient(to right, #D4AF37 0%, #D4AF37 ' + pct + '%, rgba(255,255,255,0.1) ' + pct + '%, rgba(255,255,255,0.1) 100%)';
+            }
+        }
+
+        function seekAudio(id) {
+            const player = document.getElementById('audio-player-' + id);
+            const rnge = document.getElementById('seek-range-' + id);
+            if (player && rnge) {
+                player.currentTime = parseFloat(rnge.value);
+            }
+        }
+
+        function toggleAudioPlayback(id) {
+            const player = document.getElementById('audio-player-' + id);
+            if (!player) return;
+            const playIcons = document.querySelectorAll('#play-icon-' + id + ', .play-icon-' + id);
+            const pauseIcons = document.querySelectorAll('#pause-icon-' + id + ', .pause-icon-' + id);
+            const statusSpans = document.querySelectorAll('.audio-status-text-' + id);
+
+            if (player.paused) {
+                player.play().catch(function(err) { console.log('playback err', err); });
+                playIcons.forEach(function(i) { i.classList.add('hidden'); });
+                pauseIcons.forEach(function(i) { i.classList.remove('hidden'); });
+                statusSpans.forEach(function(s) {
+                    s.innerText = "PLAYING SPORTCAST";
+                    s.classList.remove('animate-pulse');
+                });
+            } else {
+                player.pause();
+                playIcons.forEach(function(i) { i.classList.remove('hidden'); });
+                pauseIcons.forEach(function(i) { i.classList.add('hidden'); }); 
+                statusSpans.forEach(function(s) {
+                    s.innerText = "PLAY AI SPORSTCAST";
+                    s.classList.add('animate-pulse');
+                });
+            }
+        }
+
+        function resetAudioPlayer(id) {
+            const player = document.getElementById('audio-player-' + id);
+            if (!player) return;
+            player.pause();
+            player.currentTime = 0;
+            const playIcons = document.querySelectorAll('#play-icon-' + id + ', .play-icon-' + id);
+            const pauseIcons = document.querySelectorAll('#pause-icon-' + id + ', .pause-icon-' + id);
+            const statusSpans = document.querySelectorAll('.audio-status-text-' + id);
+            
+            playIcons.forEach(function(i) { i.classList.remove('hidden'); });
+            pauseIcons.forEach(function(i) { i.classList.add('hidden'); });
+            statusSpans.forEach(function(s) {
+                s.innerText = "PLAY AI SPORSTCAST";
+                s.classList.add('animate-pulse');
+            });
+            const rnge = document.getElementById('seek-range-' + id);
+            if (rnge) rnge.value = 0;
+            const currSpan = document.getElementById('time-curr-' + id);
+            if (currSpan) currSpan.innerText = '0:00';
+        }
+
+        function showFieldAvgIntel() {
+            const avg = players.reduce((a, b) => a + b.avg_score, 0) / players.length;
+            const deviation = players.map(p => Math.abs(p.avg_score - avg)).reduce((a, b) => a + b, 0) / players.length;
+            
+            showIntelPopup(
+                'Field Analytics', 
+                'Global Performance Matrix',
+                `
+                <div class="space-y-8">
+                    <p class="text-white/60 font-serif text-lg italic italic">The field average defines the baseline for all extraction missions. Current operational deviation is <span class="text-white font-bold font-mono">${deviation.toFixed(2)}</span> strokes.</p>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="p-6 bg-white/5 rounded-2xl border border-white/5">
+                            <p class="text-xs uppercase font-black text-white/30 mb-2 tracking-widest">Base Efficiency</p>
+                            <p class="text-4xl font-mono font-black italic text-white">${avg.toFixed(1)}</p>
+                        </div>
+                        <div class="p-6 bg-white/5 rounded-2xl border border-white/5">
+                            <p class="text-xs uppercase font-black text-white/30 mb-2 tracking-widest">Crew Count</p>
+                            <p class="text-4xl font-mono font-black italic text-golf-gold">${players.length}</p>
+                        </div>
+                    </div>
+                    <button onclick="hideIntelPopup()" class="w-full py-6 bg-white text-black rounded-3xl text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all">Acknowledge</button>
+                </div>
+                `
+            );
+        }
+
+        function showBirdieIntel() {
+            const total = players.reduce((a,b) => a + b.total_birdies, 0);
+            const rate = (total / players.reduce((a,b) => a + (b.total_rounds || 1), 0)).toFixed(2);
+            showIntelPopup(
+                'Aggression Registry',
+                'Scoring Velocity Analysis',
+                `
+                <div class="space-y-8">
+                    <p class="text-white/60 font-serif text-lg italic">Total birdies captured across all historical exfils. Field-wide scoring velocity is currently <span class="text-golf-gold font-bold font-mono">${rate}</span> birds per deployment.</p>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="p-6 bg-white/5 rounded-2xl border border-white/5">
+                            <p class="text-xs uppercase font-black text-white/30 mb-2 tracking-widest">Birdie Volatility</p>
+                            <p class="text-4xl font-mono font-black italic text-green-400">${total}</p>
+                        </div>
+                        <div class="p-6 bg-white/5 rounded-2xl border border-white/5 text-center flex flex-col justify-center">
+                            <p class="text-[11px] font-mono text-white/20 uppercase tracking-[0.3em]">Status: High Aggression</p>
+                        </div>
+                    </div>
+                </div>
+                `
+            );
+        }
+
+        function updateMasterChartVisibility() {
+            if (!masterMatrixChart) return;
+            const visibleIds = players.filter(p => document.getElementById('toggle_matrix_' + p.id)?.checked).map(p => p.id);
+            const filteredPlayers = players.filter(p => visibleIds.includes(p.id));
+            
+            masterMatrixChart.data.labels = filteredPlayers.map(p => p.name);
+            masterMatrixChart.data.datasets[0].data = filteredPlayers.map(p => p.avg_score);
+            masterMatrixChart.data.datasets[1].data = filteredPlayers.map(p => p.avg_gir);
+            masterMatrixChart.data.datasets[2].data = filteredPlayers.map(p => p.avg_scramble);
+            masterMatrixChart.data.datasets[3].data = filteredPlayers.map(p => p.avg_putts * 20);
+            masterMatrixChart.data.datasets[4].data = filteredPlayers.map(p => ((p.total_birdies + p.total_eagles) / (p.total_rounds || 1)) * 10);
+            masterMatrixChart.data.datasets[5].data = filteredPlayers.map(p => ((p.total_water_hazards + p.total_lost_balls) / (p.total_rounds || 1)) * 20);
+            
+            masterMatrixChart.update();
+            
+            // Sync table rows
+            players.forEach(p => {
+                const row = document.getElementById('matrix_row_' + p.id);
+                const cb = document.getElementById('toggle_matrix_' + p.id);
+                if (row) {
+                    if (cb && !cb.checked) row.classList.add('opacity-10', 'grayscale');
+                    else row.classList.remove('opacity-10', 'grayscale');
+                }
+            });
+        }
+
+        function toggleAllPlayers(state) {
+            players.forEach(p => {
+                const cb = document.getElementById('toggle_matrix_' + p.id);
+                if (cb) cb.checked = state;
+            });
+            updateMasterChartVisibility();
+        }
+
+        function showTab(tab, btn, skipScroll = false) {
+            try {
+                const btns = document.querySelectorAll('.tab-btn');
+                btns.forEach(b => {
+                    b.classList.remove('active', 'bg-white', 'text-black');
+                    b.classList.add('text-white/40');
+                });
+                
+                if (btn) {
+                    btn.classList.add('active', 'bg-white', 'text-black');
+                    btn.classList.remove('text-white/40');
+                }
+                
+                const content = document.getElementById('portalContent');
+                const drillDown = document.getElementById('drillDownContainer');
+                const playerStats = document.getElementById('playerStatsContainer');
+                
+                if (drillDown) drillDown.classList.add('hidden');
+                if (playerStats) playerStats.classList.add('hidden');
+                
+                if (content) {
+                    content.classList.remove('hidden');
+                    
+                    if (tab === 'leaderboard') renderLeaderboard(content);
+                    else if (tab === 'history') renderHistory(content);
+                    else if (tab === 'analytics') renderAnalytics(content);
+                    
+                    if (!skipScroll) {
+                        // Enhanced smooth scroll with dynamic offset calculation
+                        setTimeout(() => {
+                            const portalTop = content.getBoundingClientRect().top + window.pageYOffset;
+                            window.scrollTo({ top: portalTop - 50, behavior: 'smooth' });
+                        }, 100);
+                    }
+                }
+            } catch (e) {
+                console.error('Portal Error:', e);
+            }
+        }
+
+        function renderLeaderboard(container) {
+            const sortedPlayers = [...players].sort((a,b) => a.avg_score - b.avg_score);
+            
+            let html = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                     <div class="space-y-12">
+                         <section class="glass gold-border overflow-hidden">
+                            <div class="p-10 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                                <h2 class="text-sm font-black uppercase tracking-[0.4em] text-white/40">Leaderboard Standing</h2>
+                            </div>
+                            <div class="divide-y divide-white/5">
+                                ${sortedPlayers.map((p, i) => `
+                                    <div onclick="renderPlayerDeepStats('${p.id}')" class="p-10 flex items-center justify-between hover:bg-white/[0.04] transition-all cursor-pointer group border-b border-white/5 last:border-0 relative overflow-hidden">
+                                        <div class="absolute top-0 right-0 p-4 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
+                                            <span class="text-7xl font-serif font-black italic">${p.name[0]}</span>
+                                        </div>
+                                        <div class="flex items-center gap-10 relative z-10">
+                                            <div class="w-16 h-16 rounded-2xl bg-golf-gold/10 flex items-center justify-center font-serif text-3xl font-black italic text-golf-gold border border-golf-gold/20 shadow-xl">
+                                                #${i+1}
+                                            </div>
+                                            <div class="space-y-2">
+                                                <h3 class="text-4xl font-serif font-black italic text-white group-hover:text-golf-gold transition-colors tracking-tight">${p.name}</h3>
+                                                <div class="flex gap-4">
+                                                    <span class="text-[11px] font-black uppercase tracking-widest text-white/30 italic">${p.total_rounds} Validated Rounds</span>
+                                                    <div class="flex gap-2">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                                        <span class="text-[11px] font-black text-green-500/60 uppercase tracking-widest">${p.avg_gir.toFixed(0)}% Precision</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-right space-y-2 relative z-10">
+                                            <p class="text-6xl font-mono font-black italic text-white tracking-tighter drop-shadow-2xl">${p.avg_score.toFixed(1)}</p>
+                                            <div class="flex justify-end gap-4 items-center">
+                                                <div class="text-right">
+                                                    <p class="text-[11px] font-black text-white/20 uppercase tracking-widest leading-none">Best</p>
+                                                    <p class="font-mono text-xs font-black text-green-400 italic">${p.best_score === Infinity ? '--' : p.best_score}</p>
+                                                </div>
+                                                <div class="w-px h-6 bg-white/5"></div>
+                                                <div class="text-right">
+                                                    <p class="text-[11px] font-black text-white/20 uppercase tracking-widest leading-none">Scramble</p>
+                                                    <p class="font-mono text-xs font-black text-golf-gold italic">${p.avg_scramble.toFixed(0)}%</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                         </section>
+
+                         
+                     </div>
+
+                     <div class="space-y-12">
+                        <section class="glass p-12 gold-border">
+                            <h3 class="text-sm uppercase font-black text-white/40 tracking-[0.4em] mb-12">Performance Distribution</h3>
+                            <div class="h-80">
+                                <canvas id="mainScoreChart"></canvas>
+                            </div>
+                        </section>
+                        <section class="glass p-12 gold-border">
+                            <h3 class="text-sm uppercase font-black text-white/40 tracking-[0.4em] mb-12">GIR Efficiency Index</h3>
+                            <div class="h-80">
+                                <canvas id="mainGirChart"></canvas>
+                            </div>
+                        </section>
+                     </div>
+                </div>
+            `;
+            container.innerHTML = html;
+            
+            setTimeout(() => {
+                renderCharts();
+            }, 100);
+        }
+
+        function renderCharts() {
+             const ctxScore = document.getElementById('mainScoreChart');
+             if (ctxScore) {
+                 new Chart(ctxScore, {
+                    type: 'bar',
+                    data: {
+                        labels: players.map(p => p.name),
+                        datasets: [{
+                            label: 'Avg Score',
+                            data: players.map(p => p.avg_score),
+                            backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                            borderColor: '#D4AF37',
+                            borderWidth: 2,
+                            borderRadius: 16
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        onClick: (e, elements) => {
+                            if (elements.length > 0) {
+                                const index = elements[0].index;
+                                const player = players[index];
+                                if (player) renderPlayerDeepStats(player.id);
+                            }
+                        },
+                        scales: {
+                            y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.2)' } },
+                            x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.4)', font: { weight: 'bold' } } }
+                        }
+                    }
+                 });
+             }
+
+             const ctxGir = document.getElementById('mainGirChart');
+             if (ctxGir) {
+                 new Chart(ctxGir, {
+                    type: 'line',
+                    data: {
+                        labels: players.map(p => p.name),
+                        datasets: [{
+                            label: 'GIR %',
+                            data: players.map(p => p.avg_gir),
+                            borderColor: '#10B981',
+                            borderWidth: 4,
+                            tension: 0.4,
+                            pointRadius: 6,
+                            pointBackgroundColor: '#10B981',
+                            fill: true,
+                            backgroundColor: 'rgba(16, 185, 129, 0.05)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        onClick: (e, elements) => {
+                            if (elements.length > 0) {
+                                const index = elements[0].index;
+                                const player = players[index];
+                                if (player) renderPlayerDeepStats(player.id);
+                            }
+                        },
+                        scales: {
+                            y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.2)' } },
+                            x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.4)', font: { weight: 'bold' } } }
+                        }
+                    }
+                 });
+             }
+        }
+
+        function renderHistory(container) {
+            let html = `
+                <div class="glass gold-border overflow-hidden shadow-2xl">
+                    <div class="p-12 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
+                        <div>
+                            <h2 class="text-xs font-black uppercase tracking-[0.4em] text-white/40 mb-2">Career Database Access</h2>
+                            <p class="text-[11px] font-mono text-white/20 uppercase tracking-widest">Total Validated Intercepts: ${rounds.length}</p>
+                        </div>
+                        <div class="w-12 h-12 bg-golf-gold/10 border border-golf-gold/20 rounded-xl flex items-center justify-center">
+                            <span class="text-golf-gold font-mono font-bold">DB</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left">
+                            <thead class="bg-black/40">
+                                <tr>
+                                    <th class="p-10 text-sm uppercase font-black tracking-widest text-white/20">Extraction Interval</th>
+                                    <th class="p-10 text-sm uppercase font-black tracking-widest text-white/20">Site Specification</th>
+                                    <th class="p-10 text-sm uppercase font-black tracking-widest text-white/20">Deployment Crew</th>
+                                    <th class="p-10 text-right text-sm uppercase font-black tracking-widest text-white/20 pr-16">Intelligence Detail</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                ${[...rounds].reverse().map(r => `
+                                    <tr onclick="renderRoundDetail('${r.id}')" class="group hover:bg-white/[0.03] transition-all cursor-pointer">
+                                        <td class="p-10">
+                                            <p class="font-mono text-xl font-black italic text-white/40 group-hover:text-white transition-colors">${r.meta_data.date_played || 'AUTHENTICATED'}</p>
+                                        </td>
+                                        <td class="p-10">
+                                            <p class="font-serif text-3xl font-black italic text-white group-hover:text-golf-gold transition-colors">${r.meta_data.course_name || 'Classified Site'}</p>
+                                        </td>
+                                        <td class="p-10">
+                                            <div class="flex gap-1.5">
+                                                ${r.round_data.slice(0, 4).map(p => `
+                                                    <div class="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[11px] font-black text-white/40 transition-transform group-hover:scale-110" title="${p.player_name}">${p.player_name[0]}</div>
+                                                `).join('')}
+                                                ${r.round_data.length > 4 ? `<div class="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[10px] font-black text-white/20">+${r.round_data.length - 4}</div>` : ''}
+                                            </div>
+                                        </td>
+                                        <td class="p-10 text-right pr-16 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button class="px-8 py-3 bg-white text-black rounded-full text-xs font-black uppercase tracking-widest shadow-xl">Detailed View</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+        }
+
+        function renderPlayerDeepStats(playerId) {
+            const p = players.find(player => player.id === playerId);
+            if (!p) return;
+            
+            const content = document.getElementById('portalContent');
+            const container = document.getElementById('playerStatsContainer');
+            if (content) content.classList.add('hidden');
+            container.classList.remove('hidden');
+            
+            const pRounds = rounds.filter(r => r.round_data.some(rd => rd.player_id === p.id))
+                                  .sort((a,b) => new Date(a.meta_data.date_played).getTime() - new Date(b.meta_data.date_played).getTime());
+            const roundsScores = pRounds.map(r => r.round_data.find(rd => rd.player_id === p.id).total_score);
+            
+            const recentAvg = roundsScores.slice(-5).reduce((a,b) => a+b,0) / Math.min(5, roundsScores.length);
+            const trendValue = (recentAvg - p.avg_score);
+            const trendDisp = trendValue.toFixed(1);
+
+            // Consistency calculation (Standard Deviation)
+            const scores = roundsScores;
+            const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
+            const variance = scores.reduce((a, b) => a + (b - mean) ** 2, 0) / scores.length;
+            const stdDev = Math.sqrt(variance).toFixed(1);
+
+            const totalHoles = p.total_holes_played || (p.total_rounds * 18);
+            const eaglePct = totalHoles > 0 ? ((p.total_eagles || 0) / totalHoles * 100).toFixed(1) : '0';
+            const birdiePct = totalHoles > 0 ? ((p.total_birdies || 0) / totalHoles * 100).toFixed(1) : '0';
+            const parPct = totalHoles > 0 ? ((p.total_pars || 0) / totalHoles * 100).toFixed(1) : '0';
+            const bogeyPct = totalHoles > 0 ? ((p.total_bogeys || 0) / totalHoles * 100).toFixed(1) : '0';
+            const errorPct = totalHoles > 0 ? (((p.total_doubles || 0) + (p.total_others || 0)) / totalHoles * 100).toFixed(1) : '0';
+
+            // League Averages for Comparison
+            const avgLeagueScore = players.reduce((a, b) => a + b.avg_score, 0) / players.length;
+            const avgLeagueGir = players.reduce((a, b) => a + b.avg_gir, 0) / players.length;
+            const avgLeaguePutts = players.reduce((a, b) => a + b.avg_putts, 0) / players.length;
+            const avgLeagueScramble = players.reduce((a, b) => a + b.avg_scramble, 0) / players.length;
+
+            let html = `
+                <div class="glass p-8 md:p-20 gold-border bg-black/90 animate-up shadow-[0_0_200px_rgba(212,175,55,0.2)]">
+                    <div class="flex flex-col xl:flex-row justify-between items-start gap-8 md:gap-12 mb-20 md:mb-32">
+                        <div class="space-y-8 flex-1">
+                            <button onclick="document.getElementById('playerStatsContainer').classList.add('hidden'); document.getElementById('portalContent').classList.remove('hidden')" class="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center gap-3">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                                Back to Hub
+                            </button>
+                            <h2 class="text-[clamp(2.5rem,8vw,6rem)] font-serif font-black italic text-white tracking-tighter leading-[0.8] mb-4 break-words">${p.name}</h2>
+                            <div class="inline-flex items-center gap-4 px-6 py-2 bg-golf-gold/10 border border-golf-gold/20 rounded-full">
+                                <span class="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-golf-gold">Tier-1 Professional Profile</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 origin-right w-full xl:w-auto">
+                             ${renderStatBox('Career Accuracy', p.avg_score.toFixed(1), 'text-white', "Represents your historical scoring average. This is your career performance baseline.")}
+                             ${renderStatBox('All-Time Low', p.best_score === Infinity ? '--' : p.best_score, 'text-green-400', "The single best round score ever recorded in your tactical history.")}
+                             ${renderStatBox('Trend Matrix', (trendValue > 0 ? '+' : '') + trendDisp, trendValue <= 0 ? 'text-green-400' : 'text-red-400', "Compares your last 5 rounds against career average. Negative (green) means you're currently outperforming your baseline.")}
+                             ${renderStatBox('Stability SD', stdDev, 'text-golf-gold', "Measures consistency using Standard Deviation. A lower number indicates a more stable and predictable performance profile.")}
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-16 mb-24">
+                         <div class="lg:col-span-2 glass p-16 bg-white/[0.02] gold-border shadow-2xl">
+                             <h4 class="text-lg uppercase font-black tracking-[0.4em] text-white/40 mb-16 font-mono italic">Scoring Evolution Matrix</h4>
+                             <div class="h-96 relative mb-12">
+                                <canvas id="playerEvolutionChart"></canvas>
+                             </div>
+                             <h4 class="text-lg uppercase font-black tracking-[0.4em] text-white/40 mb-12 font-mono italic">Tactical Pattern Trends (%)</h4>
+                             <div class="h-96 relative">
+                                <canvas id="playerPatternsChart"></canvas>
+                             </div>
+                         </div>
+                         <div class="glass p-16 bg-white/[0.02] border-white/5">
+                             <h4 class="text-lg uppercase font-black tracking-[0.4em] text-white/40 mb-16 font-mono italic">Statistical Distribution</h4>
+                             <div class="space-y-8">
+                                  ${renderSpectrumRow('Eagle+', p.total_eagles || 0, 'text-golf-gold', eaglePct)}
+                                  ${renderSpectrumRow('Birdie', p.total_birdies || 0, 'text-green-400', birdiePct)}
+                                  ${renderSpectrumRow('Par', p.total_pars || 0, 'text-white', parPct)}
+                                  ${renderSpectrumRow('Bogey', (p.total_bogeys || 0), 'text-white/40', bogeyPct)}
+                                  ${renderSpectrumRow('Double+', (p.total_doubles || 0) + (p.total_others || 0), 'text-red-600/80', errorPct)}
+                                  ${renderSpectrumRow('Sand Saves', (p.total_sand_saves || 0) + ' / ' + (p.total_sand_attempts || 0), 'text-yellow-500')}
+                                  ${renderSpectrumRow('Water Hazards', p.total_water_hazards || 0, 'text-blue-400')}
+                                  <div class="flex justify-between items-end border-b border-white/5 pb-4">
+                                      <div>
+                                          <p class="text-lg font-black uppercase text-white/40 tracking-widest mb-1">Lost Balls</p>
+                                          <div class="flex items-baseline gap-3">
+                                            <span class="px-3 py-1 bg-white rounded-lg inline-block">
+                                                <p class="text-4xl font-mono font-black italic text-black">${p.total_lost_balls || 0}</p>
+                                            </span>
+                                            <p class="text-sm font-mono text-white/20 font-black italic mt-2">CAREER TOTAL</p>
+                                          </div>
+                                      </div>
+                                      <div class="text-right">
+                                           <p class="text-xs font-mono text-white/10 uppercase tracking-widest font-black italic">Legacy Impact</p>
+                                      </div>
+                                  </div>
+                             </div>
+                         </div>
+                    </div>
+
+                    <!-- League Comparison Matrix -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 mb-24">
+                         <div class="glass p-16 bg-white/[0.02] gold-border shadow-2xl">
+                             <h4 class="text-lg uppercase font-black tracking-[0.4em] text-golf-gold mb-16 font-mono italic">Field Intelligence Comparison</h4>
+                             <div class="space-y-6">
+                                  ${renderComparisonRow('Avg Score', p.avg_score, avgLeagueScore, true)}
+                                  ${renderComparisonRow('GIR Efficiency', p.avg_gir, avgLeagueGir)}
+                                  ${renderComparisonRow('Putter Precision', p.avg_putts, avgLeaguePutts, true)}
+                                  ${renderComparisonRow('Recovery Rate', p.avg_scramble, avgLeagueScramble)}
+                             </div>
+                         </div>
+                         <div class="glass p-16 bg-white/[0.02] border-white/5">
+                             <h4 class="text-lg uppercase font-black tracking-[0.4em] text-white/40 mb-16 font-mono italic">Elite Radar Analysis</h4>
+                             <div class="h-96 relative">
+                                <canvas id="playerRadarChart"></canvas>
+                             </div>
+                         </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-10 p-4">
+                         ${renderStatBoxExtended('Avg Putting', p.avg_putts.toFixed(1), 'text-white', 'Tactical Precision', "Historical average of putts per round. Core indicator of short-game efficiency.")}
+                         ${renderStatBoxExtended('GIR Efficiency', p.avg_gir.toFixed(0) + '%', 'text-white', 'Approximation Accuracy', "Greens in Regulation. Measures ball-striking precision and ability to reach the green in regulation strokes.")}
+                         ${renderStatBoxExtended('Recovery (Scramble)', p.avg_scramble.toFixed(0) + '%', 'text-golf-gold', 'Crisis Management', "Percentage of times you made Par or better after missing the green in regulation.")}
+                         ${renderStatBoxExtended('Sand Recovery', p.total_sand_saves + '/' + p.total_sand_attempts + ' (' + ((p.total_sand_saves || 0) / (p.total_sand_attempts || 1) * 100).toFixed(0) + '%)', 'text-yellow-500', 'Bunker Clearance', "Effectiveness in escaping sand hazards and saving par.")}
+                    </div>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-10 p-4 mt-10">
+                         ${renderStatBoxExtended('Tactical Errors', (p.total_water_hazards || 0) + (p.total_lost_balls || 0), (p.total_water_hazards + p.total_lost_balls) > 0 ? 'text-red-400' : 'text-white/20', 'Penalties Sustained', "Total count of water hazards and lost balls. High counts indicate risk-management failures.")}
+                         ${renderStatBoxExtended('Birdie Velocity', (p.total_birdies / (p.total_rounds || 1)).toFixed(2), 'text-green-400', 'Scoring Aggression', "Average birdies per round. High velocity indicates aggressive scoring potential.")}
+                         ${renderStatBoxExtended('Stability SD', stdDev, 'text-golf-gold', 'Scoring Variance', "Standard Deviation of all scores. Low numbers indicate steady play; high numbers indicate volatility.")}
+                         ${renderStatBoxExtended('Validated Rounds', p.total_rounds, 'text-white/20', 'Site History', "Total number of rounds synchronized with the Master Intelligence Hub.")}
+                    </div>
+                </div>
+            `;
+            container.innerHTML = html;
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            setTimeout(() => {
+                const ctx = document.getElementById('playerEvolutionChart').getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(212, 175, 55, 0.15)');
+                gradient.addColorStop(1, 'rgba(212, 175, 55, 0)');
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: pRounds.map(r => r.meta_data.date_played),
+                        datasets: [{
+                            data: roundsScores,
+                            borderColor: '#D4AF37',
+                            borderWidth: 5,
+                            tension: 0.35,
+                            pointRadius: 8,
+                            pointBackgroundColor: '#000',
+                            pointBorderColor: '#D4AF37',
+                            pointBorderWidth: 4,
+                            pointHoverRadius: 12,
+                            backgroundColor: gradient,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#000',
+                                padding: 20,
+                                cornerRadius: 20,
+                                titleFont: { size: 14, family: 'Playfair Display', weight: 'bold' },
+                                bodyFont: { size: 16, family: 'JetBrains Mono', weight: 'bold' },
+                                borderColor: 'rgba(212, 175, 55, 0.3)',
+                                borderWidth: 1
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                reverse: true,
+                                grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false }, 
+                                ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'JetBrains Mono', weight: 'bold' } } 
+                            },
+                            x: { 
+                                grid: { display: false }, 
+                                ticks: { color: 'rgba(255,255,255,0.2)', font: { family: 'JetBrains Mono' } } 
+                            }
+                        }
+                    }
+                });
+
+                // Tactical Trends Chart
+                const patternsCtx = document.getElementById('playerPatternsChart').getContext('2d');
+                const roundTacticalData = pRounds.map(r => {
+                    const rd = r.round_data.find(d => d.player_id === p.id);
+                    const course = registry[r.meta_data.course_name] || {};
+                    let b = 0, pr = 0, bg = 0, holesPlayed = 0;
+                    Object.entries(rd.scores).forEach(([h, s]) => {
+                        if (s === null) return;
+                        holesPlayed++;
+                        const hIdx = parseInt(h.replace('h','')) - 1;
+                        const par = course.hole_pars?.[hIdx] || 4;
+                        if (s < par) b++;
+                        else if (s === par) pr++;
+                        else if (s > par) bg++;
+                    });
+                    const hTotal = holesPlayed || 1;
+                    return { birdie: (b/hTotal)*100, par: (pr/hTotal)*100, bogey: (bg/hTotal)*100 };
+                });
+
+                new Chart(patternsCtx, {
+                    type: 'line',
+                    data: {
+                        labels: pRounds.map(r => r.meta_data.date_played),
+                        datasets: [
+                            { label: 'Birdie %', data: roundTacticalData.map(d => d.birdie), borderColor: '#4ADE80', borderWidth: 3, tension: 0.3, pointRadius: 4 },
+                            { label: 'Par %', data: roundTacticalData.map(d => d.par), borderColor: '#FFFFFF', borderWidth: 3, tension: 0.3, pointRadius: 4 },
+                            { label: 'Bogey %', data: roundTacticalData.map(d => d.bogey), borderColor: '#EF4444', borderWidth: 3, tension: 0.3, pointRadius: 4 }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { position: 'top', labels: { color: 'rgba(255,255,255,0.4)', font: { size: 10, family: 'JetBrains Mono' } } }
+                        },
+                        scales: {
+                            y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.2)' } },
+                            x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 10 } } }
+                        }
+                    }
+                });
+
+                // Radar Chart
+                const radarCtx = document.getElementById('playerRadarChart').getContext('2d');
+                new Chart(radarCtx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Scoring', 'GIR Accuracy', 'Putting', 'Recovery', 'Aggression'],
+                        datasets: [
+                            {
+                                label: p.name,
+                                data: [
+                                    Math.max(0, 100 - (p.avg_score - 72) * 5),
+                                    p.avg_gir,
+                                    Math.max(0, 100 - (p.avg_putts - 1.5) * 100),
+                                    p.avg_scramble,
+                                    ((p.total_birdies + p.total_eagles) / (p.total_rounds || 1)) * 20
+                                ],
+                                backgroundColor: 'rgba(212, 175, 55, 0.2)',
+                                borderColor: '#D4AF37',
+                                borderWidth: 3,
+                                pointBackgroundColor: '#D4AF37',
+                            },
+                            {
+                                label: 'Field Avg',
+                                data: [
+                                    Math.max(0, 100 - (avgLeagueScore - 72) * 5),
+                                    avgLeagueGir,
+                                    Math.max(0, 100 - (avgLeaguePutts - 1.5) * 100),
+                                    avgLeagueScramble,
+                                    ((players.reduce((a,b)=>a+b.total_birdies+b.total_eagles,0) / players.reduce((a,b)=>a+(b.total_rounds||1),0))) * 20
+                                ],
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                borderColor: 'rgba(255, 255, 255, 0.2)',
+                                borderWidth: 2,
+                                borderDash: [5, 5],
+                                pointBackgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(255,255,255,0.05)' },
+                                grid: { color: 'rgba(255,255,255,0.05)' },
+                                pointLabels: { color: 'rgba(255,255,255,0.4)', font: { size: 10, family: 'JetBrains Mono' } },
+                                ticks: { display: false },
+                                min: 0,
+                                max: 100
+                            }
+                        },
+                        plugins: {
+                            legend: { labels: { color: 'rgba(255,255,255,0.4)', font: { size: 9, family: 'JetBrains Mono' } } }
+                        }
+                    }
+                });
+            }, 100);
+        }
+
+        function renderComparisonRow(label, playerValue, leagueValue, isLowerBetter = false) {
+            const isBetter = isLowerBetter ? playerValue < leagueValue : playerValue > leagueValue;
+            const diff = Math.abs(playerValue - leagueValue);
+            const colorClass = isBetter ? 'text-green-400' : 'text-red-400';
+            
+            const maxVal = Math.max(playerValue, leagueValue, 1);
+            const playerPct = (playerValue / maxVal) * 100;
+            const leaguePct = (leagueValue / maxVal) * 100;
+
+            return `
+                <div class="flex items-center gap-6 p-6 bg-white/[0.02] border border-white/5 rounded-3xl hover:bg-white/[0.05] transition-all">
+                    <div class="w-1/3">
+                        <p class="text-base uppercase font-black text-white/30 tracking-widest mb-1 font-mono">${label}</p>
+                        <p class="text-3xl font-mono font-black italic text-white">${playerValue.toFixed(1)}${label.includes('%') ? '%' : ''}</p>
+                    </div>
+                    <div class="flex-1 space-y-3">
+                        <div class="flex justify-between text-xs font-black uppercase tracking-widest font-mono">
+                            <span class="text-white/20">Field Avg: ${leagueValue.toFixed(1)}</span>
+                            <span class="${colorClass}">${isBetter ? 'Superior' : 'Lagging'} by ${diff.toFixed(1)}</span>
+                        </div>
+                        <div class="h-2 w-full bg-white/5 rounded-full overflow-hidden relative">
+                            <div class="absolute inset-y-0 left-0 bg-white/10" style="width: ${leaguePct}%"></div>
+                            <div class="absolute inset-y-0 left-0 ${isBetter ? 'bg-green-400' : 'bg-red-400'} opacity-30 shadow-[0_0_10px_currentColor]" style="width: ${playerPct}%"></div>
+                            <div class="absolute top-1/2 left-0 h-4 w-1 bg-white shadow-[0_0_10px_white] -translate-y-1/2" style="left: ${leaguePct}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStatBoxExtended(label, value, valueColor, subLabel, description) {
+            const desc = description || 'Current performance benchmark set for this athlete across historical intervals.';
+            return `
+                <div onclick="showIntelPopup('${label}', '${subLabel}', '${desc}')" class="p-8 bg-white/[0.03] border border-white/5 rounded-[40px] text-center shadow-inner hover:bg-white/[0.08] transition-all cursor-pointer hover:scale-105 active:scale-95 group overflow-hidden">
+                    <p class="text-[10px] uppercase font-black text-white/40 mb-3 tracking-[0.4em] font-mono group-hover:text-golf-gold transition-colors">${label}</p>
+                    <p class="text-4xl md:text-5xl font-mono font-black italic ${valueColor} tracking-tight drop-shadow-2xl mb-3">${value}</p>
+                    <p class="text-[10px] uppercase font-black text-white/20 tracking-widest">${subLabel}</p>
+                </div>
+            `;
+        }
+
+        function renderSpectrumRow(label, count, colorClass, percentage) {
+            const pctDisplay = percentage ? `<span class="text-lg font-mono text-white/40 ml-3">(${percentage}%)</span>` : '';
+            return `
+                <div onclick="showIntelPopup('${label} Analytics', 'Operational Impact', 'Frequency: ${count}. Impact on total score profile: ${percentage || 'N/A'}% of career holes.')" class="flex justify-between items-end border-b border-white/5 pb-4 cursor-pointer hover:bg-white/[0.02] transition-colors group">
+                    <div>
+                        <p class="text-lg font-black uppercase text-white/40 tracking-widest mb-1 group-hover:text-white/60 transition-colors">${label}</p>
+                        <div class="flex items-baseline">
+                            <p class="text-4xl font-mono font-black italic ${colorClass}">${count}</p>
+                            ${pctDisplay}
+                        </div>
+                    </div>
+                    <div class="text-right">
+                         <p class="text-xs font-mono text-white/10 uppercase tracking-widest font-black italic">Legacy Impact</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderStatBox(label, value, valueColor, description) {
+            const desc = description || 'Strategic value: ${value}. Key performance indicator.';
+            return `
+                <div onclick="showIntelPopup('${label}', 'Core Metric', '${desc}')" class="p-8 bg-white/[0.03] border border-white/5 rounded-[32px] text-center cursor-pointer hover:bg-white/[0.08] transition-all hover:scale-105 active:scale-95 min-w-[140px] overflow-hidden">
+                    <p class="text-[10px] uppercase font-black text-white/40 mb-2 tracking-widest font-mono">${label}</p>
+                    <p class="text-4xl md:text-5xl font-mono font-black italic ${valueColor} tracking-tight drop-shadow-2xl">${value}</p>
+                </div>
+            `;
+        }
+        function renderRoundDetail(roundId) {
+            const r = rounds.find(rd => rd.id === roundId);
+            if (!r) return;
+            
+            const aiInsight = roundCommentaries[roundId] || r.ai_commentary;
+            
+            const content = document.getElementById('portalContent');
+            const container = document.getElementById('drillDownContainer');
+            if (content) content.classList.add('hidden');
+            container.classList.remove('hidden');
+
+            const courseName = r.meta_data?.course_name || '';
+            const courseInfo = registry[courseName] || {};
+            const holePars = courseInfo.hole_pars || Array(18).fill(4);
+
+            // Generate Sportscast Rundowns for each player in this round
+            const playerRundowns = r.round_data.map(p => {
+                const waterHazards = Object.values(p.secondary_stats || {}).filter(s => s.water_hazard).length;
+                const lostBalls = Object.values(p.secondary_stats || {}).filter(s => s.lost_ball).length;
+                const sandSaves = Object.values(p.secondary_stats || {}).filter(s => s.sand_save === true).length;
+                const penalties = waterHazards + lostBalls;
+                
+                let birdies = 0;
+                let eagles = 0;
+                let pars = 0;
+                Object.entries(p.scores).forEach(([h, s]) => {
+                    if (s === null || s === undefined || s === 0) return;
+                    const hIdx = parseInt(h.replace('h', '')) - 1;
+                    const par = Number(holePars[hIdx] || 4);
+                    const diff = s - par;
+                    if (diff <= -2) eagles++;
+                    else if (diff === -1) birdies++;
+                    else if (diff === 0) pars++;
+                });
+                
+                const frontNine = Object.entries(p.scores).slice(0, 9).reduce((a, [h, s]) => a + (s || 0), 0);
+                const backNine = Object.entries(p.scores).slice(9, 18).reduce((a, [h, s]) => a + (s || 0), 0);
+                const trend = backNine < frontNine ? 'positive velocity increase' : (backNine === frontNine ? 'stable state maintained' : 'structural fatigue deviation');
+
+                let narrative = '';
+                if (p.total_score <= 72) {
+                    narrative = `An absolute masterclass from ${p.player_name}! They picked this course apart with surgical precision, showing exactly why they're the talk of the clubhouse. ${birdies} birdies on one card? That's championship-level golf right there.`;
+                } else if (p.total_score <= 80) {
+                    narrative = `Talk about a high-velocity performance from ${p.player_name}! They were aggressive, they were focused, and they made the big putts when it mattered. The ${backNine < frontNine ? 'closing stretch' : 'opening nine'} was where they really left their mark.`;
+                } else if (p.total_score <= 90) {
+                    narrative = `It was a gritty, hard-fought battle for ${p.player_name} today. They faced some tough breaks, but the resilience shown after those ${penalties > 0 ? 'unlucky hazards' : 'mid-round bogeys'} was impressive. They stayed in the simulator and finished strong.`;
+                } else {
+                    narrative = `The course had the upper hand today as ${p.player_name} navigated some rough terrain. It was a purely defensive tactical profile, but we saw glimpses of talent that suggest they'll be back of center in no time. Survival was the name of the game.`;
+                }
+
+                return {
+                    name: p.player_name,
+                    birdies,
+                    eagles,
+                    pars,
+                    narrative,
+                    trend,
+                    frontNine,
+                    backNine,
+                    waterHazards,
+                    lostBalls,
+                    sandSaves
+                };
+            });
+
+            const generateFieldNarrative = (roundData) => {
+                const sorted = [...roundData].sort((a, b) => a.total_score - b.total_score);
+                const winner = sorted[0];
+                
+                let winnerPlayedPar = 0;
+                Object.entries(winner.scores).forEach(([holeKey, score]) => {
+                    if (score !== null && score !== undefined) {
+                        const holeIndex = parseInt(holeKey.replace('h', '')) - 1;
+                        winnerPlayedPar += Number(holePars[holeIndex] || 4);
+                    }
+                });
+                const winnerVsPar = winner.total_score - winnerPlayedPar;
+
+                const avg = (roundData.reduce((acc, p) => acc + p.total_score, 0) / roundData.length).toFixed(1);
+                
+                let totalBirdies = 0;
+                roundData.forEach(p => {
+                    Object.entries(p.scores).forEach(([h, s]) => {
+                        if (s === null || s === undefined || s === 0) return;
+                        const hIdx = parseInt(h.replace('h', '')) - 1;
+                        const par = Number(holePars[hIdx] || 4);
+                        if (s === par - 1) totalBirdies++;
+                    });
+                });
+                
+                let report = `What a day for the record books here at ${r.meta_data.course_name}! The field was tested by one of the most complex layouts we've seen, finishing with a collective average of ${avg}. `;
+                
+                if (winnerVsPar <= 2) {
+                    report += `But the headline today belongs to ${winner.player_name}, who played like an absolute machine, leaving the rest of the pack in the dust with a spectacular ${winner.total_score} (vs par of ${winnerPlayedPar}). It was clinical excellence personified. `;
+                } else {
+                    report += `It was a grinding affair with no one able to break away, but ${winner.player_name} showed the most heart, clinching the top spot with a gritty ${winner.total_score} (vs par of ${winnerPlayedPar}). `;
+                }
+                
+                report += `We saw ${totalBirdies} birdies across the holes played, proving that while the course was tough, the talent was tougher. `;
+                
+                if (avg > 85) {
+                    report += `The conditions clearly favored the course today as scores climbed, but the strategic maneuvering we witnessed was top-tier. `;
+                } else {
+                    report += `The field really attacked today, taking advantage of every strategic lane available to post some truly impressive numbers. `;
+                }
+                
+                report += `As the sun sets on this deployment, the data presents a clear picture: this group is getting faster, sharper, and more precise with every round.`;
+                return report;
+            };
+
+            const fieldNarrative = generateFieldNarrative(r.round_data);
+
+            container.innerHTML = `
+                <div class="glass p-12 border-golf-gold/30 gold-border shadow-[0_0_100px_rgba(212,175,55,0.1)] animate-up bg-black/80">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16 px-4">
+                        <div class="space-y-4">
+                            <div class="inline-flex items-center gap-3">
+                                <button onclick="document.getElementById('drillDownContainer').classList.add('hidden'); document.getElementById('portalContent').classList.remove('hidden')" class="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-all">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="m15 18-6-6 6-6"/></svg>
+                                </button>
+                                <span class="text-xs font-black uppercase tracking-[0.4em] text-golf-gold italic">Tactical Scorecard Data</span>
+                            </div>
+                            <h2 class="text-5xl font-serif font-black italic text-white mb-1">${r.meta_data.round_name || 'M.A.G.A. Match Day'}</h2>
+                            <p class="text-xl font-serif font-black text-golf-gold italic mb-2">at ${r.meta_data.course_name}</p>
+                            <p class="text-[11px] font-mono text-white/40 uppercase tracking-widest">${r.meta_data.date_played || 'AUTHENTICATED EXFIL'}</p>
+                            
+                            ${r.meta_data.audio_url ? `
+                            <div class="flex items-center gap-4 mt-6 bg-white/[0.03] hover:bg-white/[0.05] border border-white/5 hover:border-white/10 px-5 py-4 rounded-[20px] w-fit transition-all group/audio-btn cursor-pointer" onclick="toggleAudioPlayback('${r.id}')">
+                                <div class="w-12 h-12 rounded-xl bg-golf-gold/10 border border-golf-gold/20 flex items-center justify-center transition-transform group-hover/audio-btn:scale-105 active:scale-95 shadow-lg shadow-golf-gold/5 flex-shrink-0">
+                                    <svg class="play-icon-${r.id} w-5 h-5 fill-golf-gold ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <svg class="pause-icon-${r.id} w-5 h-5 fill-golf-gold hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                </div>
+                                <div class="flex flex-col select-none pr-3">
+                                    <span class="audio-status-text-${r.id} text-[9px] font-black uppercase text-golf-gold tracking-widest animate-pulse">PLAY AI SPORSTCAST</span>
+                                    <span class="text-[9px] font-mono text-white/40 uppercase tracking-wider">TAP TO LAUNCH AUDIO STREAM</span>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="text-center px-8 border-r border-white/5">
+                                <p class="text-xs font-black uppercase text-white/20 mb-2 tracking-widest">Field Size</p>
+                                <p class="text-5xl font-serif font-black italic text-white">${r.round_data.length}</p>
+                            </div>
+                             <div class="text-center px-8">
+                                <p class="text-xs font-black uppercase text-white/20 mb-2 tracking-widest">Verified</p>
+                                <p class="text-5xl font-serif font-black italic text-golf-gold">${Math.round((r.round_data.filter(p => p.verified_total).length / r.round_data.length) * 100)}%</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+                        <div class="p-10 bg-white/[0.02] border border-white/5 rounded-[40px] relative overflow-hidden h-full flex flex-col">
+                            <div class="absolute -top-10 -right-10 opacity-[0.05] pointer-events-none">
+                                <svg width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            </div>
+                            <div class="flex items-center gap-3 mb-8">
+                                <div class="w-1 h-8 bg-golf-gold"></div>
+                                <h4 class="text-xs font-black uppercase tracking-[0.4em] text-golf-gold italic">Tactical Field Commentary</h4>
+                            </div>
+                            <div class="prose prose-invert max-w-none flex-1">
+                                 <div class="text-white/70 font-serif text-xl leading-relaxed italic drop-shadow-sm mb-8">
+                                    ${aiInsight || fieldNarrative}
+                                 </div>
+                                 ${aiInsight ? `
+                                    <div class="pt-8 border-t border-white/5">
+                                        <h5 class="text-xs font-black uppercase tracking-[0.3em] text-golf-gold/40 mb-4">Statistical Report Integration</h5>
+                                        <p class="text-white/50 font-serif text-base leading-relaxed italic">${fieldNarrative}</p>
+                                    </div>
+                                 ` : ''}
+                                 ${r.meta_data.audio_url ? `
+                                    <div class="mt-8 pt-8 border-t border-white/10">
+                                        <div class="p-6 bg-white/[0.04] border border-white/5 rounded-[24px] flex flex-col xl:flex-row items-center justify-between gap-6">
+                                            <div class="flex items-center gap-4 w-full xl:w-auto">
+                                                <button onclick="toggleAudioPlayback('${r.id}')" class="w-12 h-12 flex items-center justify-center rounded-full bg-golf-gold text-black hover:scale-105 active:scale-95 transition-all flex-shrink-0 cursor-pointer shadow-lg shadow-golf-gold/20">
+                                                    <svg id="play-icon-${r.id}" class="play-icon-${r.id} w-5 h-5 fill-current ml-0.5" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                                    <svg id="pause-icon-${r.id}" class="pause-icon-${r.id} w-5 h-5 fill-current hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                                                </button>
+                                                <div class="truncate">
+                                                    <p class="text-[9px] uppercase tracking-widest text-golf-gold font-black leading-none mb-1">M.A.G.A. Sportscast</p>
+                                                    <p class="text-sm font-serif font-black italic text-white leading-none">Broadcast Audio Stream</p>
+                                                </div>
+                                            </div>
+                                            <audio id="audio-player-${r.id}" src="${r.meta_data.audio_url}" class="hidden" ontimeupdate="updateAudioProgress('${r.id}')" onloadedmetadata="initAudioPlayer('${r.id}')" onended="resetAudioPlayer('${r.id}')"></audio>
+                                            
+                                            <div class="flex items-center gap-3 w-full xl:w-auto flex-grow max-w-sm flex-1">
+                                                <span id="time-curr-${r.id}" class="text-[10px] font-mono text-white/40">0:00</span>
+                                                <input id="seek-range-${r.id}" type="range" min="0" value="0" step="0.1" class="w-full h-1 bg-white/20 rounded accent-golf-gold outline-none cursor-pointer" oninput="seekAudio('${r.id}')" />
+                                                <span id="time-dur-${r.id}" class="text-[10px] font-mono text-white/40">0:00</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                 ` : ''}
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                             <h4 class="text-xs font-black uppercase tracking-[0.4em] text-white/30 italic mb-4">Operational Rundown</h4>
+                             <div class="grid grid-cols-1 gap-4">
+                                ${playerRundowns.map(pd => `
+                                    <div class="p-6 bg-white/[0.03] border border-white/5 rounded-3xl hover:bg-white/[0.05] transition-all group">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <h5 class="text-xl font-serif font-black italic text-white group-hover:text-golf-gold transition-colors">${pd.name}</h5>
+                                            <span class="text-xs font-mono font-black text-white/20 uppercase tracking-widest italic font-style:italic">${pd.trend}</span>
+                                        </div>
+                                        <p class="text-white/50 text-xs italic font-serif leading-relaxed mb-4">"${pd.narrative}"</p>
+                                        <div class="flex items-center gap-6 mt-4">
+                                            <div class="text-center">
+                                                <p class="text-[10px] text-white/20 uppercase font-black tracking-widest mb-1">Front 9</p>
+                                                <p class="text-lg font-mono font-black text-white">${pd.frontNine}</p>
+                                            </div>
+                                            <div class="text-center">
+                                                <p class="text-[10px] text-white/20 uppercase font-black tracking-widest mb-1">Back 9</p>
+                                                <p class="text-lg font-mono font-black text-white">${pd.backNine}</p>
+                                            </div>
+                                            
+                                            <div class="flex-1 flex justify-center gap-4">
+                                                ${pd.waterHazards > 0 ? `
+                                                    <div class="text-center px-3 py-1 bg-cyan-500/5 rounded-lg border border-cyan-500/10">
+                                                        <p class="text-[9px] text-cyan-400/40 uppercase font-black tracking-tighter">Water</p>
+                                                        <p class="text-base font-mono font-black text-cyan-400">${pd.waterHazards}</p>
+                                                    </div>
+                                                ` : ''}
+                                                ${pd.lostBalls > 0 ? `
+                                                    <div class="text-center px-3 py-1 bg-orange-500/5 rounded-lg border border-orange-500/10">
+                                                        <p class="text-[9px] text-orange-400/40 uppercase font-black tracking-tighter">Lost</p>
+                                                        <p class="text-base font-mono font-black text-orange-400">${pd.lostBalls}</p>
+                                                    </div>
+                                                ` : ''}
+                                                ${pd.sandSaves > 0 ? `
+                                                    <div class="text-center px-3 py-1 bg-yellow-500/5 rounded-lg border border-yellow-500/10">
+                                                        <p class="text-[9px] text-yellow-400/40 uppercase font-black tracking-tighter">Sand</p>
+                                                        <p class="text-base font-mono font-black text-yellow-400">${pd.sandSaves}</p>
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+
+                                            <div class="text-right">
+                                                <p class="text-[10px] text-green-400/40 uppercase font-black tracking-widest mb-1">Aggression</p>
+                                                <p class="text-lg font-mono font-black text-green-400 italic font-style:italic">${pd.birdies} Birds</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                             </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="text-[10px] uppercase font-black text-white/20 tracking-widest border-b border-white/5">
+                                    <th class="p-6">Athlete Specification</th>
+                                    ${Array.from({length: 18}, (_, i) => `<th class="p-2 text-center w-10">H${i+1}</th>`).join('')}
+                                    <th class="p-6 text-right">Raw Matrix Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5">
+                                ${r.round_data.map(p => `
+                                    <tr class="hover:bg-white/[0.02] group transition-all border-b border-white/5 last:border-0">
+                                        <td class="p-6">
+                                            <p class="font-serif text-2xl font-black italic text-white group-hover:text-golf-gold transition-colors font-style:italic">${p.player_name}</p>
+                                        </td>
+                                        ${Array.from({length: 18}, (_, i) => {
+                                            const holeNum = i + 1;
+                                            const score = p.scores['h' + holeNum];
+                                            const secondary = p.secondary_stats?.['h' + holeNum];
+                                            const putts = secondary?.putts;
+                                            const isWater = secondary?.water_hazard;
+                                            const isLost = secondary?.lost_ball;
+                                            const isSand = secondary?.sand_save;
+                                            
+                                            let scoreColor = 'text-white/40';
+                                            if (score !== null) {
+                                                if (score <= 2) scoreColor = 'text-golf-gold';
+                                                else if (score === 3) scoreColor = 'text-green-400';
+                                                else if (score === 4) scoreColor = 'text-white';
+                                            }
+
+                                            return `
+                                                <td class="p-2 text-center group/hole">
+                                                    <div class="flex flex-col items-center gap-1">
+                                                        <span class="font-mono font-black italic text-2xl ${scoreColor}">${score || '-'}</span>
+                                                        <div class="flex gap-1 items-center">
+                                                            ${putts !== undefined && putts !== null ? `<span class="text-[10px] font-black font-mono text-white/40">${putts}p</span>` : ''}
+                                                            <div class="flex gap-1">
+                                                                ${isWater ? '<span class="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3B82F6]"></span>' : ''}
+                                                                ${isLost ? '<span class="w-1.5 h-1.5 rounded-full bg-black border border-white"></span>' : ''}
+                                                                ${isSand ? '<span class="w-1.5 h-1.5 rounded-full bg-yellow-500 shadow-[0_0_8px_#EAB308]"></span>' : ''}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            `;
+                                        }).join('')}
+                                        <td class="p-6 text-right">
+                                            <span class="text-4xl font-mono font-black italic text-white shadow-xl italic font-style:italic">${p.total_score}</span>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function renderAnalytics(container) {
+            const leagueTotalEagles = players.reduce((a, b) => a + (b.total_eagles || 0), 0);
+            const leagueTotalBirdies = players.reduce((a, b) => a + (b.total_birdies || 0), 0);
+            const leagueTotalPars = players.reduce((a, b) => a + (b.total_pars || 0), 0);
+            const leagueTotalBogeys = players.reduce((a, b) => a + (b.total_bogeys || 0), 0);
+            const leagueTotalOthers = players.reduce((a, b) => a + (b.total_doubles || 0) + (b.total_others || 0), 0);
+
+            const matrixRows = players.map(p => {
+                const totalRounds = p.total_rounds || 1;
+                const eaglesBirdies = (p.total_eagles || 0) + (p.total_birdies || 0);
+                const sandPercent = p.total_sand_attempts > 0 ? Math.round((p.total_sand_saves / p.total_sand_attempts) * 100) : 0;
+                
+                return `
+                    <tr id="matrix_row_${p.id}" onclick="renderPlayerDeepStats('${p.id}')" class="matrix-row group hover:bg-white/[0.08] transition-all border-b border-white/5 last:border-0 cursor-pointer active:scale-[0.99]">
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" id="toggle_matrix_${p.id}" checked 
+                                       onclick="event.stopPropagation()"
+                                       class="w-3 h-3 rounded border-white/10 bg-black text-golf-gold focus:ring-golf-gold cursor-pointer"
+                                       onchange="updateMasterChartVisibility()">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-black uppercase tracking-tight text-white/80 transition-colors">${p.name}</span>
+                                    <span class="text-xs text-white/30 font-mono italic">${totalRounds} Rounds Data</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="p-4 font-mono text-base font-black italic text-white">${p.avg_score.toFixed(1)}</td>
+                        <td class="p-4 font-mono text-base text-green-400 font-bold">${p.avg_gir.toFixed(0)}%</td>
+                        <td class="p-4 font-mono text-base text-white/60">${p.avg_putts.toFixed(1)}</td>
+                        <td class="p-4 font-mono text-base text-golf-gold font-bold">${p.avg_scramble.toFixed(0)}%</td>
+                        <td class="p-4 text-center bg-white/[0.02] hover:bg-white/10 transition-colors" onclick="event.stopPropagation(); showIntelPopup('${p.name.replace(/'/g, "\'")} Scoring', 'Impact Summary', 'Scoring profile across ${totalRounds} rounds. Total Eagles/Birdies: ${eaglesBirdies}. Base Intensity: ${p.avg_score.toFixed(1)}')">
+                            <div class="relative w-full h-8 bg-white/5 rounded-lg overflow-hidden border border-white/5 flex items-center justify-center">
+                                <div class="absolute inset-0 bg-green-500/10" style="width: ${Math.min(100, (eaglesBirdies / 18) * 100)}%"></div>
+                                <span class="relative font-mono text-sm text-green-400 font-black">${eaglesBirdies}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center bg-white/[0.02]">
+                            <div class="relative w-full h-8 bg-white/5 rounded-lg overflow-hidden border border-white/5 flex items-center justify-center">
+                                <div class="absolute inset-0 bg-white/10" style="width: ${Math.min(100, (p.total_pars / 18) * 100)}%"></div>
+                                <span class="relative font-mono text-sm text-white font-black">${p.total_pars}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center bg-white/[0.02]">
+                            <div class="relative w-full h-8 bg-white/5 rounded-lg overflow-hidden border border-white/5 flex items-center justify-center">
+                                <div class="absolute inset-0 bg-white/5" style="width: ${Math.min(100, (p.total_bogeys / 18) * 100)}%"></div>
+                                <span class="relative font-mono text-sm text-white/40 font-black">${p.total_bogeys}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-center bg-white/[0.02]">
+                            <div class="relative w-full h-8 bg-white/5 rounded-lg overflow-hidden border border-white/5 flex items-center justify-center">
+                                <div class="absolute inset-0 bg-red-500/10" style="width: ${Math.min(100, ((p.total_doubles + p.total_others) / 18) * 100)}%"></div>
+                                <span class="relative font-mono text-sm text-red-500 font-black">${p.total_doubles + p.total_others}</span>
+                            </div>
+                        </td>
+                        <td class="p-4">
+                            <div class="flex gap-2">
+                                <div class="px-2.5 py-1.5 bg-blue-500/20 rounded-lg border border-blue-500/30 text-center min-w-[50px] shadow-lg hover:bg-blue-500/40 transition-colors" onclick="event.stopPropagation(); showIntelPopup('${p.name.replace(/'/g, "\\\'")} Hazards', 'Ballistics Report', 'Water Hazards: ${p.total_water_hazards}. High risk zones identified in historical data.')">
+                                    <p class="text-[10px] text-blue-400 uppercase font-black tracking-tighter">Water</p>
+                                    <p class="text-sm text-blue-400 font-black">${p.total_water_hazards}</p>
+                                </div>
+                                <div class="px-2.5 py-1.5 bg-white rounded-lg border border-white text-center min-w-[50px] shadow-lg hover:bg-gray-100 transition-colors" onclick="event.stopPropagation(); showIntelPopup('${p.name.replace(/'/g, "\\\'")} Errata', 'Missing Asset Report', 'Lost Balls: ${p.total_lost_balls}. Tactical errors requiring trajectory correction.')">
+                                    <p class="text-[10px] text-black/40 uppercase font-black tracking-tighter">Lost Ball</p>
+                                    <p class="text-sm text-black font-black">${p.total_lost_balls}</p>
+                                </div>
+                                <div class="px-2.5 py-1.5 bg-yellow-500/20 rounded-lg border border-yellow-500/30 text-center min-w-[65px] shadow-lg hover:bg-yellow-500/40 transition-colors" onclick="event.stopPropagation(); showIntelPopup('${p.name.replace(/'/g, "\\\'")} Sand', 'Bunker Clearance Intel', 'Sand Saves: ${p.total_sand_saves}/${p.total_sand_attempts} (${sandPercent}%). Bunker recovery efficiency benchmark.')">
+                                    <p class="text-[10px] text-yellow-500/50 uppercase font-black tracking-tighter">Sand Save</p>
+                                    <p class="text-sm text-yellow-500 font-black">${p.total_sand_saves}/${p.total_sand_attempts} <span class="text-[11px] opacity-60">(${sandPercent}%)</span></p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="space-y-12 animate-up">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                        <div class="glass p-12 gold-border lg:col-span-1">
+                            <h3 class="text-xs font-black uppercase tracking-widest text-white/30 italic mb-12">Global Extraction Registry</h3>
+                            <div class="h-80">
+                                <canvas id="leagueGlobalDistribChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="glass p-12 gold-border lg:col-span-2">
+                             <div class="flex justify-between items-center mb-12">
+                                <div>
+                                    <h3 class="text-xs font-black uppercase tracking-widest text-golf-gold italic mb-2">Efficiency Overlap</h3>
+                                    <p class="text-xs font-mono text-white/20 uppercase tracking-widest">GIR vs Recovery % Across Field</p>
+                                </div>
+                             </div>
+                             <div class="h-80">
+                                <canvas id="leagueEfficiencyChart"></canvas>
+                             </div>
+                        </div>
+                    </div>
+
+                    <div class="glass p-12 gold-border shadow-2xl relative overflow-hidden bg-black/60">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 relative z-10">
+                            <div>
+                                <h3 class="text-sm font-black uppercase tracking-widest text-golf-gold italic mb-2">League Intelligence Matrix</h3>
+                                <p class="text-sm font-mono text-white/20 uppercase tracking-widest leading-relaxed">Cross-Field Capability Analytics | Scoring Distribution & Recovery Efficiencies</p>
+                            </div>
+                            <div class="flex flex-wrap gap-4">
+                                <button onclick="toggleAllPlayers(true)" class="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all">Enable All</button>
+                                <button onclick="toggleAllPlayers(false)" class="px-6 py-3 bg-white/5 border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all">Disable All</button>
+                            </div>
+                        </div>
+
+                        <!-- Statistical Matrix Table -->
+                        <div class="overflow-x-auto rounded-[32px] border border-white/5 mb-12 bg-black/40">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead class="bg-white/[0.04]">
+                                    <tr class="text-sm font-black uppercase text-white/30 tracking-[0.3em] border-b border-white/10">
+                                        <th class="p-4 text-left">Athlete Identity</th>
+                                        <th class="p-4">Avg Score</th>
+                                        <th class="p-4">GIR %</th>
+                                        <th class="p-4">Putter Vel.</th>
+                                        <th class="p-4">Scramble %</th>
+                                        <th class="p-4 text-center text-green-400/40">Aggression Matrix<br/><span class="text-xs tracking-widest">(Eagle/Bird)</span></th>
+                                        <th class="p-4 text-center text-white/40">Stability Index<br/><span class="text-xs tracking-widest">(Pars)</span></th>
+                                        <th class="p-4 text-center text-white/20">Errata Log<br/><span class="text-xs tracking-widest">(Bogeys)</span></th>
+                                        <th class="p-4 text-center text-red-500/40">Critical Faults<br/><span class="text-xs tracking-widest">(Double+)</span></th>
+                                        <th class="p-4 text-center italic text-white/30">Intelligence Matrix Hazards<br/><span class="text-xs tracking-widest">(Water / Lost Ball / Sand Save)</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-white/5">
+                                    ${matrixRows}
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="h-[600px] w-full mt-12 bg-white/[0.01] p-8 rounded-[40px] border border-white/5">
+                            <canvas id="masterMatrixChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass p-12 gold-border shadow-2xl bg-black/40">
+                         <h3 class="text-xs font-black uppercase tracking-widest text-white/30 italic mb-12">Intelligence Chronology: Scoring Velocity Trend</h3>
+                         <div class="h-96">
+                            <canvas id="leagueTrendChart"></canvas>
+                         </div>
+                    </div>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                const sortedRounds = [...rounds].sort((a,b) => new Date(a.meta_data.date_played).getTime() - new Date(b.meta_data.date_played).getTime());
+
+                // 1. League Global Distribution
+                new Chart(document.getElementById('leagueGlobalDistribChart'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Eagle+', 'Birdie', 'Par', 'Bogey', 'Double+'],
+                        datasets: [{
+                            data: [leagueTotalEagles, leagueTotalBirdies, leagueTotalPars, leagueTotalBogeys, leagueTotalOthers],
+                            backgroundColor: ['#D4AF37', '#10B981', '#ffffff', 'rgba(255,255,255,0.2)', '#EF4444'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false, cutout: '70%',
+                        plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.4)', font: { size: 11, family: 'JetBrains Mono' } } } }
+                    }
+                });
+
+                // 2. Efficiency Chart (Bar Comparison)
+                new Chart(document.getElementById('leagueEfficiencyChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: players.map(p => p.name),
+                        datasets: [
+                            { label: 'GIR %', data: players.map(p => p.avg_gir), backgroundColor: '#10B981', borderRadius: 12 },
+                            { label: 'Recovery %', data: players.map(p => p.avg_scramble), backgroundColor: '#D4AF37', borderRadius: 12 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { labels: { color: 'rgba(255,255,255,0.4)', font: { size: 11, family: 'JetBrains Mono' } } } },
+                        scales: {
+                            y: { max: 100, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 11 } } },
+                            x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 12, weight: 'bold' } } }
+                        }
+                    }
+                });
+
+                // 3. League Trend Chart
+                new Chart(document.getElementById('leagueTrendChart'), {
+                    type: 'line',
+                    data: {
+                        labels: sortedRounds.map(r => r.meta_data.date_played),
+                        datasets: players.map((p, pIdx) => {
+                            const pScores = sortedRounds.map(r => {
+                                const rd = r.round_data.find(d => d.player_id === p.id);
+                                return rd ? rd.total_score : null;
+                            });
+                            return {
+                                label: p.name,
+                                data: pScores,
+                                borderColor: ['#D4AF37', '#10B981', '#3B82F6', '#EF4444', '#8B5CF6'][pIdx % 5],
+                                borderWidth: 3,
+                                tension: 0.3,
+                                pointRadius: 4,
+                                spanGaps: true
+                            };
+                        })
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top', labels: { color: 'rgba(255,255,255,0.3)', font: { size: 11, family: 'JetBrains Mono' } } } },
+                        scales: {
+                            y: { reverse: true, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 11 } } },
+                            x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.2)', font: { size: 11 } } }
+                        }
+                    }
+                });
+
+                const masterCtx = document.getElementById('masterMatrixChart');
+                if (masterCtx) {
+                    masterMatrixChart = new Chart(masterCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: players.map(p => p.name),
+                            datasets: [
+                                { label: 'Score Intensity', data: players.map(p => p.avg_score), backgroundColor: '#D4AF37', borderRadius: 8 },
+                                { label: 'GIR Index (%)', data: players.map(p => p.avg_gir), backgroundColor: '#10B981', borderRadius: 8 },
+                                { label: 'Recovery Eff (%)', data: players.map(p => p.avg_scramble), backgroundColor: '#3B82F6', borderRadius: 8 },
+                                { label: 'Putter Velocity', data: players.map(p => p.avg_putts * 20), backgroundColor: '#8B5CF6', borderRadius: 8 },
+                                { label: 'Aggression (Birdies/Rnd)', data: players.map(p => ((p.total_birdies + p.total_eagles) / (p.total_rounds || 1)) * 10), backgroundColor: '#F59E0B', borderRadius: 8 },
+                                { label: 'Error Density', data: players.map(p => ((p.total_water_hazards + p.total_lost_balls) / (p.total_rounds || 1)) * 20), backgroundColor: '#EF4444', borderRadius: 8 }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { 
+                                    display: true, 
+                                    position: 'top',
+                                    labels: { color: 'rgba(255,255,255,0.4)', font: { size: 10, family: 'JetBrains Mono', weight: 'bold' }, padding: 30 }
+                                } 
+                            },
+                            scales: {
+                                y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 9 } } },
+                                x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10, weight: 'bold' } } }
+                            },
+                            onClick: (e, elements) => {
+                                if (elements.length > 0) {
+                                    const index = elements[0].index;
+                                    const player = players[index];
+                                    if (player) renderPlayerDeepStats(player.id);
+                                }
+                            }
+                        }
+                    });
+                }
+            }, 100);
+        }
+
+        // Back To Top Logic
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('backToTop');
+            if (window.pageYOffset > 800) {
+                btn.style.opacity = '1';
+                btn.style.transform = 'scale(1)';
+                btn.style.pointerEvents = 'auto';
+            } else {
+                btn.style.opacity = '0';
+                btn.style.transform = 'scale(0.5)';
+                btn.style.pointerEvents = 'none';
+            }
+        });
+
+        // Initialize Portal
+        showTab('leaderboard', document.querySelector('.tab-btn'), true);
+    </script>
+    
+    <!-- Floating Navigation Controls -->
+    <button id="backToTop" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-12 right-12 w-16 h-16 bg-white text-black rounded-full flex items-center justify-center shadow-2xl opacity-0 scale-50 pointer-events-none z-[100] hover:scale-110 active:scale-95 group border border-white/20">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+    </button>
+</body>
+</html>
+  

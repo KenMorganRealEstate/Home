@@ -2048,7 +2048,114 @@
                                 /div>
                             )
                         } <
-                        /div> < div className = "xl:col-span-8 flex flex-col gap-5" > /* Chart section unchanged */ < /div> <
+                        /div> < div className = "xl:col-span-8 flex flex-col gap-5" >                                     <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-white p-4 rounded-xl border shadow-sm card-hover relative"><div className="stat-accent-bar bg-teal-500"></div><div className="pl-5"><div className="text-xs font-semibold text-slate-500 uppercase">Liquid Wealth</div><p className="text-xl font-bold">${finalMonth.tfsaBalance?.toLocaleString()}</p><p className="text-xs text-slate-400">Your TFSA: ${finalMonth.tfsaUser?.toLocaleString()} | Tammy: ${finalMonth.tfsaTammy?.toLocaleString()}</p></div></div>
+                                        <div className="bg-white p-4 rounded-xl border shadow-sm card-hover relative"><div className="stat-accent-bar bg-violet-500"></div><div className="pl-5"><div className="text-xs font-semibold text-slate-500 uppercase">Monthly Income</div><p className="text-xl font-bold text-violet-600">${finalMonth.totalMonthlyIncome?.toLocaleString()}/mo</p></div></div>
+                                        <div className="bg-white p-4 rounded-xl border shadow-sm card-hover relative"><div className="stat-accent-bar bg-emerald-500"></div><div className="pl-5"><div className="text-xs font-semibold text-slate-500 uppercase">Final Net Worth</div><p className="text-xl font-bold text-emerald-600">${finalMonth.totalNetWorth?.toLocaleString()}</p></div></div>
+                                        <div className="bg-white p-4 rounded-xl border shadow-sm card-hover relative bg-blue-50/30"><div className="stat-accent-bar bg-blue-500"></div><div className="pl-5"><div className="text-xs font-semibold text-blue-600 uppercase">Home Equity</div><p className="text-xl font-bold text-blue-700">${finalMonth.equity?.toLocaleString()}</p></div></div>
+                                    </div>
+                                    <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col">
+                                        <div className="flex justify-between items-center border-b pb-4 mb-4">
+                                            <h2 className="text-lg font-bold">{loanType==='nomad' ? '🗺️ Master Strategy Timeline' : '📈 Wealth Progression'} (30 Years)</h2>
+                                            <div className="flex gap-2 text-xs">
+                                                <button onClick={()=>{setChartDomainLeft(0);setChartDomainRight(30)}} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold">Full</button>
+                                                <button onClick={()=>{setChartDomainLeft(0);setChartDomainRight(10)}} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold">10 Yr</button>
+                                                <button onClick={()=>{setChartDomainLeft(20);setChartDomainRight(30)}} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold">20-30 Yr</button>
+                                            </div>
+                                        </div>
+                                        <div className="h-[400px]">
+                                            <ResponsiveContainer width="100%" height="100%">
+                                                <ComposedChart data={simulationData} margin={{top:10,right:10,left:0,bottom:20}} onMouseMove={(e)=>{if(e?.activePayload?.length) setHoveredData(e.activePayload[0].payload)}} onMouseLeave={()=>setHoveredData(null)}>
+                                                    <defs>
+                                                        <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3B82F6" stopOpacity={0.25}/><stop offset="100%" stopColor="#3B82F6" stopOpacity={0.05}/></linearGradient>
+                                                        <linearGradient id="debtGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#EF4444" stopOpacity={0.3}/><stop offset="100%" stopColor="#EF4444" stopOpacity={0.05}/></linearGradient>
+                                                        <linearGradient id="liquidGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#0D9488" stopOpacity={0.2}/><stop offset="100%" stopColor="#0D9488" stopOpacity={0.02}/></linearGradient>
+                                                    </defs>
+                                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                                    <XAxis dataKey="year" tick={<CustomXAxisTick/>} tickCount={7} domain={[chartDomainLeft, chartDomainRight]} type="number" height={40}/>
+                                                    <YAxis yAxisId="left" tickFormatter={t=>`$${(t/1000).toFixed(0)}k`} tick={{fontSize:11}} width={60}/>
+                                                    {loanType==='nomad' && <YAxis yAxisId="right" orientation="right" tickFormatter={t=>`$${(t/1000).toFixed(0)}k`} tick={{fontSize:11,fill:'#9333ea'}} width={55}/>}
+                                                    <RechartsTooltip content={({active,payload})=>{if(active&&payload?.length){const d=payload[0].payload;return(<div className="bg-white/98 backdrop-blur-md p-0 rounded-2xl shadow-2xl min-w-[260px] border border-slate-100 overflow-hidden"><div className="bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-3"><p className="font-bold text-white text-sm">Year {d.displayYear}, Month {d.displayMonth} · Age {d.age}</p></div><div className="p-4 space-y-2">{d.isDownsizeMonth&&<div className="mb-2 bg-indigo-50 text-indigo-700 p-2.5 rounded-lg text-xs flex items-center gap-1.5"><Icon name="MapPin" size={14}/> {loanType==='nomad'?'🏡 Re-Entry: Bought Downsized Home!':'🏡 Downsize Event — Debt Cleared!'}</div>}{d.isExitMonth&&<div className="mb-2 bg-emerald-50 text-emerald-700 p-2.5 rounded-lg text-xs flex items-center gap-1.5"><Icon name="Landmark" size={14}/> Home Sold! Equity Cashed Out.</div>}{d.isNomadPhase&&loanType==='nomad'&&<div className="mb-2 bg-amber-50 text-amber-700 p-2.5 rounded-lg text-xs flex items-center gap-1.5"><Icon name="Compass" size={14}/> 🌍 Full-Time Travel Phase</div>}<div className="space-y-1.5 text-sm">{d.homeValue>0&&<p className="flex justify-between text-blue-600"><span>Home Equity:</span><span className="font-semibold">${d.equity.toLocaleString()}</span></p>}{d.balance>0&&<p className="flex justify-between text-rose-500"><span>Loan Debt:</span><span className="font-semibold">${d.balance.toLocaleString()}</span></p>}{d.tfsaBalance>0&&<p className="flex justify-between text-teal-600"><span>💧 Liquid Wealth:</span><span className="font-semibold">${d.tfsaBalance.toLocaleString()}</span></p>}<p className="flex justify-between text-teal-700 text-xs"><span>Your TFSA:</span><span>${d.tfsaUser?.toLocaleString()}</span></p><p className="flex justify-between text-teal-700 text-xs"><span>Tammy's TFSA:</span><span>${d.tfsaTammy?.toLocaleString()}</span></p><p className="flex justify-between text-teal-700 text-xs"><span>Taxable Cash:</span><span>${d.taxableCash?.toLocaleString()}</span></p><div className="border-t pt-2 mt-1"><p className="flex justify-between text-slate-800 font-bold"><span>Net Worth:</span><span>${d.totalNetWorth.toLocaleString()}</span></p></div></div>{loanType==='nomad'&&d.month>0&&<div className="mt-3 pt-3 border-t"><p className="text-xs font-bold text-slate-500 uppercase mb-2">💰 Monthly Cash Flow</p><div className="space-y-1 text-xs"><p className="flex justify-between"><span>Pensions:</span><span>${d.monthlyPensionTotal.toLocaleString()}</span></p><p className="flex justify-between text-indigo-600"><span>OAS (net):</span><span>${d.monthlyOasNet?.toLocaleString()}</span></p><p className="flex justify-between text-teal-600"><span>Yield (after tax):</span><span>${d.monthlyDividendIncome.toLocaleString()}</span></p>{d.monthlyRmDraw>0&&<p className="flex justify-between text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded"><span>RM Draw:</span><span>+ ${d.monthlyRmDraw.toLocaleString()}</span></p>}{d.outOfPocketPayment>0&&<p className="flex justify-between text-rose-600"><span>HELOC Payment:</span><span>- ${d.outOfPocketPayment.toLocaleString()}</span></p>}<div className="border-t pt-1.5 mt-1"><p className="flex justify-between text-violet-700 font-bold text-sm"><span>Usable Cash:</span><span>${d.totalMonthlyIncome.toLocaleString()}/mo</span></p></div></div></div>}{d.limitHit&&<div className="mt-3 bg-amber-50 text-amber-700 p-2.5 rounded-lg text-xs flex items-start gap-1.5"><Icon name="AlertCircle" size={14} className="mt-0.5"/> 55% Principal limit reached.</div>}</div></div>);}return null;}}/>
+                                                    <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{fontSize:12,fontWeight:600}}/>
+                                                    {loanType==='nomad'&&<><ReferenceLine yAxisId="left" x={Number(nomadExitYear)} stroke="#f59e0b" strokeWidth={2} strokeDasharray="5 5" label={{position:'top',value:'🚐 Sell Home',fill:'#d97706',fontSize:11,fontWeight:700}}/><ReferenceLine yAxisId="left" x={Number(nomadExitYear)+Number(nomadTravelYears)} stroke="#6366f1" strokeWidth={2} strokeDasharray="5 5" label={{position:'top',value:'🏡 Re-Entry',fill:'#4f46e5',fontSize:11,fontWeight:700}}/></>}
+                                                    <Area yAxisId="left" type="monotone" dataKey="balance" stackId="debtEquity" stroke="#EF4444" strokeWidth={1.5} fill="url(#debtGrad)" name="RM Debt" isAnimationActive={false}/>
+                                                    <Area yAxisId="left" type="monotone" dataKey="equity" stackId="debtEquity" stroke="#3B82F6" strokeWidth={2} fill="url(#equityGrad)" name="Home Equity" isAnimationActive={false}/>
+                                                    <Area yAxisId="left" type="monotone" dataKey="tfsaBalance" stroke="#0D9488" strokeWidth={2} fill="url(#liquidGrad)" name="Liquid Wealth" isAnimationActive={false}/>
+                                                    {loanType!=='nomad'&&<Line yAxisId="left" type="monotone" dataKey={loanType==='heloc'?'totalOutofPocketInterest':'cumulativeInterest'} stroke="#f59e0b" strokeWidth={2.5} name={loanType==='heloc'?"Out-of-Pocket Interest":"Compounded Interest"} dot={false} isAnimationActive={false}/>}
+                                                    {loanType==='nomad'&&<Line yAxisId="right" type="monotone" dataKey="totalMonthlyIncome" stroke="#9333ea" strokeWidth={2.5} name="Monthly Income" dot={false} isAnimationActive={false}/>}
+                                                </ComposedChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                        <div className={`mt-5 p-4 rounded-xl border flex flex-col sm:flex-row gap-4 items-center transition-all duration-300 ${loanType==='nomad'?(nomadPhase===0?'bg-slate-50 border-slate-200':nomadPhase===1?'bg-amber-50 border-amber-200':nomadPhase===2?'bg-teal-50 border-teal-200':'bg-indigo-50 border-indigo-200'):(activeData.cumulativeAppreciation >= activeData.cumulativeInterest ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200')}`}>
+                                            <div className="flex-shrink-0 p-3 rounded-full bg-white shadow-sm">
+                                                {loanType==='nomad' ? <Icon name={['Home','Compass','Wallet','Zap'][nomadPhase??0]} size={24} className={['text-slate-500','text-amber-500','text-teal-500','text-indigo-500'][nomadPhase??0]}/> : <Icon name="Lightbulb" size={24} className={activeData.cumulativeAppreciation >= activeData.cumulativeInterest ? 'text-emerald-500' : 'text-rose-500'}/>}
+                                            </div>
+                                            <div className="flex-grow">
+                                                {loanType==='nomad' ? <>
+                                                    <h4 className="font-bold text-sm uppercase tracking-wider mb-1 text-slate-700">{['Phase 0: Waiting to Pivot','Phase 1: The Nomad Years','Phase 2: Re-Entry','Phase 3: The Dual Engine'][nomadPhase??0]} (Age {activeData.age})</h4>
+                                                    <p className="text-sm text-slate-600">{['Your home appreciates ~$'+Math.round(activeData.homeValue*(Number(appreciationRate)/100)).toLocaleString()+'/yr. Cash flow: $'+activeData.totalMonthlyIncome?.toLocaleString()+'/mo.', 'Liquid war chest: $'+activeData.tfsaBalance?.toLocaleString()+'. You are getting paid to wait!', 'You still have $'+activeData.tfsaBalance?.toLocaleString()+' invested after buying home.', 'Dual Engine active! Home: $'+activeData.homeValue?.toLocaleString()+' | Liquid: $'+activeData.tfsaBalance?.toLocaleString()][nomadPhase??0]}</p>
+                                                </> : <>
+                                                    <h4 className={`font-bold text-sm uppercase tracking-wider mb-1 ${activeData.cumulativeAppreciation >= activeData.cumulativeInterest ? 'text-emerald-700' : 'text-rose-700'}`}>Live Insight: Year {activeData.displayYear}</h4>
+                                                    <p className="text-sm text-slate-600">🏠 Home Growth: <strong className="text-emerald-600">${activeData.cumulativeAppreciation?.toLocaleString()}</strong> | 💸 Interest Cost: <strong className="text-rose-600">${activeData.cumulativeInterest?.toLocaleString()}</strong> → {activeData.cumulativeAppreciation >= activeData.cumulativeInterest ? '✅ Appreciation winning!' : '⚠️ Interest outpacing growth.'}</p>
+                                                </>}
+                                            </div>
+                                        </div>
+                                        {loanType === 'nomad' && isTravelPhase && activeRigData && (
+                                            <div className="mt-4 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                                                <h4 className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                                                    <Icon name="Zap" size={16} className="text-amber-500" /> Rig Cost Recovery
+                                                </h4>
+                                                <div className="space-y-2 text-xs">
+                                                    <p className="flex justify-between">
+                                                        <span className="text-slate-500">Original Rig Cost:</span>
+                                                        <span className="font-semibold">${Number(nomadTruckBudget).toLocaleString()}</span>
+                                                    </p>
+                                                    <p className="flex justify-between">
+                                                        <span className="text-slate-500">Cumulative Savings:</span>
+                                                        <span className="font-semibold text-emerald-600">${activeRigData.savings.toLocaleString()}</span>
+                                                    </p>
+                                                    <p className="flex justify-between font-bold text-sm">
+                                                        <span className="text-slate-700">Effective Cost Now:</span>
+                                                        <span className={activeRigData.effectiveCost === 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                                                            ${activeRigData.effectiveCost.toLocaleString()}
+                                                            {activeRigData.effectiveCost === 0 && ' 🎉 Fully paid off!'}
+                                                        </span>
+                                                    </p>
+                                                    <div className="w-full bg-slate-200 rounded-full h-2 mt-2">
+                                                        <div className="bg-emerald-500 h-2 rounded-full progress-bar" style={{ width: `${activeRigData.percent}%` }}></div>
+                                                    </div>
+                                                    <p className="text-xs text-slate-400 text-right">{activeRigData.percent.toFixed(0)}% recovered</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {loanType === 'nomad' && (
+                                            <div className="mt-4 p-4 bg-gradient-to-r from-indigo-50 to-violet-50 rounded-xl border border-indigo-200 shadow-sm">
+                                                <h4 className="text-sm font-bold text-indigo-700 mb-2 flex items-center gap-1.5">
+                                                    <Icon name="Wallet" size={16} className="text-indigo-500" /> Downsize Dividend
+                                                </h4>
+                                                <div className="space-y-2 text-xs">
+                                                    <p className="flex justify-between">
+                                                        <span className="text-slate-600">Spent on Adventures So Far:</span>
+                                                        <span className="font-semibold text-indigo-700">${activeDividend.cumulative.toLocaleString()}</span>
+                                                    </p>
+                                                    <p className="flex justify-between">
+                                                        <span className="text-slate-600">Total Planned Experience Budget:</span>
+                                                        <span className="font-semibold">${activeDividend.total.toLocaleString()}</span>
+                                                    </p>
+                                                    <div className="w-full bg-indigo-200 rounded-full h-2 mt-2">
+                                                        <div className="bg-indigo-500 h-2 rounded-full progress-bar" style={{ width: `${activeDividend.percent}%` }}></div>
+                                                    </div>
+                                                    <p className="text-xs text-indigo-600 text-right font-medium">
+                                                        {activeDividend.cumulative === 0 ? 'Your downsizing is unlocking adventures!' :
+                                                         activeDividend.cumulative < 50000 ? 'The journey begins!' :
+                                                         activeDividend.cumulative < 150000 ? 'Your downsizing has funded incredible experiences!' :
+                                                         activeDividend.cumulative < 300000 ? 'Your downsizing has fueled a lifetime of adventures!' :
+                                                         'Your downsizing has funded an empire of experiences!'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div> < /div> <
                         /div>
                     ) : (
                         /* ═══════════════════════════════════════════════════════════ */

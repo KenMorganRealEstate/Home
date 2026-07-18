@@ -1,0 +1,1562 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Wealth & Retirement Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        :root { --color-bg: #f8fafc; --color-surface: #ffffff; --color-border: #e2e8f0; }
+        * { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+        *::-webkit-scrollbar { width: 6px; height: 6px; }
+        *::-webkit-scrollbar-track { background: transparent; }
+        *::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .animate-fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.12); }
+        .stat-accent-bar { position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: 4px 0 0 4px; }
+        .progress-bar { transition: width 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 min-h-screen antialiased">
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useMemo, useCallback, useRef } = React;
+        const { ComposedChart, Line, Area, XAxis, YAxis, CartesianGrid, Tooltip: RechartsTooltip, ResponsiveContainer, Legend, ReferenceLine, PieChart, Pie, Cell, BarChart, Bar } = Recharts;
+
+        const svgPaths = {
+            Info: <><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></>,
+            Plus: <><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>,
+            Trash2: <><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></>,
+            Home: <><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></>,
+            Landmark: <><line x1="3" y1="22" x2="21" y2="22" /><line x1="6" y1="18" x2="6" y2="11" /><line x1="10" y1="18" x2="10" y2="11" /><line x1="14" y1="18" x2="14" y2="11" /><line x1="18" y1="18" x2="18" y2="11" /><polygon points="12 2 20 7 4 7" /></>,
+            AlertCircle: <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>,
+            ArrowRightLeft: <><path d="m16 3 4 4-4 4" /><path d="M20 7H4" /><path d="m8 21-4-4 4-4" /><path d="M4 17h16" /></>,
+            ArrowDownCircle: <><circle cx="12" cy="12" r="10" /><path d="m8 12 4 4 4-4" /><path d="M12 8v8" /></>,
+            Lightbulb: <><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1.3.5 2.6 1.5 3.5.8.8 1.3 1.5 1.5 2.5" /><path d="M9 18h6" /><path d="M10 22h4" /></>,
+            MapPin: <><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></>,
+            Compass: <><circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" /></>,
+            Wallet: <><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" /><path d="M3 5v14a2 2 0 0 0 2 2h16v-5" /><path d="M18 12a2 2 0 0 0 0 4h4v-4Z" /></>,
+            DollarSign: <><line x1="12" y1="2" x2="12" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></>,
+            Download: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>,
+            Upload: <><path d="M21 15v4a2 2 0 0 1-2 2H5a2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></>,
+            Calendar: <><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>,
+            RefreshCw: <><path d="M21 2v6h-6" /><path d="M3 12a9 9 0 0 1 15-6.7L21 8" /><path d="M3 22v-6h6" /><path d="M21 12a9 9 0 0 1-15 6.7L3 16" /></>,
+            Zap: <><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></>,
+            PieChartIcon: <><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" /></>,
+            BarChartIcon: <><line x1="12" y1="20" x2="12" y2="10" /><line x1="18" y1="20" x2="18" y2="4" /><line x1="6" y1="20" x2="6" y2="16" /></>,
+            TrendingUp: <><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></>,
+            Sparkles: <><path d="m12 3-1.9 4.1L6 9l4.1 1.9L12 15l1.9-4.1L18 9l-4.1-1.9Z" /><path d="M5 3v4" /><path d="M19 17v4" /><path d="M3 5h4" /><path d="M17 19h4" /></>,
+            Shield: <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></>,
+            Plane: <><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-1 .1-1.3.5l-.4.6c-.4.6-.2 1.4.4 1.8L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.4.6 1.2.8 1.8.4l.6-.4c.4-.3.6-.8.5-1.3Z" /></>,
+            Target: <><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></>,
+            Globe: <><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></>,
+            Gift: <><polyline points="20 12 20 22 4 22 4 12" /><rect x="2" y="7" width="20" height="5" /><line x1="12" y1="22" x2="12" y2="7" /><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z" /><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" /></>,
+            Star: <><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></>,
+            Banknote: <><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /><circle cx="12" cy="12" r="3" /></>,
+            Percent: <><line x1="19" y1="5" x2="5" y2="19" /><circle cx="6.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" /></>,
+            Scale: <><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="M7 21h10" /><path d="M12 3v18" /><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></>
+        };
+
+        const Icon = ({ name, size = 24, className = "" }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}> {svgPaths[name]} </svg> );
+        
+        const InfoTooltip = ({ text }) => ( <span className="group relative flex items-center justify-center ml-1.5 cursor-help inline-flex"> <Icon name="Info" size={15} className="text-slate-400 hover:text-indigo-500 transition-colors" /> <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-white text-xs rounded-xl shadow-xl opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none font-normal leading-relaxed"> {text} <span className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-slate-800"></span></span></span> );
+        
+        const InputGroup = ({ label, value, onChange, type = "number", prefix = "", suffix = "", tooltip, step = "1", min = "0", max, disabled = false }) => ( <div className="flex flex-col mb-3.5"> <label className="flex items-center text-xs font-semibold text-slate-600 mb-1.5 tracking-wide uppercase"> {label} {tooltip && <InfoTooltip text={tooltip} />} </label> <div className="relative flex items-center group"> {prefix && <span className="absolute left-3.5 text-slate-400 font-medium text-sm">{prefix}</span>} <input type={type} className={`w-full py-2.5 px-3.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all text-sm font-medium text-slate-700 placeholder:text-slate-300 disabled:bg-slate-50 disabled:text-slate-400 ${prefix ? 'pl-9' : ''} ${suffix ? 'pr-10' : ''}`} value={value} onChange={(e) => onChange(e.target.value)} step={step} min={min} max={max} disabled={disabled} /> {suffix && <span className="absolute right-3.5 text-slate-400 font-medium text-sm">{suffix}</span>} </div></div> );
+        
+        const ToggleSwitch = ({ checked, onChange, label, tooltip }) => ( <div className="flex items-center justify-between py-1.5"> <span className="text-xs font-semibold text-slate-600 flex items-center gap-1">{label} {tooltip && <InfoTooltip text={tooltip} />}</span> <label className="relative inline-flex items-center cursor-pointer"> <input type="checkbox" className="sr-only peer" checked={checked} onChange={onChange} /> <div className="w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-indigo-500 peer-focus:ring-2 peer-focus:ring-indigo-500/30 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div></label></div> );
+        
+        const LumpSumSection = ({ newLumpYear, setNewLumpYear, newLumpAmount, setNewLumpAmount, newLumpReason, setNewLumpReason, lumpSums, addLumpSum, removeLumpSum }) => ( <div className="border-t pt-4 mt-4"> <h3 className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5"><Icon name="Calendar" size={15} className="text-amber-500" /> Scheduled Lump Sums</h3> <div className="flex gap-2 flex-wrap items-end"> <div className="w-20"><InputGroup label="Year" value={newLumpYear} onChange={setNewLumpYear} min="0" max="30" /></div> <div className="flex-1 min-w-[100px]"><InputGroup label="Amount" value={newLumpAmount} onChange={setNewLumpAmount} prefix="$" /></div> <div className="flex-1 min-w-[120px]"><label className="text-xs font-semibold text-slate-600 mb-1.5 tracking-wide uppercase block">Reason</label><input type="text" className="w-full py-2.5 px-3.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none text-sm font-medium text-slate-700 placeholder:text-slate-300" value={newLumpReason} onChange={(e) => setNewLumpReason(e.target.value)} placeholder="e.g., World Tour" /></div> <button onClick={addLumpSum} className="mb-3.5 p-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl shadow-sm"><Icon name="Plus" size={18} /></button></div> {lumpSums.length > 0 && ( <div className="space-y-1.5 mt-2 max-h-40 overflow-y-auto"> {lumpSums.map(ls => ( <div key={ls.id} className="flex justify-between items-center bg-slate-50 p-2.5 rounded-lg text-xs border border-slate-100"> <span className="font-semibold text-slate-700">Yr {ls.year}: ${Number(ls.amount).toLocaleString()}</span> <span className="text-slate-500 italic">{ls.reason}</span> <button onClick={() => removeLumpSum(ls.id)} className="text-rose-400 hover:text-rose-600 transition-colors ml-2"><Icon name="Trash2" size={14} /></button></div> ))} </div> )} </div> );
+
+        const ActiveIncomeSection = ({ newActiveYear, setNewActiveYear, newActiveAmount, setNewActiveAmount, newActiveSource, setNewActiveSource, activeIncomes, addActiveIncome, removeActiveIncome }) => ( <div className="border-t pt-4 mt-4"> <h3 className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5"><Icon name="DollarSign" size={15} className="text-emerald-500" /> Active / Extra Income Streams</h3> <p className="text-xs text-slate-500 mb-3">Add random commission years or income bumps. Automatically flows to liquid investments.</p> <div className="flex gap-2 flex-wrap items-end"> <div className="w-20"><InputGroup label="Year" value={newActiveYear} onChange={setNewActiveYear} min="0" max="30" /></div> <div className="flex-1 min-w-[100px]"><InputGroup label="Amount" value={newActiveAmount} onChange={setNewActiveAmount} prefix="$" /></div> <div className="flex-1 min-w-[120px]"><label className="text-xs font-semibold text-slate-600 mb-1.5 tracking-wide uppercase block">Source</label><input type="text" className="w-full py-2.5 px-3.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 outline-none text-sm font-medium text-slate-700 placeholder:text-slate-300" value={newActiveSource} onChange={(e) => setNewActiveSource(e.target.value)} placeholder="e.g., RE Commission" /></div> <button onClick={addActiveIncome} className="mb-3.5 p-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-sm"><Icon name="Plus" size={18} /></button></div> {activeIncomes.length > 0 && ( <div className="space-y-1.5 mt-2 max-h-40 overflow-y-auto"> {activeIncomes.map(ai => ( <div key={ai.id} className="flex justify-between items-center bg-emerald-50 p-2.5 rounded-lg text-xs border border-emerald-100"> <span className="font-semibold text-emerald-700">Yr {ai.year}: ${Number(ai.amount).toLocaleString()}</span> <span className="text-emerald-600 italic">{ai.source}</span> <button onClick={() => removeActiveIncome(ai.id)} className="text-rose-400 hover:text-rose-600 transition-colors ml-2"><Icon name="Trash2" size={14} /></button></div> ))} </div> )} </div> );
+
+        function App() {
+            const [loanType, setLoanType] = useState('nomad');
+            const [homeValue, setHomeValue] = useState(1200000);
+            const [startingAge, setStartingAge] = useState(60);
+            const [interestRate, setInterestRate] = useState(7.24);
+            const [helocRate, setHelocRate] = useState(7.45);
+            const [appreciationRate, setAppreciationRate] = useState(2.0);
+            const [initialAdvance, setInitialAdvance] = useState(0);
+            const [monthlyWithdrawal, setMonthlyWithdrawal] = useState(0);
+            const [lumpSums, setLumpSums] = useState([
+                { id: 1, year: 6, amount: 50000, reason: "World tour – business class" },
+                { id: 2, year: 8, amount: 60000, reason: "African safari & luxury lodges" },
+                { id: 3, year: 10, amount: 70000, reason: "Asia & Australia expedition" },
+                { id: 4, year: 12, amount: 75000, reason: "European river cruises & villas" },
+                { id: 5, year: 14, amount: 60000, reason: "Alaska & Canadian Rockies" },
+                { id: 6, year: 16, amount: 50000, reason: "South America adventure" },
+                { id: 7, year: 18, amount: 40000, reason: "Mediterranean cruise" },
+                { id: 8, year: 20, amount: 40000, reason: "Family reunion resort" }
+            ]);
+            const [activeIncomes, setActiveIncomes] = useState([
+                { id: 1, year: 1, amount: 50000, source: "RE Commission" }
+            ]); 
+            const [newLumpYear, setNewLumpYear] = useState(10);
+            const [newLumpAmount, setNewLumpAmount] = useState(15000);
+            const [newLumpReason, setNewLumpReason] = useState("Vacation / Car");
+            const [newActiveYear, setNewActiveYear] = useState(2);
+            const [newActiveAmount, setNewActiveAmount] = useState(50000);
+            const [newActiveSource, setNewActiveSource] = useState("RE Commission");
+            const [principalPayments, setPrincipalPayments] = useState([]);
+            const [newPayYear, setNewPayYear] = useState(1);
+            const [newPayAmount, setNewPayAmount] = useState(20000);
+            const [enableDownsize, setEnableDownsize] = useState(false);
+            const [downsizeYear, setDownsizeYear] = useState(5);
+            const [newHomeValue, setNewHomeValue] = useState(800000);
+            const [enableTFSA, setEnableTFSA] = useState(true);
+            const [tfsaRoomUser, setTfsaRoomUser] = useState(102000);
+            const [tfsaRoomTammy, setTfsaRoomTammy] = useState(102000);
+            const [tfsaReturnRate, setTfsaReturnRate] = useState(5.0);
+            const [nomadExitYear, setNomadExitYear] = useState(3);
+            const [nomadTruckBudget, setNomadTruckBudget] = useState(150000);
+            const [nomadTravelYears, setNomadTravelYears] = useState(3);
+            const [nomadYield, setNomadYield] = useState(5.0);
+            const [nomadNewHomePrice, setNomadNewHomePrice] = useState(750000);
+            const [pensionUser, setPensionUser] = useState(3316.36);
+            const [pensionTammy, setPensionTammy] = useState(3031.36);
+            const [inflationRate, setInflationRate] = useState(2.0);
+            const [oasUserAmount, setOasUserAmount] = useState(800);
+            const [oasTammyAmount, setOasTammyAmount] = useState(900);
+            const [oasUserStartAge, setOasUserStartAge] = useState(65);
+            const [oasTammyStartAge, setOasTammyStartAge] = useState(65);
+            const [oasTaxRate, setOasTaxRate] = useState(15);
+            const [enableNomadRM, setEnableNomadRM] = useState(true);
+            const [nomadRmTriggerYear, setNomadRmTriggerYear] = useState(0);
+            const [nomadRmMonthly, setNomadRmMonthly] = useState(0);
+            const [hoveredData, setHoveredData] = useState(null);
+            const [chartDomainLeft, setChartDomainLeft] = useState(0);
+            const [chartDomainRight, setChartDomainRight] = useState(30);
+            const fileInputRef = useRef(null);
+            const [annualTfsaContribution, setAnnualTfsaContribution] = useState(7000);
+            const [nonRegTaxRate, setNonRegTaxRate] = useState(25);
+            const [avoidedHousingCost, setAvoidedHousingCost] = useState(800);
+            
+            // Recalibration (mid‑course correction)
+            const [enableRebase, setEnableRebase] = useState(false);
+            const [rebaseYear, setRebaseYear] = useState(4);
+            const [rebaseHomeValue, setRebaseHomeValue] = useState(1200000);
+            const [rebaseLiquidWealth, setRebaseLiquidWealth] = useState(500000);
+            const [rebaseLoanBalance, setRebaseLoanBalance] = useState(0);
+            const [rebaseYield, setRebaseYield] = useState(5.0);
+            const [rebaseAppreciation, setRebaseAppreciation] = useState(2.0);
+            const [dashboardChartTab, setDashboardChartTab] = useState('wealth');
+
+            // The Simulation Engine (handles "includeActive" flag for baseline comparisons)
+            const runSimulation = useCallback((effectiveLoanType, includeActive = true) => {
+                const data = [];
+                let currentHomeValue = Number(homeValue);
+                const initialHomeValueTracker = Number(homeValue);
+                let balance = Number(initialAdvance);
+                let cumulativePrincipal = Number(initialAdvance);
+                let totalOutofPocketInterest = 0;
+                let cumulativeInterest = 0;
+                let limitHit = false;
+                let tfsaUser = 0;
+                let tfsaTammy = 0;
+                let taxableCash = 0;
+                let leftoverCashAtDownsize = 0;
+                let isNomadPhase = false;
+                let hasSoldHouseForNomad = false;
+                let downsizeOccurred = false;
+                let roomUser = Number(tfsaRoomUser);
+                let roomTammy = Number(tfsaRoomTammy);
+                let cumulativeInvestmentIncome = 0;
+                let cumulativeTaxSaved = 0;
+                let totalTfsaContributions = 0;
+                let totalTaxableContributions = 0;
+                let cumulativeActiveIncome = 0;
+
+                                let rmR = Number(interestRate) / 100;
+                let rmMonthlyRate = Math.pow(1 + rmR / 2, 1 / 6) - 1;
+                let helocR = Number(helocRate) / 100;
+                let helocMonthlyRate = helocR / 12;
+                let monthlyAppreciation = Number(appreciationRate) / 100 / 12;
+                let tfsaMonthlyReturn = (effectiveLoanType === 'nomad' ? Number(nomadYield) : Number(tfsaReturnRate)) / 100 / 12;
+                let annualInflation = Number(inflationRate) / 100;
+                const oasUserStartMonth = (Number(oasUserStartAge) - Number(startingAge)) * 12;
+                const oasTammyStartMonth = (Number(oasTammyStartAge) - Number(startingAge)) * 12;
+                const annTfsa = Number(annualTfsaContribution);
+                const taxRate = Number(nonRegTaxRate) / 100;
+
+                const fillTFSAs = (amount) => {
+                    const roomUserNow = Math.max(0, roomUser - tfsaUser);
+                    const roomTammyNow = Math.max(0, roomTammy - tfsaTammy);
+                    const totalRoom = roomUserNow + roomTammyNow;
+                    if (totalRoom <= 0 || amount <= 0) return amount;
+                    const toUser = Math.min(roomUserNow, amount * (roomUserNow / totalRoom));
+                    const toTammy = Math.min(roomTammyNow, amount * (roomTammyNow / totalRoom));
+                    tfsaUser += toUser;
+                    tfsaTammy += toTammy;
+                    totalTfsaContributions += toUser + toTammy;
+                    return amount - toUser - toTammy;
+                };
+
+                for (let m = 0; m <= 360; m++) {
+                    const year = m / 12;
+                    let interestChargeThisMonth = 0;
+                    let principalDrawnThisMonth = 0;
+                    let outOfPocketPayment = 0;
+                    let principalPaidThisMonth = 0;
+                    let monthlyRmDraw = 0;
+                    let activeIncomeThisMonth = 0; 
+
+                    if (m > 0 && m % 12 === 0) {
+                        roomUser += annTfsa;
+                        roomTammy += annTfsa;
+                        taxableCash = fillTFSAs(taxableCash);
+                    }
+
+                    // Process Active Incomes if flag is true
+                    if (includeActive) {
+                        const scheduledActive = activeIncomes.filter(a => Number(a.year) * 12 === m);
+                        const activeThisMonth = scheduledActive.reduce((sum, a) => sum + Number(a.amount), 0);
+                        if (activeThisMonth > 0) {
+                             const afterTfsa = fillTFSAs(activeThisMonth);
+                             taxableCash += afterTfsa;
+                             activeIncomeThisMonth = activeThisMonth;
+                        }
+                    }
+                    cumulativeActiveIncome += activeIncomeThisMonth;
+
+                    if (m > 0 && currentHomeValue > 0) currentHomeValue *= (1 + monthlyAppreciation);
+
+                    // --- Recalibration override ---
+                    if (enableRebase && m === Number(rebaseYear) * 12) {
+                        // Override balances
+                        currentHomeValue = Number(rebaseHomeValue);
+                        balance = Number(rebaseLoanBalance);
+                        cumulativePrincipal = Number(rebaseLoanBalance);
+
+                        // Split liquid wealth proportionally to existing TFSAs, or 50/50
+                        const oldLiquid = tfsaUser + tfsaTammy + taxableCash;
+                        const newLiquid = Number(rebaseLiquidWealth);
+                        if (oldLiquid > 0) {
+                            const userShare = tfsaUser / oldLiquid;
+                            const tammyShare = tfsaTammy / oldLiquid;
+                            tfsaUser = newLiquid * userShare;
+                            tfsaTammy = newLiquid * tammyShare;
+                            taxableCash = newLiquid * (1 - userShare - tammyShare);
+                        } else {
+                            tfsaUser = newLiquid * 0.5;
+                            tfsaTammy = newLiquid * 0.5;
+                            taxableCash = 0;
+                        }
+
+                        // Use the new rates from this month onward
+                        monthlyAppreciation = Number(rebaseAppreciation) / 100 / 12;
+                        tfsaMonthlyReturn = Number(rebaseYield) / 100 / 12;
+                    }
+                    // --- end recalibration override ---
+                    
+                    const fullYears = Math.floor(m / 12);
+                    const monthlyPensionTotal = (Number(pensionUser) + Number(pensionTammy)) * Math.pow(1 + annualInflation, fullYears);
+                    let oasIncome = 0;
+                    if (oasUserStartMonth >= 0 && m >= oasUserStartMonth) {
+                        const yearsSinceStart = Math.floor((m - oasUserStartMonth) / 12);
+                        oasIncome += Number(oasUserAmount) * Math.pow(1 + annualInflation, yearsSinceStart);
+                    }
+                    if (oasTammyStartMonth >= 0 && m >= oasTammyStartMonth) {
+                        const yearsSinceStart = Math.floor((m - oasTammyStartMonth) / 12);
+                        oasIncome += Number(oasTammyAmount) * Math.pow(1 + annualInflation, yearsSinceStart);
+                    }
+                    const oasNet = oasIncome * (1 - Number(oasTaxRate) / 100);
+
+                    let monthlyDividendIncome = 0;
+                    let monthlyTaxSaved = 0;
+                    const totalLiquid = tfsaUser + tfsaTammy + taxableCash;
+                    
+                    if (m > 0 && totalLiquid > 0) {
+                        const yieldAmount = totalLiquid * tfsaMonthlyReturn;
+                        const tfsaTotal = tfsaUser + tfsaTammy;
+                        let netYield = 0;
+                        if (tfsaTotal > 0) {
+                            const tfsaYield = yieldAmount * (tfsaTotal / totalLiquid);
+                            const ratioUser = tfsaUser / tfsaTotal;
+                            tfsaUser += tfsaYield * ratioUser;
+                            tfsaTammy += tfsaYield * (1 - ratioUser);
+                            const taxableYield = yieldAmount - tfsaYield;
+                            const afterTaxTaxable = taxableYield * (1 - taxRate);
+                            taxableCash += afterTaxTaxable;
+                            netYield = tfsaYield + afterTaxTaxable;
+                            monthlyTaxSaved = tfsaYield * taxRate;
+                        } else {
+                            const afterTaxAll = yieldAmount * (1 - taxRate);
+                            taxableCash += afterTaxAll;
+                            netYield = afterTaxAll;
+                        }
+                        monthlyDividendIncome = netYield;
+                        cumulativeTaxSaved += monthlyTaxSaved;
+                    }
+                    cumulativeInvestmentIncome += monthlyDividendIncome;
+
+                    if (effectiveLoanType === 'nomad') {
+                        const isExitMonth = (m === Number(nomadExitYear) * 12);
+                        const isReEntryMonth = (m === (Number(nomadExitYear) + Number(nomadTravelYears)) * 12);
+                        isNomadPhase = (year >= Number(nomadExitYear) && year < (Number(nomadExitYear) + Number(nomadTravelYears)));
+                        
+                        if (enableDownsize && !downsizeOccurred && m === Number(downsizeYear) * 12) {
+                            if (!hasSoldHouseForNomad) {
+                                leftoverCashAtDownsize = currentHomeValue - balance - Number(newHomeValue);
+                                const afterTfsa = fillTFSAs(leftoverCashAtDownsize);
+                                taxableCash += afterTfsa;
+                                leftoverCashAtDownsize = 0;
+                                currentHomeValue = Number(newHomeValue);
+                                balance = 0;
+                                cumulativePrincipal = 0;
+                                hasSoldHouseForNomad = true;
+                                downsizeOccurred = true;
+                            } else if (hasSoldHouseForNomad && !isNomadPhase && currentHomeValue > 0) {
+                                leftoverCashAtDownsize = currentHomeValue - balance - Number(newHomeValue);
+                                const afterTfsa = fillTFSAs(leftoverCashAtDownsize);
+                                taxableCash += afterTfsa;
+                                leftoverCashAtDownsize = 0;
+                                currentHomeValue = Number(newHomeValue);
+                                balance = 0;
+                                cumulativePrincipal = 0;
+                                downsizeOccurred = true;
+                            }
+                        }
+                        
+                        if (!hasSoldHouseForNomad && isExitMonth) {
+                            const saleProceeds = currentHomeValue;
+                            const netCash = saleProceeds - balance - Number(nomadTruckBudget);
+                            const afterTfsa = fillTFSAs(netCash);
+                            taxableCash += afterTfsa;
+                            totalTaxableContributions += afterTfsa;
+                            currentHomeValue = 0;
+                            balance = 0;
+                            cumulativePrincipal = 0;
+                            hasSoldHouseForNomad = true;
+                        } else if (hasSoldHouseForNomad && isReEntryMonth) {
+                            const homePrice = Number(nomadNewHomePrice);
+                            const totalLiquidBefore = tfsaUser + tfsaTammy + taxableCash;
+                            if (totalLiquidBefore >= homePrice) {
+                                let remaining = homePrice;
+                                const fromTaxable = Math.min(remaining, taxableCash);
+                                taxableCash -= fromTaxable;
+                                remaining -= fromTaxable;
+                                if (remaining > 0) {
+                                    const totalTfsa = tfsaUser + tfsaTammy;
+                                    const fromTfsa = Math.min(remaining, totalTfsa);
+                                    const ratioUser = tfsaUser / totalTfsa;
+                                    tfsaUser -= fromTfsa * ratioUser;
+                                    tfsaTammy -= fromTfsa * (1 - ratioUser);
+                                    remaining -= fromTfsa;
+                                }
+                                currentHomeValue = homePrice;
+                                balance = 0;
+                                cumulativePrincipal = 0;
+                            } else {
+                                const shortfall = homePrice - totalLiquidBefore;
+                                tfsaUser = 0;
+                                tfsaTammy = 0;
+                                taxableCash = 0;
+                                currentHomeValue = homePrice;
+                                balance = shortfall;
+                                cumulativePrincipal = shortfall;
+                            }
+                        }
+                    } else {
+                        if (enableDownsize && m === Number(downsizeYear) * 12) {
+                            const saleProceeds = currentHomeValue;
+                            const totalDebt = balance;
+                            leftoverCashAtDownsize = saleProceeds - totalDebt - Number(newHomeValue);
+                            const afterTfsa = fillTFSAs(leftoverCashAtDownsize);
+                            taxableCash += afterTfsa;
+                            leftoverCashAtDownsize = 0;
+                            currentHomeValue = Number(newHomeValue);
+                            balance = 0;
+                            cumulativePrincipal = 0;
+                        }
+                    }
+
+                    if (effectiveLoanType === 'nomad') {
+                        if (!hasSoldHouseForNomad) {
+                            if (balance > 0) {
+                                interestChargeThisMonth = balance * helocMonthlyRate;
+                                outOfPocketPayment = interestChargeThisMonth;
+                                totalOutofPocketInterest += outOfPocketPayment;
+                                cumulativeInterest += interestChargeThisMonth;
+                            }
+                            if (m === 1) {
+                                const adv = Number(initialAdvance);
+                                balance += adv;
+                                cumulativePrincipal += adv;
+                                principalDrawnThisMonth += adv;
+                            }
+                        } else if (isNomadPhase) {
+                        } else {
+                            if (enableNomadRM && year >= Number(nomadRmTriggerYear) && currentHomeValue > 0) {
+                                if (balance > 0) {
+                                    interestChargeThisMonth = balance * rmMonthlyRate;
+                                    balance += interestChargeThisMonth;
+                                    cumulativeInterest += interestChargeThisMonth;
+                                }
+                                let requestedMonthly = Number(nomadRmMonthly);
+                                const currentMaxLimit = currentHomeValue * 0.55;
+                                const availablePrincipal = Math.max(0, currentMaxLimit - cumulativePrincipal);
+                                const actualMonthly = Math.min(requestedMonthly, availablePrincipal);
+                                balance += actualMonthly;
+                                cumulativePrincipal += actualMonthly;
+                                monthlyRmDraw += actualMonthly;
+                                principalDrawnThisMonth += actualMonthly;
+                                if (requestedMonthly > 0 && availablePrincipal <= 0) limitHit = true;
+                            }
+                        }
+                    } else if (effectiveLoanType === 'reverse') {
+                        if (balance > 0) {
+                            interestChargeThisMonth = balance * rmMonthlyRate;
+                            balance += interestChargeThisMonth;
+                            cumulativeInterest += interestChargeThisMonth;
+                        }
+                        let requestedWithdrawal = Number(monthlyWithdrawal);
+                        const currentMaxLimit = (enableDownsize && m >= Number(downsizeYear) * 12) ? Number(newHomeValue) * 0.55 : Number(homeValue) * 0.55;
+                        const availablePrincipal = Math.max(0, currentMaxLimit - cumulativePrincipal);
+                        const actualWithdrawal = Math.min(requestedWithdrawal, availablePrincipal);
+                        balance += actualWithdrawal;
+                        cumulativePrincipal += actualWithdrawal;
+                        principalDrawnThisMonth += actualWithdrawal;
+                        if (requestedWithdrawal > 0 && availablePrincipal <= 0) limitHit = true;
+                    } else if (effectiveLoanType === 'heloc') {
+                        if (balance > 0) {
+                            interestChargeThisMonth = balance * helocMonthlyRate;
+                            outOfPocketPayment = interestChargeThisMonth;
+                            totalOutofPocketInterest += outOfPocketPayment;
+                            cumulativeInterest += interestChargeThisMonth;
+                        }
+                        let requestedWithdrawal = Number(monthlyWithdrawal);
+                        const currentMaxLimit = (enableDownsize && m >= Number(downsizeYear) * 12) ? Number(newHomeValue) * 0.55 : Number(homeValue) * 0.55;
+                        const availablePrincipal = Math.max(0, currentMaxLimit - cumulativePrincipal);
+                        const actualWithdrawal = Math.min(requestedWithdrawal, availablePrincipal);
+                        balance += actualWithdrawal;
+                        cumulativePrincipal += actualWithdrawal;
+                        principalDrawnThisMonth += actualWithdrawal;
+                        if (requestedWithdrawal > 0 && availablePrincipal <= 0) limitHit = true;
+                        
+                        const scheduledPayments = principalPayments.filter(p => p.year * 12 === m);
+                        const totalPayment = scheduledPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+                        if (totalPayment > 0) {
+                            const actualPayment = Math.min(totalPayment, balance);
+                            balance -= actualPayment;
+                            cumulativePrincipal = Math.max(0, cumulativePrincipal - actualPayment);
+                            principalPaidThisMonth = actualPayment;
+                        }
+                    }
+
+                    const scheduledLumpSums = lumpSums.filter(ls => ls.year * 12 === m);
+                    let remainingLump = scheduledLumpSums.reduce((sum, ls) => sum + Number(ls.amount), 0);
+                    const totalLiquidNow = tfsaUser + tfsaTammy + taxableCash;
+                    
+                    if (remainingLump > 0 && totalLiquidNow > 0) {
+                        const fromTaxable = Math.min(remainingLump, taxableCash);
+                        taxableCash -= fromTaxable;
+                        remainingLump -= fromTaxable;
+                        if (remainingLump > 0) {
+                            const totalTfsa = tfsaUser + tfsaTammy;
+                            const fromTfsa = Math.min(remainingLump, totalTfsa);
+                            const ratioUser = tfsaUser / totalTfsa;
+                            tfsaUser -= fromTfsa * ratioUser;
+                            tfsaTammy -= fromTfsa * (1 - ratioUser);
+                            remainingLump -= fromTfsa;
+                        }
+                    }
+                    if (remainingLump > 0) {
+                        if (effectiveLoanType === 'nomad') {
+                            if (!hasSoldHouseForNomad) {
+                                const limit = Number(homeValue) * 0.55;
+                                const avail = Math.max(0, limit - cumulativePrincipal);
+                                const draw = Math.min(remainingLump, avail);
+                                balance += draw;
+                                cumulativePrincipal += draw;
+                                principalDrawnThisMonth += draw;
+                                remainingLump -= draw;
+                                if (remainingLump > 0 && avail <= 0) limitHit = true;
+                            } else if (hasSoldHouseForNomad && !isNomadPhase && enableNomadRM && year >= Number(nomadRmTriggerYear)) {
+                                const limit = currentHomeValue * 0.55;
+                                const avail = Math.max(0, limit - cumulativePrincipal);
+                                const draw = Math.min(remainingLump, avail);
+                                balance += draw;
+                                cumulativePrincipal += draw;
+                                principalDrawnThisMonth += draw;
+                                monthlyRmDraw += draw;
+                                remainingLump -= draw;
+                                if (remainingLump > 0 && avail <= 0) limitHit = true;
+                            }
+                        } else if (effectiveLoanType === 'heloc' || effectiveLoanType === 'reverse') {
+                            const limit = (enableDownsize && m >= Number(downsizeYear) * 12) ? Number(newHomeValue) * 0.55 : Number(homeValue) * 0.55;
+                            const avail = Math.max(0, limit - cumulativePrincipal);
+                            const draw = Math.min(remainingLump, avail);
+                            balance += draw;
+                            cumulativePrincipal += draw;
+                            principalDrawnThisMonth += draw;
+                            if (remainingLump > 0 && avail <= 0) limitHit = true;
+                        }
+                    }
+
+                    const totalMonthlyIncome = monthlyPensionTotal + oasNet + monthlyDividendIncome + monthlyRmDraw - outOfPocketPayment;
+                    const cumulativeAppreciation = effectiveLoanType === 'nomad' && hasSoldHouseForNomad && !isNomadPhase ? Math.max(0, currentHomeValue - Number(nomadNewHomePrice)) : currentHomeValue - initialHomeValueTracker;
+                    const totalLiquidWealth = tfsaUser + tfsaTammy + taxableCash;
+                    
+                    data.push({
+                        month: m, year, displayYear: Math.floor(year), displayMonth: m % 12 || (m === 0 ? 0 : 12),
+                        age: Number(startingAge) + Math.floor(year), homeValue: Math.round(currentHomeValue),
+                        balance: Math.round(balance), equity: Math.max(0, Math.round(currentHomeValue - balance)),
+                        cumulativePrincipal: Math.round(cumulativePrincipal), interestChargeThisMonth: Math.round(interestChargeThisMonth),
+                        outOfPocketPayment: Math.round(outOfPocketPayment), totalOutofPocketInterest: Math.round(totalOutofPocketInterest),
+                        cumulativeInterest: Math.round(cumulativeInterest), cumulativeAppreciation: Math.round(cumulativeAppreciation),
+                        principalDrawnThisMonth, principalPaidThisMonth, limitHit,
+                        isDownsizeMonth: (effectiveLoanType !== 'nomad' && enableDownsize && m === Number(downsizeYear) * 12) || (effectiveLoanType === 'nomad' && m === (Number(nomadExitYear) + Number(nomadTravelYears)) * 12),
+                        isExitMonth: effectiveLoanType === 'nomad' && m === Number(nomadExitYear) * 12,
+                        tfsaBalance: Math.round(totalLiquidWealth), tfsaUser: Math.round(tfsaUser),
+                        tfsaTammy: Math.round(tfsaTammy), taxableCash: Math.round(taxableCash),
+                        totalNetWorth: Math.round(Math.max(0, currentHomeValue - balance) + totalLiquidWealth),
+                        isNomadPhase, monthlyPensionTotal: Math.round(monthlyPensionTotal),
+                        monthlyDividendIncome: Math.round(monthlyDividendIncome), monthlyRmDraw: Math.round(monthlyRmDraw),
+                        monthlyOasNet: Math.round(oasNet), totalMonthlyIncome: Math.round(totalMonthlyIncome),
+                        leftoverCashAtDownsize: Math.round(Math.max(0, leftoverCashAtDownsize)),
+                        cumulativeInvestmentIncome: Math.round(cumulativeInvestmentIncome), cumulativeTaxSaved: Math.round(cumulativeTaxSaved),
+                        guaranteedIncome: Math.round(monthlyPensionTotal + oasNet), variableIncome: Math.round(monthlyDividendIncome + monthlyRmDraw - outOfPocketPayment),
+                        activeIncomeThisMonth: Math.round(activeIncomeThisMonth), cumulativeActiveIncome: Math.round(cumulativeActiveIncome)
+                    });
+                }
+                return data;
+            }, [homeValue, interestRate, helocRate, appreciationRate, initialAdvance, monthlyWithdrawal, lumpSums, activeIncomes, principalPayments, startingAge, enableDownsize, downsizeYear, newHomeValue, enableTFSA, tfsaRoomUser, tfsaRoomTammy, tfsaReturnRate, nomadExitYear, nomadTruckBudget, nomadTravelYears, nomadYield, nomadNewHomePrice, pensionUser, pensionTammy, inflationRate, enableNomadRM, nomadRmTriggerYear, nomadRmMonthly, oasUserAmount, oasTammyAmount, oasUserStartAge, oasTammyStartAge, oasTaxRate, annualTfsaContribution, nonRegTaxRate, enableRebase, rebaseYear, rebaseHomeValue, rebaseLiquidWealth, rebaseLoanBalance, rebaseYield, rebaseAppreciation]);
+
+            const simulationData = useMemo(() => runSimulation(loanType === 'dashboard' ? 'nomad' : loanType, true), [runSimulation, loanType]);
+            const nomadPivotData = useMemo(() => runSimulation('nomad', true), [runSimulation]);
+            const nomadBaselineData = useMemo(() => runSimulation('nomad', false), [runSimulation]); 
+            
+            const immediateDownsizeData = useMemo(() => {
+                const data = [];
+                let homeValueID = Number(homeValue);
+                let balanceID = 0;
+                let tfsaUserID = 0, tfsaTammyID = 0, taxableCashID = 0;
+                let roomUserID = Number(tfsaRoomUser);
+                let roomTammyID = Number(tfsaRoomTammy);
+                const monthlyApp = Number(appreciationRate) / 100 / 12;
+                const tfsaReturn = Number(nomadYield) / 100 / 12;
+                const taxRateID = Number(nonRegTaxRate) / 100;
+                const annTfsa = Number(annualTfsaContribution);
+                const pivotMonth = Number(nomadExitYear) * 12;
+                
+                const fillTFSAsID = (amount) => {
+                    const roomUserNow = Math.max(0, roomUserID - tfsaUserID);
+                    const roomTammyNow = Math.max(0, roomTammyID - tfsaTammyID);
+                    const totalRoom = roomUserNow + roomTammyNow;
+                    if (totalRoom <= 0 || amount <= 0) return amount;
+                    const toUser = Math.min(roomUserNow, amount * (roomUserNow / totalRoom));
+                    const toTammy = Math.min(roomTammyNow, amount * (roomTammyNow / totalRoom));
+                    tfsaUserID += toUser;
+                    tfsaTammyID += toTammy;
+                    return amount - toUser - toTammy;
+                };
+                
+                for (let m = 0; m <= 360; m++) {
+                    if (m > 0 && m % 12 === 0) {
+                        roomUserID += annTfsa;
+                        roomTammyID += annTfsa;
+                        taxableCashID = fillTFSAsID(taxableCashID);
+                    }
+                    if (m > 0 && homeValueID > 0) homeValueID *= (1 + monthlyApp);
+                    if (m === pivotMonth) {
+                        const saleProceeds = homeValueID;
+                        const netCash = saleProceeds - Number(nomadTruckBudget) - Number(nomadNewHomePrice);
+                        const afterTfsa = fillTFSAsID(netCash);
+                        taxableCashID += afterTfsa;
+                        homeValueID = Number(nomadNewHomePrice);
+                        balanceID = 0;
+                    }
+                    const totalLiquidID = tfsaUserID + tfsaTammyID + taxableCashID;
+                    if (m > 0 && totalLiquidID > 0) {
+                        const yieldAmount = totalLiquidID * tfsaReturn;
+                        const tfsaTotal = tfsaUserID + tfsaTammyID;
+                        if (tfsaTotal > 0) {
+                            const tfsaYield = yieldAmount * (tfsaTotal / totalLiquidID);
+                            const ratioUser = tfsaUserID / tfsaTotal;
+                            tfsaUserID += tfsaYield * ratioUser;
+                            tfsaTammyID += tfsaYield * (1 - ratioUser);
+                            taxableCashID += (yieldAmount - tfsaYield) * (1 - taxRateID);
+                        } else {
+                            taxableCashID += yieldAmount * (1 - taxRateID);
+                        }
+                    }
+                    data.push({
+                        month: m,
+                        totalNetWorth: Math.round(Math.max(0, homeValueID - balanceID) + tfsaUserID + tfsaTammyID + taxableCashID),
+                        liquidWealth: Math.round(tfsaUserID + tfsaTammyID + taxableCashID),
+                    });
+                }
+                return data;
+            }, [homeValue, nomadExitYear, nomadTruckBudget, nomadNewHomePrice, appreciationRate, tfsaRoomUser, tfsaRoomTammy, nomadYield, nonRegTaxRate, annualTfsaContribution]);
+            
+            const stayPutData = useMemo(() => {
+                const data = [];
+                let hv = Number(homeValue);
+                const monthlyApp = Number(appreciationRate) / 100 / 12;
+                const annualInflation = Number(inflationRate) / 100;
+                const oasUserStartMonth = (Number(oasUserStartAge) - Number(startingAge)) * 12;
+                const oasTammyStartMonth = (Number(oasTammyStartAge) - Number(startingAge)) * 12;
+                for (let m = 0; m <= 360; m++) {
+                    if (m > 0) hv *= (1 + monthlyApp);
+                    const fullYears = Math.floor(m / 12);
+                    const monthlyPensionTotal = (Number(pensionUser) + Number(pensionTammy)) * Math.pow(1 + annualInflation, fullYears);
+                    let oasIncome = 0;
+                    if (oasUserStartMonth >= 0 && m >= oasUserStartMonth) oasIncome += Number(oasUserAmount) * Math.pow(1 + annualInflation, Math.floor((m - oasUserStartMonth) / 12));
+                    if (oasTammyStartMonth >= 0 && m >= oasTammyStartMonth) oasIncome += Number(oasTammyAmount) * Math.pow(1 + annualInflation, Math.floor((m - oasTammyStartMonth) / 12));
+                    const oasNet = oasIncome * (1 - Number(oasTaxRate) / 100);
+                    data.push({ month: m, homeValue: Math.round(hv), totalNetWorth: Math.round(hv), monthlyIncome: Math.round(monthlyPensionTotal + oasNet) });
+                }
+                return data;
+            }, [homeValue, appreciationRate, inflationRate, pensionUser, pensionTammy, oasUserAmount, oasTammyAmount, oasUserStartAge, oasTammyStartAge, oasTaxRate, startingAge]);
+            
+            const rigAmortization = useMemo(() => {
+                const rigCost = Number(nomadTruckBudget);
+                const avoidedMonthly = Number(avoidedHousingCost);
+                const pivotMonth = Number(nomadExitYear) * 12;
+                return nomadPivotData.map((nomadPoint, index) => {
+                    if (index < pivotMonth) return { month: index, effectiveCost: rigCost, savings: 0, percent: 0 };
+                    const idPoint = immediateDownsizeData[index] || immediateDownsizeData[immediateDownsizeData.length - 1];
+                    const monthsSincePivot = Math.max(0, index - pivotMonth);
+                    const cumulativeAvoided = avoidedMonthly * monthsSincePivot;
+                    const savings = Math.max(0, (nomadPoint.totalNetWorth - idPoint.totalNetWorth) + cumulativeAvoided);
+                    const effectiveCost = Math.max(0, rigCost - savings);
+                    const percent = Math.min(100, (savings / rigCost) * 100);
+                    return { month: index, effectiveCost: Math.round(effectiveCost), savings: Math.round(savings), percent };
+                });
+            }, [nomadPivotData, immediateDownsizeData, nomadTruckBudget, nomadExitYear, avoidedHousingCost]);
+            
+            const lumpSumCumulative = useMemo(() => {
+                const totalAll = lumpSums.reduce((sum, ls) => sum + Number(ls.amount), 0);
+                const data = [];
+                for (let m = 0; m <= 360; m++) {
+                    const cum = lumpSums.filter(ls => Number(ls.year) * 12 <= m).reduce((s, ls) => s + Number(ls.amount), 0);
+                    data.push({ month: m, cumulative: cum, total: totalAll, percent: totalAll > 0 ? (cum / totalAll) * 100 : 0 });
+                }
+                return data;
+            }, [lumpSums]);
+            
+            const finalMonth = simulationData[360] || {};
+            const activeData = hoveredData || finalMonth;
+            const activeRigData = hoveredData ? rigAmortization[hoveredData.month] : rigAmortization[360];
+            const activeDividend = hoveredData ? lumpSumCumulative[hoveredData.month] : lumpSumCumulative[360];
+            const activeMonth = hoveredData ? hoveredData.month : 360;
+            const travelStartMonth = Number(nomadExitYear) * 12;
+            const travelEndMonth = travelStartMonth + Number(nomadTravelYears) * 12;
+            const isTravelPhase = activeMonth >= travelStartMonth && activeMonth < travelEndMonth;
+            
+            const addLumpSum = useCallback(() => {
+                if (newLumpYear >= 0 && newLumpAmount > 0) {
+                    setLumpSums(prev => [...prev, { id: Date.now(), year: Number(newLumpYear), amount: Number(newLumpAmount), reason: newLumpReason }]);
+                    setNewLumpReason("Vacation / Car");
+                }
+            }, [newLumpYear, newLumpAmount, newLumpReason]);
+            const removeLumpSum = useCallback((id) => setLumpSums(prev => prev.filter(ls => ls.id !== id)), []);
+            
+            const addActiveIncome = useCallback(() => {
+                if (newActiveYear >= 0 && newActiveAmount > 0) {
+                    setActiveIncomes(prev => [...prev, { id: Date.now(), year: Number(newActiveYear), amount: Number(newActiveAmount), source: newActiveSource }]);
+                    setNewActiveSource("RE Commission");
+                }
+            }, [newActiveYear, newActiveAmount, newActiveSource]);
+            const removeActiveIncome = useCallback((id) => setActiveIncomes(prev => prev.filter(a => a.id !== id)), []);
+
+            const addPayment = () => {
+                if (newPayYear >= 0 && newPayAmount > 0) setPrincipalPayments([...principalPayments, { id: Date.now(), year: Number(newPayYear), amount: Number(newPayAmount) }]);
+            };
+            const removePayment = (id) => setPrincipalPayments(principalPayments.filter(p => p.id !== id));
+            
+            const exportScenario = useCallback(() => {
+                const scenarioData = {
+                    loanType, homeValue, startingAge, interestRate, helocRate, appreciationRate, initialAdvance, monthlyWithdrawal, 
+                    lumpSums, activeIncomes, principalPayments, enableDownsize, downsizeYear, newHomeValue, enableTFSA, tfsaRoomUser, 
+                    tfsaRoomTammy, tfsaReturnRate, nomadExitYear, nomadTruckBudget, nomadTravelYears, nomadYield, nomadNewHomePrice, 
+                    pensionUser, pensionTammy, inflationRate, enableNomadRM, nomadRmTriggerYear, nomadRmMonthly, oasUserAmount, 
+                    oasTammyAmount, oasUserStartAge, oasTammyStartAge, oasTaxRate, annualTfsaContribution, nonRegTaxRate, avoidedHousingCost
+                };
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(scenarioData, null, 2));
+                const anchor = document.createElement('a');
+                anchor.setAttribute("href", dataStr);
+                anchor.setAttribute("download", `wealth-scenario-${loanType}-${new Date().toISOString().slice(0,10)}.json`);
+                anchor.click();
+                anchor.remove();
+            }, [loanType, homeValue, startingAge, interestRate, helocRate, appreciationRate, initialAdvance, monthlyWithdrawal, lumpSums, activeIncomes, principalPayments, enableDownsize, downsizeYear, newHomeValue, enableTFSA, tfsaRoomUser, tfsaRoomTammy, tfsaReturnRate, nomadExitYear, nomadTruckBudget, nomadTravelYears, nomadYield, nomadNewHomePrice, pensionUser, pensionTammy, inflationRate, enableNomadRM, nomadRmTriggerYear, nomadRmMonthly, oasUserAmount, oasTammyAmount, oasUserStartAge, oasTammyStartAge, oasTaxRate, annualTfsaContribution, nonRegTaxRate, avoidedHousingCost]);
+            
+            const importScenario = useCallback((event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        const setters = {
+                            loanType: setLoanType, homeValue: setHomeValue, startingAge: setStartingAge, interestRate: setInterestRate, 
+                            helocRate: setHelocRate, appreciationRate: setAppreciationRate, initialAdvance: setInitialAdvance, 
+                            monthlyWithdrawal: setMonthlyWithdrawal, lumpSums: setLumpSums, activeIncomes: setActiveIncomes, 
+                            principalPayments: setPrincipalPayments, enableDownsize: setEnableDownsize, downsizeYear: setDownsizeYear, 
+                            newHomeValue: setNewHomeValue, enableTFSA: setEnableTFSA, tfsaRoomUser: setTfsaRoomUser, 
+                            tfsaRoomTammy: setTfsaRoomTammy, tfsaReturnRate: setTfsaReturnRate, nomadExitYear: setNomadExitYear, 
+                            nomadTruckBudget: setNomadTruckBudget, nomadTravelYears: setNomadTravelYears, nomadYield: setNomadYield, 
+                            nomadNewHomePrice: setNomadNewHomePrice, pensionUser: setPensionUser, pensionTammy: setPensionTammy, 
+                            inflationRate: setInflationRate, enableNomadRM: setEnableNomadRM, nomadRmTriggerYear: setNomadRmTriggerYear, 
+                            nomadRmMonthly: setNomadRmMonthly, oasUserAmount: setOasUserAmount, oasTammyAmount: setOasTammyAmount, 
+                            oasUserStartAge: setOasUserStartAge, oasTammyStartAge: setOasTammyStartAge, oasTaxRate: setOasTaxRate, 
+                            annualTfsaContribution: setAnnualTfsaContribution, nonRegTaxRate: setNonRegTaxRate, avoidedHousingCost: setAvoidedHousingCost
+                        };
+                        Object.keys(data).forEach(key => {
+                            if (setters[key] && data[key] !== undefined) setters[key](data[key]);
+                        });
+                    } catch (error) {
+                        alert("Invalid scenario file.");
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = null;
+            }, []);
+            
+            const handleReset = () => {
+                if (window.confirm('Reset to the built‑in semi‑aggressive plan?')) {
+                    setHomeValue(1200000); setStartingAge(60); setInterestRate(7.24); setHelocRate(7.45); setAppreciationRate(2.0); 
+                    setInitialAdvance(0); setMonthlyWithdrawal(0); 
+                    setLumpSums([
+                        { id: 1, year: 6, amount: 50000, reason: "World tour – business class" },
+                        { id: 2, year: 8, amount: 60000, reason: "African safari & luxury lodges" },
+                        { id: 3, year: 10, amount: 70000, reason: "Asia & Australia expedition" },
+                        { id: 4, year: 12, amount: 75000, reason: "European river cruises & villas" },
+                        { id: 5, year: 14, amount: 60000, reason: "Alaska & Canadian Rockies" },
+                        { id: 6, year: 16, amount: 50000, reason: "South America adventure" },
+                        { id: 7, year: 18, amount: 40000, reason: "Mediterranean cruise" },
+                        { id: 8, year: 20, amount: 40000, reason: "Family reunion resort" },
+                    ]); 
+                    setActiveIncomes([
+                        { id: 1, year: 1, amount: 50000, source: "RE Commission" }
+                    ]);
+                    setNewActiveYear(2); setNewActiveAmount(50000); setNewActiveSource("RE Commission");
+                    setPrincipalPayments([]); setEnableDownsize(false); setDownsizeYear(5); setNewHomeValue(800000); 
+                    setEnableTFSA(true); setTfsaRoomUser(102000); setTfsaRoomTammy(102000); setTfsaReturnRate(5.0); 
+                    setNomadExitYear(3); setNomadTruckBudget(150000); setNomadTravelYears(3); setNomadYield(5.0); 
+                    setNomadNewHomePrice(750000); setPensionUser(3316.36); setPensionTammy(3031.36); setInflationRate(2.0); 
+                    setEnableNomadRM(true); setNomadRmTriggerYear(0); setNomadRmMonthly(0); setOasUserAmount(800); 
+                    setOasTammyAmount(900); setOasUserStartAge(65); setOasTammyStartAge(65); setOasTaxRate(15); 
+                    setNewLumpReason("Vacation / Car"); setAnnualTfsaContribution(7000); setNonRegTaxRate(25); setAvoidedHousingCost(800);
+                }
+            };
+
+            const generateReport = useCallback(() => {
+                const f = nomadPivotData[360] || {};
+                const ageAtEnd = Number(startingAge) + 30;
+                const pivotYear = Number(nomadExitYear);
+                const travelEndYear = pivotYear + Number(nomadTravelYears);
+                const downsizePrice = Number(nomadNewHomePrice);
+                const rigCost = Number(nomadTruckBudget);
+                const totalLiquidNow = f.tfsaBalance || 0;
+                const equityNow = f.equity || 0;
+                const netWorthNow = f.totalNetWorth || 0;
+                const monthlyIncomeNow = f.totalMonthlyIncome || 0;
+                const pensionsNow = f.monthlyPensionTotal || 0;
+                const oasNow = f.monthlyOasNet || 0;
+                const yieldNow = f.monthlyDividendIncome || 0;
+                const rmDrawNow = f.monthlyRmDraw || 0;
+
+                const totalExpBudget = lumpSums.reduce((sum, ls) => sum + Number(ls.amount), 0);
+                const lumpsByYear = {};
+                lumpSums.forEach(ls => {
+                    const y = Number(ls.year);
+                    lumpsByYear[y] = (lumpsByYear[y] || 0) + Number(ls.amount);
+                });
+
+                const travelEndIdx = travelEndYear * 12;
+                const rigData = rigAmortization[travelEndIdx] || { savings: 0, percent: 0 };
+                const rigSavings = rigData.savings;
+                const rigPercent = rigData.percent;
+
+                const reportHTML = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Your Nomad Pivot – Financial Freedom Report</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"><style>*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:#0b1120;color:#e2e8f0;line-height:1.6}.hero{height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background-image:url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1500&q=80');background-size:cover;background-position:center}.hero::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(11,17,32,0.75);backdrop-filter:blur(4px)}.hero-content{position:relative;z-index:1;text-align:center;max-width:800px;padding:2rem}.hero h1{font-size:4rem;font-weight:800;background:linear-gradient(to right,#fbbf24,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:1rem}.hero p{font-size:1.4rem;color:#cbd5e1;margin-bottom:2rem}.container{max-width:1100px;margin:0 auto;padding:4rem 2rem}.glass-card{background:rgba(255,255,255,0.06);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.1);border-radius:2rem;padding:2.5rem;margin-bottom:2.5rem;box-shadow:0 10px 30px rgba(0,0,0,0.3);transition:transform 0.3s ease,border-color 0.3s ease;animation:fadeInUp 1s ease both}.glass-card:hover{transform:translateY(-4px);border-color:rgba(245,158,11,0.5)}@keyframes fadeInUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}h2{font-size:2.2rem;font-weight:700;color:#f1f5f9;margin-bottom:1.5rem;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:.8rem}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:2rem}.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;margin:2rem 0}.stat-label{font-size:.9rem;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:.4rem}.stat-value{font-size:2.5rem;font-weight:800;color:#f1f5f9}.highlight{color:#fbbf24}.emerald{color:#34d399}.blue{color:#60a5fa}.rose{color:#f87171}.violet{color:#a78bfa}.progress-bar{height:.7rem;background:rgba(255,255,255,0.1);border-radius:2rem;margin:1rem 0 .5rem;overflow:hidden}.progress-fill{height:100%;background:linear-gradient(90deg,#fbbf24,#f59e0b);border-radius:2rem;width:${rigPercent}%}.timeline{display:flex;flex-direction:column;position:relative;padding-left:2rem}.timeline::before{content:'';position:absolute;left:.5rem;top:0;bottom:0;width:2px;background:rgba(245,158,11,0.3)}.timeline-item{display:flex;gap:1.5rem;margin-bottom:2rem;position:relative}.timeline-dot{width:1.2rem;height:1.2rem;border-radius:50%;background:#f59e0b;box-shadow:0 0 0 4px rgba(245,158,11,0.2);flex-shrink:0;margin-top:.3rem;position:relative;left:-2.15rem}.timeline-content{background:rgba(255,255,255,0.03);border-radius:1rem;padding:1.2rem 1.5rem;flex:1;border:1px solid rgba(255,255,255,0.05)}.btn-top{position:fixed;bottom:2rem;right:2rem;background:rgba(245,158,11,0.9);color:#0b1120;width:3rem;height:3rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;cursor:pointer;border:none;box-shadow:0 8px 20px rgba(0,0,0,0.4);transition:transform 0.2s;z-index:999}.btn-top:hover{transform:translateY(-2px)}.footer-note{text-align:center;margin-top:4rem;color:#64748b;font-size:.9rem}@media(max-width:768px){.hero h1{font-size:2.5rem}.grid-2,.grid-4{grid-template-columns:1fr}.stat-value{font-size:2rem}}</style></head><body><div class="hero"><div class="hero-content animate__animated animate__fadeInDown"><h1>Your Nomad Pivot</h1><p>A personalized financial freedom report for you and Tammy</p><p style="font-size:1rem">Scroll down to see your story unfold</p></div></div><div class="container"><div class="glass-card animate__animated animate__fadeInUp"><h2>🔭 Snapshot at Age ${ageAtEnd}</h2><div class="grid-4"><div><div class="stat-label">Liquid Wealth</div><div class="stat-value emerald">$${totalLiquidNow.toLocaleString()}</div></div><div><div class="stat-label">Home Equity</div><div class="stat-value blue">$${equityNow.toLocaleString()}</div></div><div><div class="stat-label">Net Worth</div><div class="stat-value highlight">$${netWorthNow.toLocaleString()}</div></div><div><div class="stat-label">Monthly Income</div><div class="stat-value violet">$${Math.round(monthlyIncomeNow).toLocaleString()}/mo</div></div></div></div><div class="glass-card"><h2>🏠 The Downsize Dividend</h2><p>By selling your $${Number(homeValue).toLocaleString()} home at age ${Number(startingAge) + pivotYear}, buying a beautiful downsized home for $${downsizePrice.toLocaleString()}, and investing the proceeds, you've unlocked a total of <strong class="highlight">$${totalExpBudget.toLocaleString()}</strong> for extraordinary experiences.</p><div class="progress-bar"><div class="progress-fill" style="width:${(totalExpBudget / (netWorthNow + totalExpBudget) * 100).toFixed(0)}%;"></div></div><p style="margin-top:.5rem">That's ${(totalExpBudget / (netWorthNow + totalExpBudget) * 100).toFixed(0)}% of your total wealth dedicated to living your best life.</p></div><div class="glass-card"><h2>🚐 Your Truck & Trailer Paid You Back</h2><p>Thanks to the power of waiting to buy your new home, your $${rigCost.toLocaleString()} rig effectively cost you only <strong class="emerald">$${Math.max(0, rigCost - rigSavings).toLocaleString()}</strong> after ${travelEndYear - pivotYear} years of travel. The savings from investment returns and avoided housing costs covered the rest.</p><div class="progress-bar"><div class="progress-fill" style="width:${rigPercent}%;"></div></div><p style="margin-top:.5rem">${rigPercent.toFixed(0)}% recovered through smart planning.</p></div><div class="glass-card"><h2>🗺️ Your Adventure Timeline</h2><div class="timeline">${Object.keys(lumpsByYear).sort((a, b) => a - b).map(y => `<div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><strong style="font-size:1.2rem">Year ${y} (Age ${Number(startingAge) + Number(y)})</strong><br><span class="highlight" style="font-size:1.4rem">$${lumpsByYear[y].toLocaleString()}</span><br>${lumpSums.filter(ls => ls.year == y).map(ls => ls.reason).join(', ')}</div></div>`).join('')}</div><p style="margin-top:1rem;font-size:1.3rem">Total experience budget: <strong class="highlight">$${totalExpBudget.toLocaleString()}</strong></p></div><div class="glass-card"><h2>📈 Your Wealth Over Time</h2><div class="timeline"><div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><strong>At Re‑entry (Age ${Number(startingAge) + travelEndYear})</strong><br>Liquid wealth: ~$${(nomadPivotData[travelEndYear * 12]?.tfsaBalance || 0).toLocaleString()}</div></div><div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><strong>At Age 75</strong><br>Net worth: ~$${(nomadPivotData[15 * 12]?.totalNetWorth || 0).toLocaleString()}</div></div><div class="timeline-item"><div class="timeline-dot"></div><div class="timeline-content"><strong>At Age 90</strong><br>Net worth: $${netWorthNow.toLocaleString()}, with monthly income of $${Math.round(monthlyIncomeNow).toLocaleString()} from pensions and OAS alone.</div></div></div></div><div class="glass-card"><h2>💰 Your Reliable Monthly Income</h2><div class="grid-2"><div><span class="stat-label">Pensions</span><br><span class="blue" style="font-size:2rem">$${pensionsNow.toLocaleString()}</span></div><div><span class="stat-label">OAS (net)</span><br><span class="blue" style="font-size:2rem">$${oasNow.toLocaleString()}</span></div><div><span class="stat-label">Investment Yield</span><br><span class="emerald" style="font-size:2rem">$${yieldNow.toLocaleString()}</span></div><div><span class="stat-label">Reverse Mortgage Draw</span><br><span class="rose" style="font-size:2rem">$${rmDrawNow.toLocaleString()}</span></div></div><p style="margin-top:1rem;font-size:1.3rem">Together, they provide <strong class="violet">$${Math.round(monthlyIncomeNow).toLocaleString()}/mo</strong> — completely covering your lifestyle.</p></div><div class="glass-card" style="text-align:center"><h2 style="border:none">✨ You've Already Won</h2><p style="font-size:1.3rem">Your indexed pensions and OAS guarantee your daily needs forever. The rest is pure freedom — to explore, to give, to live without compromise. Tammy, the numbers don't lie: the only risk is not doing it.</p></div></div><button class="btn-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button><p class="footer-note">Generated by your personal Wealth & Retirement Simulator. Not financial advice.</p></body></html>`;
+                const blob = new Blob([reportHTML], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `nomad-pivot-report-${new Date().toISOString().slice(0, 10)}.html`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }, [nomadPivotData, startingAge, homeValue, nomadExitYear, nomadTravelYears, nomadNewHomePrice, nomadTruckBudget, lumpSums, rigAmortization]);
+            
+            const CustomXAxisTick = (props) => {
+                const { x, y, payload } = props;
+                const age = Number(startingAge) + payload.value;
+                return ( <g transform={`translate(${x},${y})`}> <text x={0} y={0} dy={14} textAnchor="middle" fill="#64748B" fontSize={11} fontWeight="700">Yr {payload.value}</text><text x={0} y={0} dy={29} textAnchor="middle" fill="#94A3B8" fontSize={10}>Age {age}</text> </g>);
+            };
+            
+            const nomadPhase = loanType === 'nomad' ? (activeData.isNomadPhase ? 1 : (activeData.year < Number(nomadExitYear) ? 0 : (activeData.monthlyRmDraw > 0 ? 3 : 2))) : null;
+            
+            const finalNetWorthData = useMemo(() => {
+                const f = nomadPivotData[360] || {};
+                return [{ name: 'Home Equity', value: f.equity || 0, color: '#3B82F6' }, { name: 'Liquid Wealth', value: f.tfsaBalance || 0, color: '#0D9488' }, { name: 'RM Debt', value: f.balance || 0, color: '#EF4444' }];
+            }, [nomadPivotData]);
+            
+            const lumpSumChartData = useMemo(() => {
+                const yearMap = new Map();
+                lumpSums.forEach(ls => yearMap.set(Number(ls.year), (yearMap.get(Number(ls.year)) || 0) + Number(ls.amount)));
+                const data = [];
+                for (let y = 0; y <= 30; y++) data.push({ year: y, amount: yearMap.get(y) || 0 });
+                return data;
+            }, [lumpSums]);
+            
+            const incomeBreakdownData = useMemo(() => {
+                const years = [0, 5, 10, 15, 20, 25, 30];
+                return years.map(y => {
+                    const month = nomadPivotData[y * 12] || {};
+                    return { year: y, Pensions: month.monthlyPensionTotal || 0, OAS: month.monthlyOasNet || 0, Yield: month.monthlyDividendIncome || 0, 'RM Draw': month.monthlyRmDraw || 0 };
+                });
+            }, [nomadPivotData]);
+            
+            const investmentGrowthData = useMemo(() => {
+                const years = [];
+                for (let y = 0; y <= 30; y += 2) years.push(y);
+                return years.map(y => {
+                    const month = nomadPivotData[y * 12] || {};
+                    return { year: y, age: Number(startingAge) + y, cumulativeInvestmentIncome: month.cumulativeInvestmentIncome || 0, liquidWealth: month.tfsaBalance || 0, tfsaUser: month.tfsaUser || 0, tfsaTammy: month.tfsaTammy || 0, taxableCash: month.taxableCash || 0, cumulativeTaxSaved: month.cumulativeTaxSaved || 0 };
+                });
+            }, [nomadPivotData, startingAge]);
+            
+            const nomadFinal = nomadPivotData[360] || {};
+            const nomadBaselineFinal = nomadBaselineData[360] || {};
+            const stayPutFinal = stayPutData[360] || {};
+            
+            const totalExperienceBudget = lumpSums.reduce((sum, ls) => sum + Number(ls.amount), 0);
+            const netWorthAdvantage = (nomadFinal.totalNetWorth || 0) - (stayPutFinal.totalNetWorth || 0);
+            const monthlyIncomeAdvantage = (nomadFinal.totalMonthlyIncome || 0) - (stayPutFinal.monthlyIncome || 0);
+            
+            // Hustle calculations
+            const rawHustleEarned = nomadFinal.cumulativeActiveIncome || 0;
+            const finalHustleBoost = (nomadFinal.totalNetWorth || 0) - (nomadBaselineFinal.totalNetWorth || 0);
+            const hustleCompounding = Math.max(0, finalHustleBoost - rawHustleEarned);
+
+            const dashboardWealthCompareData = useMemo(() => {
+                const years = [];
+                for (let y = 0; y <= 30; y += 2) years.push(y);
+                return years.map(y => ({ year: y, age: Number(startingAge) + y, 'Nomad Pivot': (nomadPivotData[y * 12] || {}).totalNetWorth || 0, 'Stay Put (no downsize)': (stayPutData[y * 12] || {}).totalNetWorth || 0 }));
+            }, [nomadPivotData, stayPutData, startingAge]);
+
+            const hustleImpactChartData = useMemo(() => {
+                const years = [];
+                for (let y = 0; y <= 30; y += 2) years.push(y);
+                return years.map(y => {
+                    const activeM = nomadPivotData[y * 12] || {};
+                    const baseM = nomadBaselineData[y * 12] || {};
+                    return {
+                        year: y,
+                        age: Number(startingAge) + y,
+                        'Base Wealth (No RE)': baseM.totalNetWorth || 0,
+                        'Bonus from RE Hustle': Math.max(0, (activeM.totalNetWorth || 0) - (baseM.totalNetWorth || 0)),
+                        'Cumulative Earned': activeM.cumulativeActiveIncome || 0
+                    };
+                });
+            }, [nomadPivotData, nomadBaselineData, startingAge]);
+
+            const wealthCompositionData = useMemo(() => {
+                const years = [];
+                for (let y = 0; y <= 30; y += 3) years.push(y);
+                return years.map(y => {
+                    const m = nomadPivotData[y * 12] || {};
+                    return { year: y, age: Number(startingAge) + y, 'Home Equity': m.equity || 0, 'Liquid Wealth': m.tfsaBalance || 0, 'RM Debt': -(m.balance || 0) };
+                });
+            }, [nomadPivotData, startingAge]);
+
+            const guaranteedVsVariableData = useMemo(() => {
+                const years = [0, 5, 10, 15, 20, 25, 30];
+                return years.map(y => {
+                    const m = nomadPivotData[y * 12] || {};
+                    return { year: y, age: Number(startingAge) + y, 'Guaranteed (Pension+OAS)': m.guaranteedIncome || 0, 'Variable (Investments+RM)': Math.max(0, m.variableIncome || 0) };
+                });
+            }, [nomadPivotData, startingAge]);
+
+            const taxSavingsData = useMemo(() => {
+                const years = [];
+                for (let y = 0; y <= 30; y += 2) years.push(y);
+                return years.map(y => {
+                    const m = nomadPivotData[y * 12] || {};
+                    return { year: y, age: Number(startingAge) + y, 'Cumulative Tax Saved': m.cumulativeTaxSaved || 0 };
+                });
+            }, [nomadPivotData, startingAge]);
+
+            const liquidityRatioData = useMemo(() => {
+                const years = [];
+                for (let y = 0; y <= 30; y += 2) years.push(y);
+                return years.map(y => {
+                    const m = nomadPivotData[y * 12] || {};
+                    const totalNW = m.totalNetWorth || 1;
+                    const liquid = m.tfsaBalance || 0;
+                    return { year: y, age: Number(startingAge) + y, 'Liquidity Ratio %': Math.round((liquid / totalNW) * 100), liquid, totalNW };
+                });
+            }, [nomadPivotData, startingAge]);
+
+            const equityUnlocked = Number(homeValue) - Number(nomadNewHomePrice);
+            const guaranteedIncomeFinal = nomadFinal.guaranteedIncome || 0;
+            const variableIncomeFinal = nomadFinal.variableIncome || 0;
+            const totalIncomeFinal = nomadFinal.totalMonthlyIncome || 0;
+            const guaranteedPct = totalIncomeFinal > 0 ? Math.round((guaranteedIncomeFinal / totalIncomeFinal) * 100) : 100;
+            const variablePct = 100 - guaranteedPct;
+            const incomeSecurityData = [{ name: 'Guaranteed', value: guaranteedIncomeFinal, color: '#6366f1' }, { name: 'Variable', value: Math.max(0, variableIncomeFinal), color: '#f59e0b' }];
+            const liquidYearsData = useMemo(() => {
+                const f = nomadPivotData[360] || {};
+                const monthlyExp = Math.max(1, (f.totalMonthlyIncome || 5000));
+                const liquid = f.tfsaBalance || 0;
+                return Math.round((liquid / (monthlyExp * 12)) * 10) / 10;
+            }, [nomadPivotData]);
+
+            const milestoneData = useMemo(() => {
+                const milestones = [];
+                const exitM = Number(nomadExitYear) * 12;
+                const reentryM = (Number(nomadExitYear) + Number(nomadTravelYears)) * 12;
+                if (exitM <= 360 && nomadPivotData[exitM]) milestones.push({ label: 'Home Sold', year: Number(nomadExitYear), age: Number(startingAge) + Number(nomadExitYear), value: nomadPivotData[exitM].tfsaBalance || 0, icon: 'Landmark', color: '#f59e0b' });
+                if (reentryM <= 360 && nomadPivotData[reentryM]) milestones.push({ label: 'Re-Entry', year: Number(nomadExitYear) + Number(nomadTravelYears), age: Number(startingAge) + Number(nomadExitYear) + Number(nomadTravelYears), value: nomadPivotData[reentryM].totalNetWorth || 0, icon: 'Home', color: '#6366f1' });
+                milestones.push({ label: 'Age 75', year: 15, age: Number(startingAge) + 15, value: (nomadPivotData[15 * 12] || {}).totalNetWorth || 0, icon: 'Target', color: '#0d9488' });
+                milestones.push({ label: 'Age 90', year: 30, age: Number(startingAge) + 30, value: nomadFinal.totalNetWorth || 0, icon: 'Star', color: '#8b5cf6' });
+                return milestones;
+            }, [nomadPivotData, nomadExitYear, nomadTravelYears, startingAge, nomadFinal]);
+
+            const wealthWaterfallData = useMemo(() => {
+                return [
+                    { name: 'Starting Equity', value: Number(homeValue), color: '#3B82F6' },
+                    { name: 'Equity Unlocked', value: equityUnlocked, color: '#f59e0b' },
+                    { name: 'Investment Growth', value: nomadFinal.cumulativeInvestmentIncome || 0, color: '#0D9488' },
+                    { name: 'Spent on Life', value: totalExperienceBudget, color: '#EF4444' },
+                    { name: 'Tax Saved (TFSA)', value: nomadFinal.cumulativeTaxSaved || 0, color: '#8b5cf6' },
+                ];
+            }, [homeValue, equityUnlocked, nomadFinal, totalExperienceBudget]);
+
+            // Helper component to render the shared set of charts at the bottom of both layouts
+            const SharedDashboardCharts = () => (
+                <div className="flex flex-col gap-5 mt-5">
+                    {/* The Tabs */}
+                    <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-100">
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {[{ key: 'hustle', label: 'The RE Hustle Impact', icon: 'Zap' }, { key: 'wealth', label: 'Net Worth Comparison', icon: 'TrendingUp' }, { key: 'composition', label: 'Wealth Composition', icon: 'PieChartIcon' }, { key: 'income', label: 'Income Security', icon: 'Shield' }, { key: 'tax', label: 'Tax Advantage', icon: 'Percent' }, { key: 'liquidity', label: 'Liquidity & Freedom', icon: 'Wallet' }].map(tab => ( <button key={tab.key} onClick={() => setDashboardChartTab(tab.key)} className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${dashboardChartTab === tab.key ? (tab.key === 'hustle' ? 'bg-amber-500 text-white shadow-md' : 'bg-indigo-500 text-white shadow-md') : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}><Icon name={tab.icon} size={16} /> {tab.label}</button> ))}
+                        </div>
+
+                        {dashboardChartTab === 'hustle' && (
+                            <div className="space-y-4 animate-fade-in">
+                                <h3 className="text-lg font-bold flex items-center gap-2 mb-1"><Icon name="Zap" size={20} className="text-amber-500" /> The Real Estate Hustle Impact</h3>
+                                <p className="text-sm text-slate-500 mb-4">See exactly how your active RE commissions compound over time compared to a baseline scenario where you completely stopped working today.</p>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                                    <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-xl relative overflow-hidden">
+                                        <div className="text-xs font-semibold text-emerald-700 uppercase mb-1 relative z-10">Raw Commissions Injected</div>
+                                        <div className="text-2xl font-bold text-emerald-800 relative z-10">${rawHustleEarned.toLocaleString()}</div>
+                                        <div className="absolute right-[-10px] bottom-[-10px] opacity-10"><Icon name="DollarSign" size={80} /></div>
+                                    </div>
+                                    <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl relative overflow-hidden">
+                                        <div className="text-xs font-semibold text-indigo-700 uppercase mb-1 relative z-10">Final Wealth Boost</div>
+                                        <div className="text-2xl font-bold text-indigo-800 relative z-10">+{finalHustleBoost.toLocaleString()}</div>
+                                        <div className="text-xs text-indigo-600 mt-1 relative z-10">Total added to your final net worth.</div>
+                                        <div className="absolute right-[-10px] bottom-[-10px] opacity-10"><Icon name="TrendingUp" size={80} /></div>
+                                    </div>
+                                    <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl relative overflow-hidden">
+                                        <div className="text-xs font-semibold text-amber-700 uppercase mb-1 relative z-10">Compound Growth on Hustle</div>
+                                        <div className="text-2xl font-bold text-amber-800 relative z-10">${hustleCompounding.toLocaleString()}</div>
+                                        <div className="text-xs text-amber-600 mt-1 relative z-10">Pure "free money" from investing the extra income.</div>
+                                        <div className="absolute right-[-10px] bottom-[-10px] opacity-10"><Icon name="Zap" size={80} /></div>
+                                    </div>
+                                </div>
+
+                                <div className="h-[350px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <ComposedChart data={hustleImpactChartData} margin={{top:10,right:10,left:0,bottom:5}}>
+                                            <defs>
+                                                <linearGradient id="hustleBaseGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#94a3b8" stopOpacity={0.2}/><stop offset="100%" stopColor="#94a3b8" stopOpacity={0.05}/></linearGradient>
+                                                <linearGradient id="hustleBonusGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10b981" stopOpacity={0.4}/><stop offset="100%" stopColor="#10b981" stopOpacity={0.1}/></linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                            <XAxis dataKey="year" tick={{fontSize: 11}} tickFormatter={y => `Yr ${y}`}/>
+                                            <YAxis tickFormatter={t=>`$${(t/1000).toFixed(0)}k`} tick={{fontSize:11}} width={60}/>
+                                            <RechartsTooltip formatter={(value) => `$${value.toLocaleString()}`} labelFormatter={(y) => `Year ${y} · Age ${Number(startingAge)+y}`}/>
+                                            <Legend verticalAlign="top" height={32} iconType="circle"/>
+                                            <Area type="monotone" dataKey="Base Wealth (No RE)" stackId="1" stroke="#94a3b8" strokeWidth={2} fill="url(#hustleBaseGrad)" isAnimationActive={false}/>
+                                            <Area type="monotone" dataKey="Bonus from RE Hustle" stackId="1" stroke="#10b981" strokeWidth={2.5} fill="url(#hustleBonusGrad)" isAnimationActive={false}/>
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        )}
+
+                        {dashboardChartTab === 'wealth' && (
+                            <div className="space-y-4 animate-fade-in">
+                                <h3 className="text-lg font-bold flex items-center gap-2 mb-1"><Icon name="Compass" size={20} className="text-indigo-500" /> Nomad Pivot vs. Staying Put</h3>
+                                <p className="text-sm text-slate-500 mb-4">What the same 30 years look like if you never sold, never traveled, and simply lived on pensions and OAS inside your current home.</p>
+                                <div className="h-[350px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <ComposedChart data={dashboardWealthCompareData} margin={{top:10,right:10,left:0,bottom:5}}>
+                                            <defs><linearGradient id="nomadGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6366F1" stopOpacity={0.3}/><stop offset="100%" stopColor="#6366F1" stopOpacity={0.03}/></linearGradient></defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                            <XAxis dataKey="year" tick={{fontSize: 11}} tickFormatter={y => `Yr ${y}`}/>
+                                            <YAxis tickFormatter={t=>`$${(t/1000).toFixed(0)}k`} tick={{fontSize:11}} width={60}/>
+                                            <RechartsTooltip formatter={(value) => `$${value.toLocaleString()}`} labelFormatter={(y) => `Year ${y} · Age ${Number(startingAge)+y}`}/>
+                                            <Legend verticalAlign="top" height={32} iconType="circle" wrapperStyle={{fontSize:12,fontWeight:600}}/>
+                                            <Area type="monotone" dataKey="Nomad Pivot" stroke="#6366F1" strokeWidth={2.5} fill="url(#nomadGrad)" isAnimationActive={false}/>
+                                            <Line type="monotone" dataKey="Stay Put (no downsize)" stroke="#94a3b8" strokeWidth={2} strokeDasharray="6 4" dot={false} isAnimationActive={false}/>
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+                                    <div className={`p-4 rounded-xl border ${netWorthAdvantage >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
+                                        <div className="text-xs font-semibold uppercase text-slate-500">Net Worth Difference at Year 30</div>
+                                        <p className={`text-xl font-bold ${netWorthAdvantage >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                            {netWorthAdvantage >= 0 ? '+' : ''}${netWorthAdvantage.toLocaleString()}
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-1">
+                                            {netWorthAdvantage >= 0 ? "The Nomad Pivot comes out ahead — you didn't give up long-term security to gain freedom, you gained both." : "Staying put edges ahead financially, but with none of the life lived along the way."}
+                                        </p>
+                                    </div>
+                                    <div className="p-4 rounded-xl border bg-indigo-50 border-indigo-200">
+                                        <div className="text-xs font-semibold uppercase text-slate-500">Extra Monthly Cash Flow Unlocked</div>
+                                        <p className="text-xl font-bold text-indigo-600">
+                                            {monthlyIncomeAdvantage >= 0 ? '+' : ''}${Math.round(monthlyIncomeAdvantage).toLocaleString()}/mo
+                                        </p>
+                                        <p className="text-xs text-slate-500 mt-1">
+                                            Beyond pensions and OAS, the Nomad Pivot's invested proceeds keep generating usable monthly cash — money that simply doesn't exist if the equity stays parked in the house.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {dashboardChartTab === 'composition' && (
+                            <div className="space-y-4 animate-fade-in">
+                                <h3 className="text-lg font-bold flex items-center gap-2 mb-1"><Icon name="PieChartIcon" size={20} className="text-indigo-500" /> Wealth Composition Over Time</h3>
+                                <p className="text-sm text-slate-500 mb-4">See how your net worth shifts between home equity, liquid investments, and any reverse mortgage debt across the decades.</p>
+                                <div className="h-[350px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <ComposedChart data={wealthCompositionData} margin={{top: 10, right: 10, left: 0, bottom: 5}}>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                            <XAxis dataKey="year" tick={{fontSize: 11}} tickFormatter={y => `Yr ${y}`}/>
+                                            <YAxis tickFormatter={t=>`$${(t/1000).toFixed(0)}k`} tick={{fontSize:11}} width={60}/>
+                                            <RechartsTooltip formatter={(value) => `$${Math.abs(value).toLocaleString()}`} labelFormatter={(y, payload) => { const d = payload[0]?.payload; return d ? `Year ${d.year} · Age ${d.age}` : `Year ${y}`; }}/>
+                                            <Legend verticalAlign="top" height={32} iconType="circle" wrapperStyle={{fontSize: 12, fontWeight: 600}}/>
+                                            <Bar dataKey="Home Equity" stackId="a" fill="#3B82F6" radius={[6,6,0,0]} isAnimationActive={false}/>
+                                            <Bar dataKey="Liquid Wealth" stackId="a" fill="#0D9488" radius={[0,0,0,0]} isAnimationActive={false}/>
+                                            <Bar dataKey="RM Debt" stackId="a" fill="#EF4444" radius={[0,0,0,0]} isAnimationActive={false}/>
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="grid grid-cols-3 gap-3 mt-4 text-center">
+                                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                                        <div className="text-[11px] font-semibold text-blue-600 uppercase">Final Home Equity</div>
+                                        <p className="font-bold text-blue-700">${(nomadFinal.equity || 0).toLocaleString()}</p>
+                                    </div>
+                                    <div className="bg-teal-50 border border-teal-100 rounded-xl p-3">
+                                        <div className="text-[11px] font-semibold text-teal-600 uppercase">Final Liquid Wealth</div>
+                                        <p className="font-bold text-teal-700">${(nomadFinal.tfsaBalance || 0).toLocaleString()}</p>
+                                    </div>
+                                    <div className="bg-rose-50 border border-rose-100 rounded-xl p-3">
+                                        <div className="text-[11px] font-semibold text-rose-600 uppercase">Outstanding RM Debt</div>
+                                        <p className="font-bold text-rose-700">${(nomadFinal.balance || 0).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {dashboardChartTab === 'income' && (
+                            <div className="space-y-4 animate-fade-in">
+                                <h3 className="text-lg font-bold flex items-center gap-2 mb-1"><Icon name="Shield" size={20} className="text-indigo-500" /> Income Security: Guaranteed vs. Variable</h3>
+                                <p className="text-sm text-slate-500 mb-4">Your guaranteed income (pensions + OAS) grows with inflation. Compare that to variable income from investments and reverse mortgage draws.</p>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                                    <div className="h-[300px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={guaranteedVsVariableData} margin={{top: 10, right: 10, left: 0, bottom: 5}}>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                                <XAxis dataKey="year" tick={{fontSize: 11}} tickFormatter={y => `Yr ${y}`}/>
+                                                <YAxis tickFormatter={t=>`$${(t/1000).toFixed(0)}k`} tick={{fontSize:11}} width={60}/>
+                                                <RechartsTooltip formatter={(value) => `$${value.toLocaleString()}/mo`} labelFormatter={(y, payload) => { const d = payload[0]?.payload; return d ? `Year ${d.year} · Age ${d.age}` : `Year ${y}`; }}/>
+                                                <Legend verticalAlign="top" height={32} iconType="circle" wrapperStyle={{fontSize: 12, fontWeight: 600}}/>
+                                                <Bar dataKey="Guaranteed (Pension+OAS)" stackId="a" fill="#6366f1" radius={[6, 6, 0, 0]} isAnimationActive={false}/>
+                                                <Bar dataKey="Variable (Investments+RM)" stackId="a" fill="#f59e0b" radius={[6, 6, 0, 0]} isAnimationActive={false}/>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div className="flex flex-col justify-center">
+                                        <div className="bg-indigo-50 rounded-2xl p-5 border border-indigo-100">
+                                            <div className="text-xs font-semibold uppercase text-slate-500 mb-3">At Age {Number(startingAge) + 30}, Your Monthly Income Mix</div>
+                                            <div className="h-[180px]">
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <PieChart>
+                                                        <Pie data={incomeSecurityData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={3} label={({name, percent}) => `${name} ${(percent*100).toFixed(0)}%`}>
+                                                            {incomeSecurityData.map((entry, index) => ( <Cell key={index} fill={entry.color} /> ))}
+                                                        </Pie>
+                                                        <RechartsTooltip formatter={(value) => `$${value.toLocaleString()}/mo`}/>
+                                                    </PieChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                            <div className="flex justify-between text-xs mt-2"><span className="text-indigo-600 font-semibold">🔒 {guaranteedPct}% Guaranteed</span><span className="text-amber-600 font-semibold">📈 {variablePct}% Variable</span></div>
+                                            <p className="text-xs text-slate-500 mt-2">Your indexed pensions and OAS provide a rock-solid foundation. The variable portion is bonus money that enhances your lifestyle without threatening your basic security.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {dashboardChartTab === 'tax' && (
+                            <div className="space-y-4 animate-fade-in">
+                                <h3 className="text-lg font-bold flex items-center gap-2 mb-1"><Icon name="Percent" size={20} className="text-emerald-500" /> TFSA Tax Advantage</h3>
+                                <p className="text-sm text-slate-500 mb-4">Every dollar of investment growth inside your TFSAs is completely tax-free. This chart shows the cumulative tax you've saved.</p>
+                                <div className="h-[300px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <ComposedChart data={taxSavingsData} margin={{top: 10, right: 10, left: 0, bottom: 5}}>
+                                            <defs><linearGradient id="taxGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#059669" stopOpacity={0.3}/><stop offset="100%" stopColor="#059669" stopOpacity={0.03}/></linearGradient></defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                            <XAxis dataKey="year" tick={{fontSize: 11}} tickFormatter={y => `Yr ${y}`}/>
+                                            <YAxis tickFormatter={t=>`$${(t/1000).toFixed(0)}k`} tick={{fontSize:11}} width={60}/>
+                                            <RechartsTooltip formatter={(value) => `$${value.toLocaleString()}`} labelFormatter={(y, payload) => { const d = payload[0]?.payload; return d ? `Year ${d.year} · Age ${d.age}` : `Year ${y}`; }}/>
+                                            <Legend verticalAlign="top" height={32} iconType="circle" wrapperStyle={{fontSize: 12, fontWeight: 600}}/>
+                                            <Area type="monotone" dataKey="Cumulative Tax Saved" stroke="#059669" strokeWidth={2.5} fill="url(#taxGrad)" isAnimationActive={false}/>
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="grid grid-cols-3 gap-3 mt-4 text-center">
+                                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3">
+                                        <div className="text-[11px] font-semibold text-emerald-600 uppercase">Total Tax Saved</div>
+                                        <p className="font-bold text-emerald-700">${(nomadFinal.cumulativeTaxSaved || 0).toLocaleString()}</p>
+                                    </div>
+                                    <div className="bg-teal-50 border border-teal-100 rounded-xl p-3">
+                                        <div className="text-[11px] font-semibold text-teal-600 uppercase">Your TFSA Balance</div>
+                                        <p className="font-bold text-teal-700">${(nomadFinal.tfsaUser || 0).toLocaleString()}</p>
+                                    </div>
+                                    <div className="bg-teal-50 border border-teal-100 rounded-xl p-3">
+                                        <div className="text-[11px] font-semibold text-teal-600 uppercase">Tammy's TFSA Balance</div>
+                                        <p className="font-bold text-teal-700">${(nomadFinal.tfsaTammy || 0).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-slate-500 mt-3">The power of tax-free compounding: your TFSAs sheltered <strong className="text-emerald-700">${(nomadFinal.cumulativeTaxSaved || 0).toLocaleString()}</strong> in taxes that would have otherwise gone to the CRA.</p>
+                            </div>
+                        )}
+
+                        {dashboardChartTab === 'liquidity' && (
+                            <div className="space-y-4 animate-fade-in">
+                                <h3 className="text-lg font-bold flex items-center gap-2 mb-1"><Icon name="Wallet" size={20} className="text-teal-500" /> Liquidity & Financial Freedom</h3>
+                                <p className="text-sm text-slate-500 mb-4">Liquidity measures how much of your wealth is readily accessible. The Nomad Pivot converts locked-up home equity into liquid investments.</p>
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                                    <div className="h-[300px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <ComposedChart data={liquidityRatioData} margin={{top: 10, right: 10, left: 0, bottom: 5}}>
+                                                <defs><linearGradient id="liqGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#0D9488" stopOpacity={0.3}/><stop offset="100%" stopColor="#0D9488" stopOpacity={0.03}/></linearGradient></defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                                <XAxis dataKey="year" tick={{fontSize: 11}} tickFormatter={y => `Yr ${y}`}/>
+                                                <YAxis tickFormatter={t=>`${t}%`} tick={{fontSize:11}} width={50} domain={[0,100]}/>
+                                                <RechartsTooltip formatter={(value) => [`${value}%`, 'Liquidity Ratio']} labelFormatter={(y, payload) => { const d = payload[0]?.payload; return d ? `Year ${d.year} · Age ${d.age}\nLiquid: $${d.liquid.toLocaleString()} | Total: $${d.totalNW.toLocaleString()}` : `Year ${y}`; }}/>
+                                                <Legend verticalAlign="top" height={32} iconType="circle" wrapperStyle={{fontSize: 12, fontWeight: 600}}/>
+                                                <Area type="monotone" dataKey="Liquidity Ratio %" stroke="#0D9488" strokeWidth={2.5} fill="url(#liqGrad)" isAnimationActive={false}/>
+                                                <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" label={{value: '50% threshold', position: 'right', fill: '#d97706', fontSize: 10}}/>
+                                            </ComposedChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    <div className="flex flex-col justify-center space-y-4">
+                                        <div className="bg-teal-50 rounded-2xl p-5 border border-teal-100">
+                                            <div className="text-xs font-semibold uppercase text-slate-500 mb-2">💧 Liquid Wealth Can Cover</div>
+                                            <p className="text-3xl font-bold text-teal-600">{liquidYearsData} <span className="text-lg font-normal text-teal-500">years</span></p>
+                                            <p className="text-xs text-slate-500 mt-1">of your current monthly income (${(nomadFinal.totalMonthlyIncome || 0).toLocaleString()}/mo) without selling your home or touching pensions.</p>
+                                        </div>
+                                        <div className="bg-indigo-50 rounded-2xl p-5 border border-indigo-100">
+                                            <div className="text-xs font-semibold uppercase text-slate-500 mb-2">🏠 Equity Unlocked by Downsizing</div>
+                                            <p className="text-2xl font-bold text-indigo-600">${equityUnlocked.toLocaleString()}</p>
+                                            <p className="text-xs text-slate-500 mt-1">Difference between your ${Number(homeValue).toLocaleString()} current home and the ${Number(nomadNewHomePrice).toLocaleString()} downsized home.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-100">
+                        <h3 className="text-lg font-bold flex items-center gap-2 mb-1"><Icon name="TrendingUp" size={20} className="text-cyan-500" /> Money Generated by Your TFSAs & Taxable Account</h3>
+                        <p className="text-sm text-slate-500 mb-4">Cumulative investment earnings thrown off by the invested home-sale proceeds — this is new money, on top of what you put in.</p>
+                        <div className="h-[280px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <ComposedChart data={investmentGrowthData} margin={{top: 10, right: 10, left: 0, bottom: 5}}>
+                                    <defs><linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#0891B2" stopOpacity={0.3}/><stop offset="100%" stopColor="#0891B2" stopOpacity={0.03}/></linearGradient></defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                    <XAxis dataKey="year" tick={{fontSize: 11}} tickFormatter={y => `Yr ${y}`}/>
+                                    <YAxis tickFormatter={t=>`$${(t/1000).toFixed(0)}k`} tick={{fontSize:11}} width={60}/>
+                                    <RechartsTooltip formatter={(value) => `$${value.toLocaleString()}`} labelFormatter={(y) => `Year ${y} · Age ${Number(startingAge)+y}`}/>
+                                    <Area type="monotone" dataKey="cumulativeInvestmentIncome" name="Cumulative Investment Income" stroke="#0891B2" strokeWidth={2.5} fill="url(#incomeGrad)" isAnimationActive={false}/>
+                                </ComposedChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3 mt-4 text-center">
+                            <div className="bg-teal-50 border border-teal-100 rounded-xl p-3">
+                                <div className="text-[11px] font-semibold text-teal-600 uppercase">Your TFSA</div>
+                                <p className="font-bold text-teal-700">${(nomadFinal.tfsaUser || 0).toLocaleString()}</p>
+                            </div>
+                            <div className="bg-teal-50 border border-teal-100 rounded-xl p-3">
+                                <div className="text-[11px] font-semibold text-teal-600 uppercase">Tammy's TFSA</div>
+                                <p className="font-bold text-teal-700">${(nomadFinal.tfsaTammy || 0).toLocaleString()}</p>
+                            </div>
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                                <div className="text-[11px] font-semibold text-slate-500 uppercase">Taxable Account</div>
+                                <p className="font-bold text-slate-700">${(nomadFinal.taxableCash || 0).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-100">
+                        <h3 className="text-lg font-bold flex items-center gap-2 mb-1"><Icon name="Plane" size={20} className="text-amber-500" /> Where the Downsize Dividend Went</h3>
+                        <p className="text-sm text-slate-500 mb-4">Every scheduled lump sum from the Nomad Pivot plan — the life enhancement a locked-in, stay-put home could never have funded.</p>
+                        <div className="h-[220px] mb-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={lumpSumChartData}>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                    <XAxis dataKey="year" tick={{ fontSize: 11 }} tickFormatter={y => `Yr ${y}`} />
+                                    <YAxis tickFormatter={t => `$${(t / 1000).toFixed(0)}k`} width={55} />
+                                    <RechartsTooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                                    <Bar dataKey="amount" fill="#f59e0b" radius={[6, 6, 0, 0]} name="Spending" isAnimationActive={false} />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                        {lumpSums.length > 0 && (
+                            <div className="space-y-2">
+                                {[...lumpSums].sort((a, b) => a.year - b.year).map(ls => (
+                                    <div key={ls.id} className="flex items-center justify-between bg-amber-50/60 border border-amber-100 rounded-xl px-4 py-2.5">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0"><Icon name="MapPin" size={16} className="text-amber-600" /></div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-slate-700">{ls.reason || 'Experience fund'}</p>
+                                                <p className="text-xs text-slate-400">Year {ls.year} · Age {Number(startingAge) + Number(ls.year)}</p>
+                                            </div>
+                                        </div>
+                                        <span className="font-bold text-amber-700 text-sm">${Number(ls.amount).toLocaleString()}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                            <span className="text-sm font-semibold text-slate-600">Total unlocked for experiences</span>
+                            <span className="text-xl font-bold text-amber-600">${totalExperienceBudget.toLocaleString()}</span>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-100">
+                        <h3 className="text-lg font-bold flex items-center gap-2 mb-3"><Icon name="Target" size={20} className="text-rose-500" /> Key Milestones on Your Journey</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {milestoneData.map((m, i) => (
+                                <div key={i} className="bg-slate-50 rounded-xl p-4 border border-slate-100 card-hover text-center">
+                                    <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center" style={{backgroundColor: m.color + '20'}}><Icon name={m.icon} size={20} style={{color: m.color}} /></div>
+                                    <p className="text-xs font-semibold text-slate-600">{m.label}</p>
+                                    <p className="text-xs text-slate-400">Age {m.age} · Yr {m.year}</p>
+                                    <p className="text-lg font-bold text-slate-800 mt-1">${m.value.toLocaleString()}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-100">
+                        <h3 className="text-lg font-bold flex items-center gap-2 mb-3"><Icon name="Scale" size={20} className="text-indigo-500" /> How Your Wealth Was Built</h3>
+                        <p className="text-sm text-slate-500 mb-4">A breakdown of where your final net worth came from — starting equity, unlocked value, investment growth, and the cost of living your best life.</p>
+                        <div className="h-[280px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart data={wealthWaterfallData} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                    <XAxis type="number" tickFormatter={t => `$${(t / 1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
+                                    <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fontWeight: 600 }} width={95} />
+                                    <RechartsTooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                                    <Bar dataKey="value" radius={[0, 6, 6, 0]} isAnimationActive={false}>
+                                        {wealthWaterfallData.map((entry, index) => (
+                                            <Cell key={index} fill={entry.color} />
+                                        ))}
+                                    </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                        <div className="grid grid-cols-5 gap-2 mt-3 text-center">
+                            {wealthWaterfallData.map((w, i) => (
+                                <div key={i} className="text-[10px]">
+                                    <span className="inline-block w-3 h-3 rounded-sm mr-1" style={{ backgroundColor: w.color }}></span>
+                                    <span className="text-slate-600 font-medium">{w.name}</span><br />
+                                    <span className="font-bold text-slate-700">${w.value.toLocaleString()}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover flex flex-col">
+                            <h3 className="text-lg font-bold flex items-center gap-2 mb-4"><Icon name="PieChartIcon" size={20} className="text-indigo-500" /> Net Worth Composition (Year 30)</h3>
+                            <div className="flex-grow min-h-[280px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie data={finalNetWorthData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} innerRadius={50} paddingAngle={4} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                            {finalNetWorthData.map((entry, index) => (
+                                                <Cell key={index} fill={entry.color} />
+                                            ))}
+                                        </Pie>
+                                        <RechartsTooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-2">Home equity, liquid investments, and outstanding reverse mortgage debt — Nomad Pivot scenario.</p>
+                        </div>
+                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 card-hover flex flex-col">
+                            <h3 className="text-lg font-bold flex items-center gap-2 mb-4"><Icon name="BarChartIcon" size={20} className="text-emerald-500" /> Income Breakdown (Every 5 Years)</h3>
+                            <div className="flex-grow min-h-[280px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={incomeBreakdownData}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                        <XAxis dataKey="year" tick={{ fontSize: 11 }} />
+                                        <YAxis tickFormatter={t => `$${(t / 1000).toFixed(0)}k`} width={55} />
+                                        <RechartsTooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                                        <Legend />
+                                        <Bar dataKey="Pensions" stackId="a" fill="#6366f1" isAnimationActive={false} />
+                                        <Bar dataKey="OAS" stackId="a" fill="#8b5cf6" isAnimationActive={false} />
+                                        <Bar dataKey="Yield" stackId="a" fill="#0d9488" isAnimationActive={false} />
+                                        <Bar dataKey="RM Draw" stackId="a" fill="#f43f5e" isAnimationActive={false} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-2">Monthly income sources at selected ages — Nomad Pivot scenario.</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-indigo-50 via-white to-amber-50 rounded-2xl p-6 sm:p-8 border border-slate-100 shadow-sm text-center">
+                        <Icon name="Shield" size={28} className="text-indigo-400 mx-auto mb-2" />
+                        <h3 className="text-lg font-bold text-slate-800 mb-2">Security Was Never the Question — It Was Always Guaranteed</h3>
+                        <p className="text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                            Your indexed pensions and OAS cover the essentials for life, with or without the Nomad Pivot. The real choice was never between safety and risk — it was between letting ${Number(homeValue).toLocaleString()} of equity sit quietly in a house, or putting it to work: ${totalExperienceBudget.toLocaleString()} in the trips and moments money can't buy back later, plus ${(nomadFinal.cumulativeInvestmentIncome || 0).toLocaleString()} in investment growth that a paid-off house alone can never generate. The Nomad Pivot didn't trade security for adventure — it funded both.
+                        </p>
+                    </div>
+                </div>
+            );
+
+            return ( <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 font-sans text-slate-800">
+                <div className="max-w-7xl mx-auto space-y-5">
+                    <div className="bg-white/90 backdrop-blur-md rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200/60 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 animate-fade-in">
+                        <div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-2.5">
+                                    <span className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center"><Icon name="Landmark" className="text-white" size={22} /></span> Wealth & Retirement Simulator
+                                </h1>
+                                <div className="flex gap-2 flex-wrap">
+                                    <label className="cursor-pointer flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-xl transition-all border border-slate-200 shadow-sm"><Icon name="Upload" size={14} /> Import <input type="file" accept=".json" onChange={importScenario} ref={fileInputRef} className="hidden" /></label>
+                                    <button onClick={exportScenario} className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold rounded-xl transition-all border border-slate-200 shadow-sm"><Icon name="Download" size={14} /> Export</button>
+                                    <button onClick={generateReport} className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-semibold rounded-xl transition-all border border-amber-200 shadow-sm"><Icon name="Download" size={14} /> 📄 Report</button>
+                                    <button onClick={handleReset} className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 text-xs font-semibold rounded-xl transition-all border border-slate-200 shadow-sm"><Icon name="RefreshCw" size={14} /> Reset</button>
+                                </div>
+                            </div>
+                            <p className="text-slate-500 mt-2 text-sm">Compare debt strategies & build a complete multi-phase retirement plan.</p>
+                        </div>
+                        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 w-full lg:w-auto overflow-x-auto">
+                            {['heloc', 'reverse', 'nomad', 'dashboard'].map(key => ( <button key={key} onClick={() => setLoanType(key)} className={`flex-1 min-w-[110px] py-2.5 px-4 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${loanType === key ? (key === 'nomad' ? 'bg-slate-800 text-white shadow-md' : 'bg-white text-slate-800 shadow-sm') : 'text-slate-500 hover:text-slate-700'}`}><Icon name={key === 'heloc' ? 'ArrowRightLeft' : key === 'reverse' ? 'Landmark' : key === 'nomad' ? 'Compass' : 'PieChartIcon'} size={16} className={loanType === key && key === 'nomad' ? 'text-amber-400' : ''} /> {key === 'heloc' ? 'HELOC' : key === 'reverse' ? 'Reverse Mtg' : key === 'nomad' ? 'Nomad Pivot' : 'Dashboard'}</button> ))}
+                        </div>
+                    </div>
+
+                    {loanType !== 'dashboard' ? (
+                        <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+                            <div className="xl:col-span-4 space-y-5">
+                                {loanType !== 'nomad' ? (
+                                    <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4 animate-fade-in">
+                                        <h2 className="text-lg font-bold flex items-center gap-2 text-slate-800"><Icon name="DollarSign" size={20} className="text-indigo-500" /> Base Scenario</h2>
+                                        <div className="grid grid-cols-2 gap-x-4"><InputGroup label="Home Value" value={homeValue} onChange={setHomeValue} prefix="$" /><InputGroup label="Starting Age" value={startingAge} onChange={setStartingAge} min="40" max="90" /></div>
+                                        <div className="grid grid-cols-2 gap-x-4"><InputGroup label={loanType === 'reverse' ? 'RM Rate' : 'HELOC Rate'} value={loanType === 'reverse' ? interestRate : helocRate} onChange={loanType === 'reverse' ? setInterestRate : setHelocRate} suffix="%" step="0.01" /><InputGroup label="Home Apprec." value={appreciationRate} onChange={setAppreciationRate} suffix="%" step="0.1" /></div>
+                                        <div className="grid grid-cols-2 gap-x-4"><InputGroup label="Initial Advance" value={initialAdvance} onChange={setInitialAdvance} prefix="$" /><InputGroup label="Monthly Withdraw" value={monthlyWithdrawal} onChange={setMonthlyWithdrawal} prefix="$" /></div>
+                                        <div className="border-t pt-4 mt-4"><h3 className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">🔒 Pensions & OAS</h3><div className="grid grid-cols-2 gap-x-4"><InputGroup label="Your Pension/mo" value={pensionUser} onChange={setPensionUser} prefix="$" step="0.01" /><InputGroup label="Tammy's Pension/mo" value={pensionTammy} onChange={setPensionTammy} prefix="$" step="0.01" /></div><InputGroup label="Inflation Rate" value={inflationRate} onChange={setInflationRate} suffix="%" step="0.1" /><div className="grid grid-cols-2 gap-x-4 mt-2"><InputGroup label="Your OAS/mo (gross)" value={oasUserAmount} onChange={setOasUserAmount} prefix="$" step="1" /><InputGroup label="Tammy OAS/mo (gross)" value={oasTammyAmount} onChange={setOasTammyAmount} prefix="$" step="1" /></div><div className="grid grid-cols-2 gap-x-4"><InputGroup label="Your OAS Start Age" value={oasUserStartAge} onChange={setOasUserStartAge} min="60" max="70" /><InputGroup label="Tammy OAS Start Age" value={oasTammyStartAge} onChange={setOasTammyStartAge} min="60" max="70" /></div><InputGroup label="OAS Tax Rate" value={oasTaxRate} onChange={setOasTaxRate} suffix="%" step="0.1" /></div>
+                                        <LumpSumSection newLumpYear={newLumpYear} setNewLumpYear={setNewLumpYear} newLumpAmount={newLumpAmount} setNewLumpAmount={setNewLumpAmount} newLumpReason={newLumpReason} setNewLumpReason={setNewLumpReason} lumpSums={lumpSums} addLumpSum={addLumpSum} removeLumpSum={removeLumpSum} />
+                                        <ActiveIncomeSection newActiveYear={newActiveYear} setNewActiveYear={setNewActiveYear} newActiveAmount={newActiveAmount} setNewActiveAmount={setNewActiveAmount} newActiveSource={newActiveSource} setNewActiveSource={setNewActiveSource} activeIncomes={activeIncomes} addActiveIncome={addActiveIncome} removeActiveIncome={removeActiveIncome} />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4 animate-fade-in">
+                                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-t-4 border-t-amber-400">
+                                            <h2 className="text-lg font-bold flex items-center gap-2"><span className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><Icon name="Compass" size={18} className="text-amber-600" /></span> Phase 1: The Exit</h2>
+                                            <div className="grid grid-cols-2 gap-x-4 mt-3"><InputGroup label="Pivot Year" value={nomadExitYear} onChange={setNomadExitYear} min="0" max="25" /><InputGroup label="Home Value" value={homeValue} onChange={setHomeValue} prefix="$" /></div>
+                                            <InputGroup label="Truck & Trailer Budget" value={nomadTruckBudget} onChange={setNomadTruckBudget} prefix="$" />
+                                            <InputGroup label="Monthly Housing Cost Avoided" value={avoidedHousingCost} onChange={setAvoidedHousingCost} prefix="$" tooltip="Property tax, maintenance, utilities you skip while traveling." />
+                                            <div className="p-3 bg-slate-50 rounded-xl mt-3"><h3 className="text-xs font-bold text-slate-600 uppercase mb-2 flex items-center gap-1">🔒 Indexed Pensions <InfoTooltip text="Your safety net." /></h3><div className="grid grid-cols-2 gap-x-4"><InputGroup label="Your Pension/mo" value={pensionUser} onChange={setPensionUser} prefix="$" step="0.01" /><InputGroup label="Tammy's Pension/mo" value={pensionTammy} onChange={setPensionTammy} prefix="$" step="0.01" /></div><InputGroup label="Inflation" value={inflationRate} onChange={setInflationRate} suffix="%" step="0.1" /><div className="mt-4 pt-3 border-t border-slate-200"><h3 className="text-xs font-bold text-slate-600 uppercase mb-2 flex items-center gap-1">🇨🇦 Old Age Security (OAS)</h3><div className="grid grid-cols-2 gap-x-4"><InputGroup label="Your OAS/mo (gross)" value={oasUserAmount} onChange={setOasUserAmount} prefix="$" step="1" /><InputGroup label="Tammy OAS/mo (gross)" value={oasTammyAmount} onChange={setOasTammyAmount} prefix="$" step="1" /></div><div className="grid grid-cols-2 gap-x-4"><InputGroup label="Your OAS Start Age" value={oasUserStartAge} onChange={setOasUserStartAge} min="60" max="70" /><InputGroup label="Tammy OAS Start Age" value={oasTammyStartAge} onChange={setOasTammyStartAge} min="60" max="70" /></div><InputGroup label="OAS Tax Rate" value={oasTaxRate} onChange={setOasTaxRate} suffix="%" step="0.1" /></div></div>
+                                        </div>
+                                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-t-4 border-t-teal-400">
+                                            <h2 className="text-lg font-bold flex items-center gap-2"><span className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center"><Icon name="Wallet" size={18} className="text-teal-600" /></span> Phase 2: The Journey</h2>
+                                            <div className="grid grid-cols-2 gap-x-4 mt-3"><InputGroup label="Years on Road" value={nomadTravelYears} onChange={setNomadTravelYears} min="1" max="15" /><InputGroup label="Investment Yield" value={nomadYield} onChange={setNomadYield} suffix="%" step="0.1" /></div>
+                                        </div>
+                                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-t-4 border-t-indigo-400">
+    <h2 className="text-lg font-bold flex items-center gap-2"><span className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center"><Icon name="Home" size={18} className="text-indigo-600" /></span> Phase 3: Re-Entry</h2>
+    <InputGroup label="Downsized Home Price" value={nomadNewHomePrice} onChange={setNomadNewHomePrice} prefix="$" />
+    <InputGroup label="Home Appreciation" value={appreciationRate} onChange={setAppreciationRate} suffix="%" step="0.1" />
+
+    {/* --- NEW BLOCK: Reverse Mortgage Toggle --- */}
+    <div className="border-t pt-4 mt-4">
+        <h3 className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+            🏦 Reverse Mortgage (after re‑entry)
+        </h3>
+        <ToggleSwitch
+            checked={enableNomadRM}
+            onChange={() => setEnableNomadRM(!enableNomadRM)}
+            label="Enable Nomad RM"
+            tooltip="When ON, a reverse mortgage can cover lump sums and monthly withdrawals once you re‑enter the housing market."
+        />
+        {enableNomadRM && (
+            <div className="grid grid-cols-2 gap-x-4 mt-3">
+                <InputGroup
+                    label="RM Trigger Year"
+                    value={nomadRmTriggerYear}
+                    onChange={setNomadRmTriggerYear}
+                    min="0"
+                    max="30"
+                    tooltip="Year the reverse mortgage can start drawing (0 = as soon as re‑entry)"
+                />
+                <InputGroup
+                    label="Monthly RM Draw"
+                    value={nomadRmMonthly}
+                    onChange={setNomadRmMonthly}
+                    prefix="$"
+                    tooltip="Regular monthly amount to draw from the reverse mortgage"
+                />
+            </div>
+        )}
+    </div>
+    {/* --- END of new block --- */}
+
+</div>
+{/* Recalibration card */}
+<div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 border-t-4 border-t-orange-400">
+    <h2 className="text-lg font-bold flex items-center gap-2">
+        <span className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+            <Icon name="RefreshCw" size={18} className="text-orange-600" />
+        </span>
+        Recalibrate at a Future Year
+    </h2>
+    <p className="text-xs text-slate-500 mt-1 mb-3">
+        Override balances and rates at a specific year to model a mid‑course correction.
+    </p>
+    <ToggleSwitch
+        checked={enableRebase}
+        onChange={() => setEnableRebase(!enableRebase)}
+        label="Enable Recalibration"
+    />
+    {enableRebase && (
+        <div className="mt-3 space-y-3">
+            <InputGroup label="Recalibration Year" value={rebaseYear} onChange={setRebaseYear} min="0" max="30" />
+            <InputGroup label="Home Value at Year" value={rebaseHomeValue} onChange={setRebaseHomeValue} prefix="$" />
+            <InputGroup label="Total Liquid Wealth at Year" value={rebaseLiquidWealth} onChange={setRebaseLiquidWealth} prefix="$" tooltip="Sum of your TFSA, Tammy's TFSA, and taxable accounts." />
+            <InputGroup label="Loan Balance at Year" value={rebaseLoanBalance} onChange={setRebaseLoanBalance} prefix="$" tooltip="Outstanding reverse mortgage or HELOC balance." />
+            <div className="grid grid-cols-2 gap-x-4">
+                <InputGroup label="New Investment Yield" value={rebaseYield} onChange={setRebaseYield} suffix="%" step="0.1" tooltip="Annual return on liquid investments from this year onward." />
+                <InputGroup label="New Home Appreciation" value={rebaseAppreciation} onChange={setRebaseAppreciation} suffix="%" step="0.1" tooltip="Annual home value growth from this year onward." />
+            </div>
+        </div>
+    )}
+</div>
+                                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                                            <h3 className="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">🏦 TFSA & Tax Settings</h3>
+                                            <div className="grid grid-cols-2 gap-x-4"><InputGroup label="Your TFSA Room" value={tfsaRoomUser} onChange={setTfsaRoomUser} prefix="$" /><InputGroup label="Tammy's TFSA Room" value={tfsaRoomTammy} onChange={setTfsaRoomTammy} prefix="$" /></div>
+                                            <InputGroup label="Annual TFSA Contribution" value={annualTfsaContribution} onChange={setAnnualTfsaContribution} prefix="$" step="100" />
+                                            <InputGroup label="Tax on Non‑Reg Earnings" value={nonRegTaxRate} onChange={setNonRegTaxRate} suffix="%" step="0.1" />
+                                        </div>
+                                        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+                                            <LumpSumSection newLumpYear={newLumpYear} setNewLumpYear={setNewLumpYear} newLumpAmount={newLumpAmount} setNewLumpAmount={setNewLumpAmount} newLumpReason={newLumpReason} setNewLumpReason={setNewLumpReason} lumpSums={lumpSums} addLumpSum={addLumpSum} removeLumpSum={removeLumpSum} />
+                                            <ActiveIncomeSection newActiveYear={newActiveYear} setNewActiveYear={setNewActiveYear} newActiveAmount={newActiveAmount} setNewActiveAmount={setNewActiveAmount} newActiveSource={newActiveSource} setNewActiveSource={setNewActiveSource} activeIncomes={activeIncomes} addActiveIncome={addActiveIncome} removeActiveIncome={removeActiveIncome} />
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            
+                            <div className="xl:col-span-8 flex flex-col gap-5">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-white p-4 rounded-xl border shadow-sm card-hover relative"><div className="stat-accent-bar bg-teal-500"></div><div className="pl-5"><div className="text-xs font-semibold text-slate-500 uppercase">Liquid Wealth</div><p className="text-xl font-bold">${finalMonth.tfsaBalance?.toLocaleString()}</p><p className="text-xs text-slate-400">Your TFSA: ${finalMonth.tfsaUser?.toLocaleString()} | Tammy: ${finalMonth.tfsaTammy?.toLocaleString()}</p></div></div>
+                                    <div className="bg-white p-4 rounded-xl border shadow-sm card-hover relative"><div className="stat-accent-bar bg-violet-500"></div><div className="pl-5"><div className="text-xs font-semibold text-slate-500 uppercase">Monthly Income</div><p className="text-xl font-bold text-violet-600">${finalMonth.totalMonthlyIncome?.toLocaleString()}/mo</p></div></div>
+                                    <div className="bg-white p-4 rounded-xl border shadow-sm card-hover relative"><div className="stat-accent-bar bg-emerald-500"></div><div className="pl-5 flex flex-col items-start gap-1"><div className="flex items-center gap-2"><div className="text-xs font-semibold text-slate-500 uppercase">Final Net Worth</div>{finalHustleBoost > 0 && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold">+{finalHustleBoost.toLocaleString()} RE Boost</span>}</div><p className="text-xl font-bold text-emerald-600">${finalMonth.totalNetWorth?.toLocaleString()}</p></div></div>
+                                    <div className="bg-white p-4 rounded-xl border shadow-sm card-hover relative bg-blue-50/30"><div className="stat-accent-bar bg-blue-500"></div><div className="pl-5"><div className="text-xs font-semibold text-blue-600 uppercase">Home Equity</div><p className="text-xl font-bold text-blue-700">${finalMonth.equity?.toLocaleString()}</p></div></div>
+                                </div>
+                                <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100 flex flex-col">
+                                    <div className="flex justify-between items-center border-b pb-4 mb-4">
+                                        <h2 className="text-lg font-bold">{loanType==='nomad' ? '🗺️ Master Strategy Timeline' : '📈 Wealth Progression'} (30 Years)</h2>
+                                        <div className="flex gap-2 text-xs">
+                                            <button onClick={()=>{setChartDomainLeft(0);setChartDomainRight(30)}} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold">Full</button>
+                                            <button onClick={()=>{setChartDomainLeft(0);setChartDomainRight(10)}} className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold">10 Yr</button>
+                                        </div>
+                                    </div>
+                                    <div className="h-[400px]">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <ComposedChart data={simulationData} margin={{top:10,right:10,left:0,bottom:20}} onMouseMove={(e)=>{if(e?.activePayload?.length) setHoveredData(e.activePayload[0].payload)}} onMouseLeave={()=>setHoveredData(null)}>
+                                                <defs>
+                                                    <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#3B82F6" stopOpacity={0.25}/><stop offset="100%" stopColor="#3B82F6" stopOpacity={0.05}/></linearGradient>
+                                                    <linearGradient id="debtGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#EF4444" stopOpacity={0.3}/><stop offset="100%" stopColor="#EF4444" stopOpacity={0.05}/></linearGradient>
+                                                    <linearGradient id="liquidGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#0D9488" stopOpacity={0.2}/><stop offset="100%" stopColor="#0D9488" stopOpacity={0.02}/></linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                                                <XAxis dataKey="year" tick={<CustomXAxisTick/>} tickCount={7} domain={[chartDomainLeft, chartDomainRight]} type="number" height={40}/>
+                                                <YAxis yAxisId="left" tickFormatter={t=>`$${(t/1000).toFixed(0)}k`} tick={{fontSize:11}} width={60}/>
+                                                {loanType==='nomad' && <YAxis yAxisId="right" orientation="right" tickFormatter={t=>`$${(t/1000).toFixed(0)}k`} tick={{fontSize:11,fill:'#9333ea'}} width={55}/>}
+                                                <RechartsTooltip content={({active,payload})=>{
+                                                    if(active&&payload?.length){
+                                                        const d=payload[0].payload;
+                                                        return(
+                                                            <div className="bg-white/98 backdrop-blur-md p-0 rounded-2xl shadow-2xl min-w-[260px] border border-slate-100 overflow-hidden">
+                                                                <div className="bg-gradient-to-r from-indigo-500 to-violet-500 px-4 py-3"><p className="font-bold text-white text-sm">Year {d.displayYear}, Month {d.displayMonth} · Age {d.age}</p></div>
+                                                                <div className="p-4 space-y-2">
+                                                                    {d.isDownsizeMonth&&<div className="mb-2 bg-indigo-50 text-indigo-700 p-2.5 rounded-lg text-xs flex items-center gap-1.5"><Icon name="MapPin" size={14}/> {loanType==='nomad'?'🏡 Re-Entry: Bought Downsized Home!':'🏡 Downsize Event — Debt Cleared!'}</div>}
+                                                                    {d.isExitMonth&&<div className="mb-2 bg-emerald-50 text-emerald-700 p-2.5 rounded-lg text-xs flex items-center gap-1.5"><Icon name="Landmark" size={14}/> Home Sold! Equity Cashed Out.</div>}
+                                                                    {d.activeIncomeThisMonth>0&&<div className="mb-2 bg-emerald-100 text-emerald-800 font-bold p-2.5 rounded-lg text-xs flex justify-between items-center"><span className="flex items-center gap-1.5"><Icon name="DollarSign" size={14}/> Active Income:</span><span>+ ${d.activeIncomeThisMonth.toLocaleString()}</span></div>}
+                                                                    <div className="space-y-1.5 text-sm">
+                                                                        {d.homeValue>0&&<p className="flex justify-between text-blue-600"><span>Home Equity:</span><span className="font-semibold">${d.equity.toLocaleString()}</span></p>}
+                                                                        {d.balance>0&&<p className="flex justify-between text-rose-500"><span>Loan Debt:</span><span className="font-semibold">${d.balance.toLocaleString()}</span></p>}
+                                                                        {d.tfsaBalance>0&&<p className="flex justify-between text-teal-600"><span>💧 Liquid Wealth:</span><span className="font-semibold">${d.tfsaBalance.toLocaleString()}</span></p>}
+                                                                        <div className="border-t pt-2 mt-1"><p className="flex justify-between text-slate-800 font-bold"><span>Net Worth:</span><span>${d.totalNetWorth.toLocaleString()}</span></p></div>
+                                                                    </div>
+                                                                    {loanType==='nomad'&&d.month>0&&<div className="mt-3 pt-3 border-t"><p className="text-xs font-bold text-slate-500 uppercase mb-2">💰 Monthly Cash Flow</p><div className="space-y-1 text-xs"><p className="flex justify-between"><span>Pensions:</span><span>${d.monthlyPensionTotal.toLocaleString()}</span></p><p className="flex justify-between text-indigo-600"><span>OAS (net):</span><span>${d.monthlyOasNet?.toLocaleString()}</span></p><p className="flex justify-between text-teal-600"><span>Yield (after tax):</span><span>${d.monthlyDividendIncome.toLocaleString()}</span></p><div className="border-t pt-1.5 mt-1"><p className="flex justify-between text-violet-700 font-bold text-sm"><span>Usable Cash:</span><span>${d.totalMonthlyIncome.toLocaleString()}/mo</span></p></div></div></div>}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    }
+                                                    return null;
+                                                }}/>
+                                                <Legend verticalAlign="top" height={36} iconType="circle" wrapperStyle={{fontSize:12,fontWeight:600}}/>
+                                                <Area yAxisId="left" type="monotone" dataKey="balance" stackId="debtEquity" stroke="#EF4444" strokeWidth={1.5} fill="url(#debtGrad)" name="RM Debt" isAnimationActive={false}/>
+                                                <Area yAxisId="left" type="monotone" dataKey="equity" stackId="debtEquity" stroke="#3B82F6" strokeWidth={2} fill="url(#equityGrad)" name="Home Equity" isAnimationActive={false}/>
+                                                <Area yAxisId="left" type="monotone" dataKey="tfsaBalance" stroke="#0D9488" strokeWidth={2} fill="url(#liquidGrad)" name="Liquid Wealth" isAnimationActive={false}/>
+                                                {loanType==='nomad'&&<Line yAxisId="right" type="monotone" dataKey="totalMonthlyIncome" stroke="#9333ea" strokeWidth={2.5} name="Monthly Income" dot={false} isAnimationActive={false}/>}
+                                            </ComposedChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                    {loanType === 'nomad' && activeData.cumulativeActiveIncome > 0 && (
+                                        <div className="mt-4 p-4 bg-emerald-50 rounded-xl border border-emerald-200 shadow-sm flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center"><Icon name="TrendingUp" size={20} className="text-emerald-600" /></div>
+                                                <div>
+                                                    <h4 className="text-sm font-bold text-emerald-800">The Hustle Impact (Cumulative)</h4>
+                                                    <p className="text-xs text-emerald-600">You've injected <strong>${activeData.cumulativeActiveIncome.toLocaleString()}</strong> of active RE income so far.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <SharedDashboardCharts />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-5 animate-fade-in">
+                            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 shadow-lg border border-indigo-900/40 text-white relative overflow-hidden">
+                                <h2 className="text-2xl font-bold flex items-center gap-2 mb-2"><Icon name="Sparkles" size={26} className="text-amber-300" /> Dashboard Overview</h2>
+                                <p className="text-slate-300 text-sm">Your Nomad Pivot at a glance, incorporating active commission years and scheduled lump sums.</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div className="bg-white p-4 rounded-xl border shadow-sm relative"><div className="text-[11px] font-semibold text-slate-500 uppercase flex items-center gap-2">Final Net Worth {finalHustleBoost > 0 && <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">+ RE Boost</span>}</div><p className="text-lg font-bold text-emerald-600">${(nomadFinal.totalNetWorth || 0).toLocaleString()}</p></div>
+                                <div className="bg-white p-4 rounded-xl border shadow-sm"><div className="text-[11px] font-semibold text-slate-500 uppercase">Liquid Wealth</div><p className="text-lg font-bold text-teal-600">${(nomadFinal.tfsaBalance || 0).toLocaleString()}</p></div>
+                                <div className="bg-white p-4 rounded-xl border shadow-sm"><div className="text-[11px] font-semibold text-slate-500 uppercase">Home Equity</div><p className="text-lg font-bold text-blue-600">${(nomadFinal.equity || 0).toLocaleString()}</p></div>
+                                <div className="bg-white p-4 rounded-xl border shadow-sm"><div className="text-[11px] font-semibold text-slate-500 uppercase">Spent on Experiences</div><p className="text-lg font-bold text-amber-600">${totalExperienceBudget.toLocaleString()}</p></div>
+                            </div>
+
+                            <SharedDashboardCharts />
+                        </div>
+                    )}
+                    <div className="text-center text-xs text-slate-400 pb-4">Simulator for educational purposes only. Not financial advice.</div>
+                </div>
+            </div>);
+        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

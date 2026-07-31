@@ -467,8 +467,8 @@
                 </div>
             </div>
             <div class="flex gap-2 w-full lg:w-auto">
-                <button onclick="importCSV()" class="glass-btn px-4 py-2 rounded-xl text-sm font-medium flex-1 lg:flex-none"><i class="fas fa-file-import mr-2"></i>Import</button>
-                <button onclick="exportCSV()" class="glass-btn px-4 py-2 rounded-xl text-sm font-medium flex-1 lg:flex-none"><i class="fas fa-file-export mr-2"></i>Export</button>
+                <button onclick="importJSON()" class="glass-btn px-4 py-2 rounded-xl text-sm font-medium flex-1 lg:flex-none"><i class="fas fa-file-import mr-2"></i>Import JSON</button>
+                <button onclick="exportJSON()" class="glass-btn px-4 py-2 rounded-xl text-sm font-medium flex-1 lg:flex-none"><i class="fas fa-file-export mr-2"></i>Export JSON</button>
             </div>
         </div>
 
@@ -812,10 +812,10 @@
             // 2. NOW update the current agent variable
             currentAgent = agent;
 
-            // 3. Determine the correct storage key to load
-            const loadKey = currentAgent === 'default' ? 'realEstateDashboardState_v10' : `dashboard_agent_${currentAgent}`;
-            
-            // 4. Load the selected agent's unique state
+            // 3. Determine the correct storage key (Fixes the 'default' vs 'agent' key mismatch)
+            const loadKey = (currentAgent === 'default') ? 'realEstateDashboardState_v10' : `dashboard_agent_${currentAgent}`;
+
+            // 4. Load the correct agent state from localStorage
             const saved = localStorage.getItem(loadKey);
             if (saved) {
                 try {
@@ -831,7 +831,7 @@
                 goals = { grossIncome: 0, netIncome: 0, listingsSold: 0, buyersSold: 0, contacts: 0 };
             }
 
-            // 5. Sync the Goal Modal input fields so they match the loaded agent
+            // 5. Sync the goal input fields visually
             Object.keys(goals).forEach(k => {
                 const el = document.getElementById(`goal${k.charAt(0).toUpperCase() + k.slice(1)}`);
                 if (el) el.value = goals[k] || '';
@@ -1691,71 +1691,71 @@
         }
 
         // ════════════════════════════════════════════════════════════════
-        //  CSV IMPORT / EXPORT
+        //  JSON IMPORT / EXPORT
         // ════════════════════════════════════════════════════════════════
 
-        function exportCSV() {
+        function exportJSON() {
             if (!logEntries.length) { showToast('No data to export', 'error'); return; }
-            const headers = ['id', 'date', 'eventType', 'leadSource', 'notes', 'contacts', 'homeValue', 'commissionRate',
-                'grossCommission', 'expenses', 'saleType', 'brokerSplit', 'brokerFee', 'expenseCategory', 'expenseAmount',
-                'expenseFor', 'isSameDayAppt'
-            ];
-            const rows = logEntries.map(r => headers.map(h => {
-                const v = r[h];
-                const s = (v === undefined || v === null) ? '' : String(v);
-                return `"${s.replace(/"/g, '""')}"`;
-            }).join(','));
-            const csv = [`GOALS,"${JSON.stringify(goals).replace(/"/g,'""')}"`, headers.join(','), ...rows].join('\n');
-            const blob = new Blob([csv], { type: 'text/csv' });
+            
+            const dataToExport = {
+                goals: goals,
+                logEntries: logEntries
+            };
+            
+            const jsonString = JSON.stringify(dataToExport, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = 'Agent_Tracker_Backup.csv';
+            link.download = 'Agent_Tracker_Backup.json';
             link.click();
-            showToast('Export complete 📤', 'success');
+            showToast('JSON Export complete 📤', 'success');
         }
 
-        function importCSV() {
+        function importJSON() {
             const input = document.createElement('input');
             input.type = 'file';
-            input.accept = '.csv';
+            input.accept = '.json';
             input.onchange = (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (ev) => {
-                    const rows = ev.target.result.trim().split(/\r?\n/).filter(r => r.trim());
-                    if (!rows.length) { showToast('Empty file', 'error'); return; }
-                    if (!rows[0].toUpperCase().startsWith('GOALS,')) { showToast('Invalid backup format', 'error'); return; }
                     try {
-                        const goalsStr = rows[0].substring(6).replace(/^"|"$/g, '').replace(/""/g, '"');
-                        const importedGoals = JSON.parse(goalsStr);
-                        const headers = rows[1].split(',').map(h => h.replace(/"/g, ''));
-                        const importedLogs = rows.slice(2).map(row => {
-                            const vals = row.match(/(?<=,|^)(?:"(?:[^"]|"")*"|[^,]*)(?=,|$)/g) || [];
-                            const obj = {};
-                            headers.forEach((h, i) => {
-                                let v = (vals[i] || '').replace(/^"|"$/g, '').replace(/""/g, '"');
-                                if (['id', 'contacts', 'homeValue', 'commissionRate', 'grossCommission',
-                                        'expenses', 'brokerSplit', 'brokerFee', 'expenseAmount'
-                                    ].includes(h)) obj[h] = parseFloat(v) || 0;
-                                else if (h === 'isSameDayAppt') obj[h] = v === 'true';
-                                else obj[h] = v === 'null' ? null : v;
-                            });
-                            return obj;
+                        const parsedData = JSON.parse(ev.target.result);
+                        
+                        if (!parsedData.logEntries || !Array.isArray(parsedData.logEntries)) {
+                            showToast('Invalid JSON format. Missing logEntries array.', 'error');
+                            return;
+                        }
+                        
+                        // Generate new unique IDs to safely append without conflicts
+                        const newLogs = parsedData.logEntries.map(entry => {
+                            entry.id = Date.now() + Math.floor(Math.random() * 100000);
+                            return entry;
                         });
-                        showConfirm(`Import ${importedLogs.length} entries? Overwrites current data.`, () => {
-                            logEntries = importedLogs;
-                            if (importedGoals) goals = importedGoals;
+
+                        showConfirm(`Append ${newLogs.length} entries to your current data? (Click Proceed to append, or Cancel to abort)`, () => {
+                            // 1. Safely append the new logs to existing logs (preserves past history)
+                            logEntries = [...logEntries, ...newLogs];
+                            
+                            // 2. Only update goals if they are currently blank/zero, preserving your custom set goals
+                            if (parsedData.goals) {
+                                if (!goals.grossIncome && !goals.netIncome) {
+                                    goals = parsedData.goals;
+                                }
+                            }
+                            
                             updateAll();
-                            showToast('Backup restored ✅', 'success');
+                            showToast('JSON Data appended successfully ✅', 'success');
                         });
-                    } catch (err) { showToast('Error parsing file', 'error'); }
+                    } catch (err) { 
+                        showToast('Error parsing JSON file', 'error'); 
+                    }
                 };
                 reader.readAsText(file);
             };
             input.click();
         }
-
         // ════════════════════════════════════════════════════════════════
         //  PERSISTENCE
         // ════════════════════════════════════════════════════════════════

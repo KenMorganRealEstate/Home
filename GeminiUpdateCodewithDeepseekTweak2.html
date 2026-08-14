@@ -1,4 +1,6 @@
 
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -194,6 +196,10 @@
                 let totalTfsaContributions = 0;
                 let totalTaxableContributions = 0;
                 let cumulativeActiveIncome = 0;
+                let cumulativePension = 0;
+                let cumulativeOAS = 0;
+                let cumulativeInvestmentYield = 0;
+                let cumulativeRRSP = 0;
 
                 let currentRrsp = safeNumber(rrspBalanceUser);
                 let currentSmoothedRrsp = 0;
@@ -565,6 +571,11 @@
                     }
 
                     const totalMonthlyIncome = monthlyPensionTotal + oasNet + monthlyDividendIncome + monthlyRmDraw + currentSmoothedRrsp - outOfPocketPayment;
+                    cumulativePension += monthlyPensionTotal;
+                    cumulativeOAS += oasNet;
+                    cumulativeInvestmentYield += monthlyDividendIncome;
+                    cumulativeRRSP += currentSmoothedRrsp;
+                    const cumulativeTotalIncome = cumulativePension + cumulativeOAS + cumulativeInvestmentYield + cumulativeRRSP;    
                     const cumulativeAppreciation = effectiveLoanType === 'nomad' && hasSoldHouseForNomad && !isNomadPhase ? Math.max(0, currentHomeValue - safeNumber(nomadNewHomePrice)) : currentHomeValue - initialHomeValueTracker;
                     const totalLiquidWealth = tfsaUser + tfsaTammy + taxableCash;
                     
@@ -588,7 +599,10 @@
                         leftoverCashAtDownsize: Math.round(Math.max(0, leftoverCashAtDownsize)),
                         cumulativeInvestmentIncome: Math.round(cumulativeInvestmentIncome), cumulativeTaxSaved: Math.round(cumulativeTaxSaved),
                         guaranteedIncome: Math.round(monthlyPensionTotal + oasNet), variableIncome: Math.round(monthlyDividendIncome + monthlyRmDraw + currentSmoothedRrsp - outOfPocketPayment),
-                        activeIncomeThisMonth: Math.round(activeIncomeThisMonth), cumulativeActiveIncome: Math.round(cumulativeActiveIncome)
+                        activeIncomeThisMonth: Math.round(activeIncomeThisMonth), cumulativeActiveIncome: Math.round(cumulativeActiveIncome),
+cumulativePension: Math.round(cumulativePension), cumulativeOAS: Math.round(cumulativeOAS),
+cumulativeInvestmentYield: Math.round(cumulativeInvestmentYield), cumulativeRRSP: Math.round(cumulativeRRSP),
+cumulativeTotalIncome: Math.round(cumulativeTotalIncome)
                     });
                 }
                 return data;
@@ -1563,6 +1577,20 @@
                                                                         <div className="border-t pt-2 mt-1"><p className="flex justify-between text-slate-800 font-bold"><span>Net Worth:</span><span>${d.totalNetWorth.toLocaleString()}</span></p></div>
                                                                     </div>
                                                                     {loanType==='nomad'&&d.month>0&&<div className="mt-3 pt-3 border-t"><p className="text-xs font-bold text-slate-500 uppercase mb-2">💰 Monthly Cash Flow</p><div className="space-y-1 text-xs"><p className="flex justify-between"><span>Pensions:</span><span>${d.monthlyPensionTotal.toLocaleString()}</span></p><p className="flex justify-between text-indigo-600"><span>OAS (net):</span><span>${d.monthlyOasNet?.toLocaleString()}</span></p><p className="flex justify-between text-teal-600"><span>Yield (after tax):</span><span>${d.monthlyDividendIncome.toLocaleString()}</span></p>{d.monthlyRrspDraw>0&&<p className="flex justify-between text-fuchsia-600"><span>RRSP Draw (net):</span><span>${d.monthlyRrspDraw.toLocaleString()}</span></p>}<div className="border-t pt-1.5 mt-1"><p className="flex justify-between text-violet-700 font-bold text-sm"><span>Usable Cash:</span><span>${d.totalMonthlyIncome.toLocaleString()}/mo</span></p></div></div></div>}
+                                                                    {d.month > 0 && (
+                                                                        <div className="mt-3 pt-3 border-t bg-amber-50/50 -mx-4 -mb-4 p-4 rounded-b-2xl">
+                                                                            <p className="text-xs font-bold text-slate-500 uppercase mb-2">🏆 Cumulative Extracted</p>
+                                                                            <div className="space-y-1 text-xs">
+                                                                                <p className="flex justify-between text-slate-600"><span>Canada Post Pensions:</span><span className="font-semibold">${d.cumulativePension.toLocaleString()}</span></p>
+                                                                                <p className="flex justify-between text-indigo-600"><span>OAS (net):</span><span className="font-semibold">${d.cumulativeOAS.toLocaleString()}</span></p>
+                                                                                <p className="flex justify-between text-teal-600"><span>Investments & TFSA:</span><span className="font-semibold">${d.cumulativeInvestmentYield.toLocaleString()}</span></p>
+                                                                                {d.cumulativeRRSP > 0 && <p className="flex justify-between text-fuchsia-600"><span>RRSP / RRIF:</span><span className="font-semibold">${d.cumulativeRRSP.toLocaleString()}</span></p>}
+                                                                                <div className="border-t border-amber-200 pt-1.5 mt-1">
+                                                                                    <p className="flex justify-between text-amber-700 font-bold text-sm"><span>Lifetime Total Extracted:</span><span>${d.cumulativeTotalIncome.toLocaleString()}</span></p>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         );

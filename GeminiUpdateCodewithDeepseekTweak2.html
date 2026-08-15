@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -66,7 +64,11 @@
             Star: <><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></>,
             Banknote: <><rect x="2" y="5" width="20" height="14" rx="2" /><line x1="2" y1="10" x2="22" y2="10" /><circle cx="12" cy="12" r="3" /></>,
             Percent: <><line x1="19" y1="5" x2="5" y2="19" /><circle cx="6.5" cy="6.5" r="2.5" /><circle cx="17.5" cy="17.5" r="2.5" /></>,
-            Scale: <><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="M7 21h10" /><path d="M12 3v18" /><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></>
+            Scale: <><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="M7 21h10" /><path d="M12 3v18" /><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></>,
+            ExternalLink: <><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></>,
+            BookOpen: <><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>,
+            HeartPulse: <><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27" /></>,
+            Building2: <><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /><path d="M10 6h4" /><path d="M10 10h4" /><path d="M10 14h4" /><path d="M10 18h4" /></>
         };
 
         const Icon = ({ name, size = 24, className = "" }) => ( <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}> {svgPaths[name]} </svg> );
@@ -89,6 +91,99 @@
             86: 0.0899, 87: 0.0955, 88: 0.1021, 89: 0.1099, 90: 0.1192,
             91: 0.1306, 92: 0.1449, 93: 0.1634, 94: 0.1879, 95: 0.2000
         };
+
+        const actionHubData = [
+            {
+                id: 'cibc',
+                name: 'CIBC MasterCard',
+                icon: 'Building2',
+                color: 'text-rose-600',
+                bg: 'bg-rose-50',
+                border: 'border-rose-100',
+                url: 'https://www.cibconline.cibc.com/ebm-resources/public/banking/cibc/client/web/index.html#/accounts/credit-cards/d5069f18ea065470e0e6a91c91543629963977d470b3be9a6d56ac9470eabc6f',
+                tutorialTitle: 'View MasterCard Transactions',
+                steps: [
+                    "Navigate to the CIBC Online Banking sign-on page.",
+                    "Enter your card number and password, then click 'Sign on'.",
+                    "On the dashboard, locate and click on your 'CIBC MasterCard' account.",
+                    "Scroll down the account page to view 'Past Transactions'.",
+                    "Review specific transaction details (e.g., dates, merchants like Bulk Barn or FreshCo, and amounts)."
+                ]
+            },
+            {
+                id: 'simplii',
+                name: 'Simplii Financial',
+                icon: 'Landmark',
+                color: 'text-rose-500',
+                bg: 'bg-rose-50',
+                border: 'border-rose-100',
+                url: 'https://online.simplii.com/ebm-resources/public/client/web/index.html#/signon',
+                tutorialTitle: 'Navigate Online Banking',
+                steps: [
+                    "Navigate to the Simplii Financial sign-in page.",
+                    "Enter your Card number and Password, then click 'Sign In'.",
+                    "On the home dashboard, view your 'No Fee Chequing Account' balances.",
+                    "To pay a bill, click 'Pay Bills' in the left-hand navigation menu.",
+                    "To send an e-Transfer, click 'Send Money' in the left menu.",
+                    "Enter the recipient and amount, and verify your remaining sending limit."
+                ]
+            },
+            {
+                id: 'canadalife',
+                name: 'Canada Life TFSA / Claims',
+                icon: 'HeartPulse',
+                color: 'text-rose-700',
+                bg: 'bg-rose-50',
+                border: 'border-rose-100',
+                url: 'https://my.canadalife.com/sign-in?_ga=2.62912236.117883004.1672059180-2040538809.1672059178&_gl=1*8uovo7*_ga*MjA0MDUzODgwOS4xNjcyMDU5MTc4*_ga_NQQJ06746E*MTY3MjA1OTE3OS4xLjAuMTY3MjA1OTE3OS42MC4wLjA.*_ga_3N56ECL87X*MTY3MjA1OTE3OS4xLjEuMTY3MjA1OTE4Mi41Ny4wLjA.',
+                tutorialTitle: 'Submit a Health Benefit Claim',
+                steps: [
+                    "Navigate to the Canada Life portal and sign in with your Client Card / Email.",
+                    "Navigate to 'Make a claim' -> 'Start a claim'.",
+                    "Select 'TAMMY MORGAN (Member)' under 'Who is the claim for?'.",
+                    "Click the 'Select a plan' dropdown and choose 'Health, Drugs, Vision (51391)'.",
+                    "Click 'Continue'.",
+                    "Under 'Select claim type', choose 'Health professionals'.",
+                    "Select the specific type of health professional (e.g., Physiotherapist).",
+                    "Select the provider from your previous providers list (e.g., TRUPTI KAVIT MUNSHI).",
+                    "Click 'Continue' to proceed with entering the claim amount and details."
+                ]
+            },
+            {
+                id: 'rbc',
+                name: 'RBC Direct Investing',
+                icon: 'PieChartIcon',
+                color: 'text-blue-800',
+                bg: 'bg-blue-50',
+                border: 'border-blue-100',
+                url: 'https://www1.royalbank.com/english/netaction/sgne.html?_ga=2.118028617.1557788857.1537297177-1952864913.1536770961',
+                tutorialTitle: 'Manage TFSA Investments',
+                steps: [
+                    "Navigate to the RBC Direct Investing sign-in page.",
+                    "Enter your Client Card Number or Username.",
+                    "Enter your password and click 'Sign In'.",
+                    "From your dashboard, click on your TFSA account to view your portfolio holdings and performance."
+                ]
+            },
+            {
+                id: 'cooperators',
+                name: 'Co-operators Insurance',
+                icon: 'Shield',
+                color: 'text-blue-600',
+                bg: 'bg-blue-50',
+                border: 'border-blue-100',
+                url: 'https://www.cooperators.ca/SecurePages/home',
+                tutorialTitle: 'Access Billing & Payments',
+                steps: [
+                    "Navigate to the Co-operators Online Services sign-in page.",
+                    "Click the 'Email' field and enter your email address.",
+                    "Enter your password and click 'Sign in'.",
+                    "If prompted for two-factor authentication, choose 'Text me', enter the code sent to your phone, and click 'Continue'.",
+                    "On the Welcome dashboard, click the 'View billing and payments' quick link.",
+                    "View your policies, payment frequency, next payment amount, and schedule."
+                ]
+            }
+        ];
 
         function App() {
             const [loanType, setLoanType] = useState('nomad');
@@ -152,6 +247,7 @@
             const [nonRegTaxRate, setNonRegTaxRate] = useState(25);
             const [avoidedHousingCost, setAvoidedHousingCost] = useState(800);
             const [dashboardChartTab, setDashboardChartTab] = useState('wealth');
+            const [activeTutorial, setActiveTutorial] = useState(null);
 
             // --- New RRSP / RRIF State Variables ---
             const [rrspBalanceUser, setRrspBalanceUser] = useState(30000);
@@ -573,16 +669,17 @@
 
                     const totalMonthlyIncome = monthlyPensionTotal + oasNet + monthlyDividendIncome + monthlyRmDraw + currentSmoothedRrsp - outOfPocketPayment;
                     const monthlyPensionKen = safeNumber(pensionUser) * Math.pow(1 + annualInflation, fullYears);
-const monthlyPensionTammy = safeNumber(pensionTammy) * Math.pow(1 + annualInflation, fullYears);
+                    const monthlyPensionTammy = safeNumber(pensionTammy) * Math.pow(1 + annualInflation, fullYears);
 
-cumulativePensionKen += monthlyPensionKen;
-cumulativePensionTammy += monthlyPensionTammy;
-cumulativePension += monthlyPensionTotal;
+                    cumulativePensionKen += monthlyPensionKen;
+                    cumulativePensionTammy += monthlyPensionTammy;
+                    cumulativePension += monthlyPensionTotal;
 
-cumulativeOAS += oasNet;
-cumulativeInvestmentYield += monthlyDividendIncome;
-cumulativeRRSP += currentSmoothedRrsp;
-const cumulativeTotalIncome = cumulativePension + cumulativeOAS + cumulativeInvestmentYield + cumulativeRRSP;    
+                    cumulativeOAS += oasNet;
+                    cumulativeInvestmentYield += monthlyDividendIncome;
+                    cumulativeRRSP += currentSmoothedRrsp;
+                    const cumulativeTotalIncome = cumulativePension + cumulativeOAS + cumulativeInvestmentYield + cumulativeRRSP;    
+                    
                     const cumulativeAppreciation = effectiveLoanType === 'nomad' && hasSoldHouseForNomad && !isNomadPhase ? Math.max(0, currentHomeValue - safeNumber(nomadNewHomePrice)) : currentHomeValue - initialHomeValueTracker;
                     const totalLiquidWealth = tfsaUser + tfsaTammy + taxableCash;
                     
@@ -607,15 +704,15 @@ const cumulativeTotalIncome = cumulativePension + cumulativeOAS + cumulativeInve
                         cumulativeInvestmentIncome: Math.round(cumulativeInvestmentIncome), cumulativeTaxSaved: Math.round(cumulativeTaxSaved),
                         guaranteedIncome: Math.round(monthlyPensionTotal + oasNet), variableIncome: Math.round(monthlyDividendIncome + monthlyRmDraw + currentSmoothedRrsp - outOfPocketPayment),
                         activeIncomeThisMonth: Math.round(activeIncomeThisMonth), cumulativeActiveIncome: Math.round(cumulativeActiveIncome),
-cumulativePension: Math.round(cumulativePension), cumulativePensionKen: Math.round(cumulativePensionKen), cumulativePensionTammy: Math.round(cumulativePensionTammy), 
-cumulativeOAS: Math.round(cumulativeOAS), cumulativeInvestmentYield: Math.round(cumulativeInvestmentYield), cumulativeRRSP: Math.round(cumulativeRRSP),
-cumulativeTotalIncome: Math.round(cumulativeTotalIncome)
+                        cumulativePension: Math.round(cumulativePension), cumulativePensionKen: Math.round(cumulativePensionKen), cumulativePensionTammy: Math.round(cumulativePensionTammy), 
+                        cumulativeOAS: Math.round(cumulativeOAS), cumulativeInvestmentYield: Math.round(cumulativeInvestmentYield), cumulativeRRSP: Math.round(cumulativeRRSP),
+                        cumulativeTotalIncome: Math.round(cumulativeTotalIncome)
                     });
                 }
                 return data;
             }, [homeValue, interestRate, helocRate, appreciationRate, initialAdvance, monthlyWithdrawal, lumpSums, activeIncomes, principalPayments, startingAge, enableDownsize, downsizeYear, newHomeValue, enableTFSA, tfsaRoomUser, tfsaRoomTammy, tfsaReturnRate, nomadExitYear, nomadTruckBudget, nomadTravelYears, nomadYield, nomadNewHomePrice, pensionUser, pensionTammy, inflationRate, enableNomadRM, nomadRmTriggerYear, nomadRmMonthly, oasUserAmount, oasTammyAmount, oasUserStartAge, oasTammyStartAge, oasTaxRate, annualTfsaContribution, nonRegTaxRate, rrspBalanceUser, rrspReturnRate, rrspStrategy, rrspAnnualDrawdown, rrspSmartCeiling, rrspDrawdownStartAge, rrspDrawdownEndAge, rrspAverageTaxRate, enableRebase, rebaseYear, rebaseHomeValue, rebaseLiquidWealth, rebaseLoanBalance, rebaseYield, rebaseAppreciation]);
 
-            const simulationData = useMemo(() => runSimulation(loanType === 'dashboard' ? 'nomad' : loanType, true), [runSimulation, loanType]);
+            const simulationData = useMemo(() => runSimulation(loanType === 'dashboard' || loanType === 'hub' ? 'nomad' : loanType, true), [runSimulation, loanType]);
             const nomadPivotData = useMemo(() => runSimulation('nomad', true), [runSimulation]);
             const nomadBaselineData = useMemo(() => runSimulation('nomad', false), [runSimulation]); 
             
@@ -828,7 +925,7 @@ cumulativeTotalIncome: Math.round(cumulativeTotalIncome)
                 anchor.setAttribute("download", `wealth-scenario-${loanType}-${new Date().toISOString().slice(0,10)}.json`);
                 anchor.click();
                 anchor.remove();
-            }, [loanType, homeValue, startingAge, interestRate, helocRate, appreciationRate, initialAdvance, monthlyWithdrawal, lumpSums, activeIncomes, principalPayments, enableDownsize, downsizeYear, newHomeValue, enableTFSA, tfsaRoomUser, tfsaRoomTammy, tfsaReturnRate, nomadExitYear, nomadTruckBudget, nomadTravelYears, nomadYield, nomadNewHomePrice, pensionUser, pensionTammy, inflationRate, enableNomadRM, nomadRmTriggerYear, nomadRmMonthly, oasUserAmount, oasTammyAmount, oasUserStartAge, oasTammyStartAge, oasTaxRate, annualTfsaContribution, nonRegTaxRate, avoidedHousingCost, rrspBalanceUser, rrspReturnRate, rrspStrategy, rrspAnnualDrawdown, rrspSmartCeiling, rrspDrawdownStartAge, rrspDrawdownEndAge, rrspAverageTaxRate]);
+            }, [loanType, homeValue, startingAge, interestRate, helocRate, appreciationRate, initialAdvance, monthlyWithdrawal, lumpSums, activeIncomes, principalPayments, enableDownsize, downsizeYear, newHomeValue, enableTFSA, tfsaRoomUser, tfsaRoomTammy, tfsaReturnRate, nomadExitYear, nomadTruckBudget, nomadTravelYears, nomadYield, nomadNewHomePrice, pensionUser, pensionTammy, inflationRate, enableNomadRM, nomadRmTriggerYear, nomadRmMonthly, oasUserAmount, oasTammyAmount, oasUserStartAge, oasTammyStartAge, oasTaxRate, annualTfsaContribution, nonRegTaxRate, avoidedHousingCost, rrspBalanceUser, rrspReturnRate, rrspStrategy, rrspAnnualDrawdown, rrspSmartCeiling, rrspDrawdownStartAge, rrspDrawdownEndAge, rrspAverageTaxRate, enableRebase, rebaseYear, rebaseHomeValue, rebaseLiquidWealth, rebaseLoanBalance, rebaseYield, rebaseAppreciation]);
             
             const importScenario = useCallback((event) => {
                 const file = event.target.files[0];
@@ -1361,12 +1458,103 @@ cumulativeTotalIncome: Math.round(cumulativeTotalIncome)
                             <p className="text-slate-500 mt-2 text-sm">Compare debt strategies & build a complete multi-phase retirement plan.</p>
                         </div>
                         <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 w-full lg:w-auto overflow-x-auto">
-                            {['heloc', 'reverse', 'nomad', 'dashboard'].map(key => ( <button key={key} onClick={() => setLoanType(key)} className={`flex-1 min-w-[110px] py-2.5 px-4 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${loanType === key ? (key === 'nomad' ? 'bg-slate-800 text-white shadow-md' : 'bg-white text-slate-800 shadow-sm') : 'text-slate-500 hover:text-slate-700'}`}><Icon name={key === 'heloc' ? 'ArrowRightLeft' : key === 'reverse' ? 'Landmark' : key === 'nomad' ? 'Compass' : 'PieChartIcon'} size={16} className={loanType === key && key === 'nomad' ? 'text-amber-400' : ''} /> {key === 'heloc' ? 'HELOC' : key === 'reverse' ? 'Reverse Mtg' : key === 'nomad' ? 'Nomad Pivot' : 'Dashboard'}</button> ))}
+                            {['heloc', 'reverse', 'nomad', 'dashboard', 'hub'].map(key => ( <button key={key} onClick={() => setLoanType(key)} className={`flex-1 min-w-[110px] py-2.5 px-4 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2 ${loanType === key ? (key === 'nomad' ? 'bg-slate-800 text-white shadow-md' : 'bg-white text-slate-800 shadow-sm') : 'text-slate-500 hover:text-slate-700'}`}><Icon name={key === 'heloc' ? 'ArrowRightLeft' : key === 'reverse' ? 'Landmark' : key === 'nomad' ? 'Compass' : key === 'hub' ? 'BookOpen' : 'PieChartIcon'} size={16} className={loanType === key && key === 'nomad' ? 'text-amber-400' : ''} /> {key === 'heloc' ? 'HELOC' : key === 'reverse' ? 'Reverse Mtg' : key === 'nomad' ? 'Nomad Pivot' : key === 'hub' ? 'Action Hub' : 'Dashboard'}</button> ))}
                         </div>
                     </div>
 
-                    {loanType !== 'dashboard' ? (
+                    {}
+                    {loanType === 'hub' ? (
+                        <div className="space-y-5 animate-fade-in">
+                            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 rounded-2xl p-6 shadow-lg border border-slate-800 text-white relative overflow-hidden">
+                                <h2 className="text-2xl font-bold flex items-center gap-2 mb-2"><Icon name="BookOpen" size={26} className="text-indigo-400" /> Financial Action Hub</h2>
+                                <p className="text-slate-300 text-sm">Securely launch your financial portals and access your personalized step-by-step guides.</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                {actionHubData.map(hub => (
+                                    <div key={hub.id} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col gap-4 relative overflow-hidden group">
+                                        <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${hub.bg.replace('bg-', 'from-')} to-transparent opacity-50 rounded-bl-full -z-10 transition-transform duration-500 group-hover:scale-110`}></div>
+                                        
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-12 h-12 rounded-xl ${hub.bg} border ${hub.border} flex items-center justify-center ${hub.color}`}>
+                                                <Icon name={hub.icon} size={24} />
+                                            </div>
+                                            <div>
+                                                <h3 className="text-lg font-bold text-slate-800">{hub.name}</h3>
+                                                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mt-0.5">{hub.tutorialTitle}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex gap-3 mt-2">
+                                            <a href={hub.url} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-sm">
+                                                Launch Portal <Icon name="ExternalLink" size={16} />
+                                            </a>
+                                            <button onClick={() => setActiveTutorial(hub)} className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-xl transition-all border border-slate-200 shadow-sm">
+                                                Guide Me <Icon name="BookOpen" size={16} className="text-indigo-500"/>
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {activeTutorial && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in" onClick={() => setActiveTutorial(null)}>
+                                    <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl flex flex-col animate-fade-in" onClick={e => e.stopPropagation()}>
+                                        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-lg ${activeTutorial.bg} border ${activeTutorial.border} flex items-center justify-center ${activeTutorial.color}`}>
+                                                    <Icon name={activeTutorial.icon} size={20} />
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-xl font-bold text-slate-800">{activeTutorial.name}</h2>
+                                                    <p className="text-sm font-medium text-slate-500">{activeTutorial.tutorialTitle}</p>
+                                                </div>
+                                            </div>
+                                            <button onClick={() => setActiveTutorial(null)} className="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-slate-600 transition-colors">
+                                                <Icon name="Plus" size={20} className="rotate-45" />
+                                            </button>
+                                        </div>
+                                        <div className="p-6 overflow-y-auto bg-slate-50/50">
+                                            <div className="space-y-4">
+                                                {activeTutorial.steps.map((step, idx) => (
+                                                    <div key={idx} className="flex gap-4 p-4 rounded-2xl border border-slate-100 bg-white shadow-sm hover:border-indigo-200 transition-colors">
+                                                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 font-bold text-sm shrink-0 border border-indigo-100">
+                                                            {idx + 1}
+                                                        </div>
+                                                        <div className="flex items-center pt-1.5">
+                                                            <p className="text-sm text-slate-700 font-medium leading-relaxed">{step}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="p-4 border-t border-slate-100 bg-white flex justify-end">
+                                            <button onClick={() => setActiveTutorial(null)} className="px-5 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-colors">Done</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : loanType === 'dashboard' ? (
+                        <div className="space-y-5 animate-fade-in">
+                            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 shadow-lg border border-indigo-900/40 text-white relative overflow-hidden">
+                                <h2 className="text-2xl font-bold flex items-center gap-2 mb-2"><Icon name="Sparkles" size={26} className="text-amber-300" /> Dashboard Overview</h2>
+                                <p className="text-slate-300 text-sm">Your Nomad Pivot at a glance, incorporating active commission years and scheduled lump sums.</p>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+                                <div className="bg-white p-4 rounded-xl border shadow-sm relative"><div className="text-[11px] font-semibold text-slate-500 uppercase flex items-center gap-2">Final Net Worth {finalHustleBoost > 0 && <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">+ RE Boost</span>}</div><p className="text-lg font-bold text-emerald-600">${(nomadFinal.totalNetWorth || 0).toLocaleString()}</p></div>
+                                <div className="bg-white p-4 rounded-xl border shadow-sm"><div className="text-[11px] font-semibold text-slate-500 uppercase">Liquid Wealth</div><p className="text-lg font-bold text-teal-600">${(nomadFinal.tfsaBalance || 0).toLocaleString()}</p></div>
+                                <div className="bg-white p-4 rounded-xl border shadow-sm"><div className="text-[11px] font-semibold text-slate-500 uppercase">RRSP / RRIF</div><p className="text-lg font-bold text-fuchsia-600">${(nomadFinal.rrspBalance || 0).toLocaleString()}</p></div>
+                                <div className="bg-white p-4 rounded-xl border shadow-sm"><div className="text-[11px] font-semibold text-slate-500 uppercase">Home Equity</div><p className="text-lg font-bold text-blue-600">${(nomadFinal.equity || 0).toLocaleString()}</p></div>
+                                <div className="bg-white p-4 rounded-xl border shadow-sm"><div className="text-[11px] font-semibold text-slate-500 uppercase">Spent on Experiences</div><p className="text-lg font-bold text-amber-600">${totalExperienceBudget.toLocaleString()}</p></div>
+                            </div>
+
+                            <SharedDashboardCharts />
+                        </div>
+                    ) : (
                         <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+                            {}
                             <div className="xl:col-span-4 space-y-5">
                                 {loanType !== 'nomad' ? (
                                     <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 space-y-4 animate-fade-in">
@@ -1537,6 +1725,7 @@ cumulativeTotalIncome: Math.round(cumulativeTotalIncome)
                                 )}
                             </div>
                             
+                            {}
                             <div className="xl:col-span-8 flex flex-col gap-5">
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-white p-4 rounded-xl border shadow-sm card-hover relative"><div className="stat-accent-bar bg-teal-500"></div><div className="pl-5"><div className="text-xs font-semibold text-slate-500 uppercase">Liquid Wealth</div><p className="text-xl font-bold">${finalMonth.tfsaBalance?.toLocaleString()}</p><p className="text-xs text-slate-400">Your TFSA: ${finalMonth.tfsaUser?.toLocaleString()} | Tammy: ${finalMonth.tfsaTammy?.toLocaleString()}</p></div></div>
@@ -1633,28 +1822,12 @@ cumulativeTotalIncome: Math.round(cumulativeTotalIncome)
                                 <SharedDashboardCharts />
                             </div>
                         </div>
-                    ) : (
-                        <div className="space-y-5 animate-fade-in">
-                            <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 shadow-lg border border-indigo-900/40 text-white relative overflow-hidden">
-                                <h2 className="text-2xl font-bold flex items-center gap-2 mb-2"><Icon name="Sparkles" size={26} className="text-amber-300" /> Dashboard Overview</h2>
-                                <p className="text-slate-300 text-sm">Your Nomad Pivot at a glance, incorporating active commission years and scheduled lump sums.</p>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-                                <div className="bg-white p-4 rounded-xl border shadow-sm relative"><div className="text-[11px] font-semibold text-slate-500 uppercase flex items-center gap-2">Final Net Worth {finalHustleBoost > 0 && <span className="bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">+ RE Boost</span>}</div><p className="text-lg font-bold text-emerald-600">${(nomadFinal.totalNetWorth || 0).toLocaleString()}</p></div>
-                                <div className="bg-white p-4 rounded-xl border shadow-sm"><div className="text-[11px] font-semibold text-slate-500 uppercase">Liquid Wealth</div><p className="text-lg font-bold text-teal-600">${(nomadFinal.tfsaBalance || 0).toLocaleString()}</p></div>
-                                <div className="bg-white p-4 rounded-xl border shadow-sm"><div className="text-[11px] font-semibold text-slate-500 uppercase">RRSP / RRIF</div><p className="text-lg font-bold text-fuchsia-600">${(nomadFinal.rrspBalance || 0).toLocaleString()}</p></div>
-                                <div className="bg-white p-4 rounded-xl border shadow-sm"><div className="text-[11px] font-semibold text-slate-500 uppercase">Home Equity</div><p className="text-lg font-bold text-blue-600">${(nomadFinal.equity || 0).toLocaleString()}</p></div>
-                                <div className="bg-white p-4 rounded-xl border shadow-sm"><div className="text-[11px] font-semibold text-slate-500 uppercase">Spent on Experiences</div><p className="text-lg font-bold text-amber-600">${totalExperienceBudget.toLocaleString()}</p></div>
-                            </div>
-
-                            <SharedDashboardCharts />
-                        </div>
                     )}
                     <div className="text-center text-xs text-slate-400 pb-4">Simulator for educational purposes only. Not financial advice.</div>
                 </div>
             </div>);
         }
+        
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>

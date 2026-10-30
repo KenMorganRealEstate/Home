@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omni-Planner OS</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vis-timeline/standalone/umd/vis-timeline-graph2d.min.js"></script>
+    <link href="https://unpkg.com/vis-timeline/standalone/umd/vis-timeline-graph2d.min.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ============================================================
+           GLASSMORPHISM BASE
+           ============================================================ */
+        html, body { height: 100%; }
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            color: #0f172a;
+            background-color: #eef2ff;
+            background-image:
+                radial-gradient(at 15% 20%, rgba(139, 92, 246, 0.45) 0px, transparent 55%),
+                radial-gradient(at 85% 15%, rgba(236, 72, 153, 0.32) 0px, transparent 55%),
+                radial-gradient(at 50% 85%, rgba(59, 130, 246, 0.38) 0px, transparent 55%),
+                radial-gradient(at 95% 90%, rgba(16, 185, 129, 0.28) 0px, transparent 55%);
+            background-attachment: fixed;
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.55); }
+
+        /* ---------- Glass surfaces ---------- */
+        .glass {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(22px) saturate(180%);
+            -webkit-backdrop-filter: blur(22px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.13), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+        }
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(30px) saturate(180%);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 24px 60px rgba(31, 38, 135, 0.25), 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+        }
+        .glass-header {
+            background: rgba(15, 23, 42, 0.72);
+            backdrop-filter: blur(22px) saturate(180%);
+            -webkit-backdrop-filter: blur(22px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #f8fafc;
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.25), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
+        }
+        .glass-inset {
+            background: rgba(255, 255, 255, 0.35);
+            border: 1px solid rgba(255, 255, 255, 0.55);
+        }
+
+        /* ---------- Buttons ---------- */
+        .btn-glass {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            color: #334155;
+            transition: all 0.18s ease;
+            box-shadow: 0 1px 3px rgba(31, 38, 135, 0.06);
+        }
+        .btn-glass:hover {
+            background: rgba(255, 255, 255, 0.82);
+            box-shadow: 0 4px 12px rgba(31, 38, 135, 0.16);
+            transform: translateY(-1px);
+            color: #0f172a;
+        }
+        .btn-glass:active { transform: translateY(0); }
+        .btn-glass:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .btn-primary-glass {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.92), rgba(139, 92, 246, 0.92));
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #ffffff;
+            transition: all 0.18s ease;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+        }
+        .btn-primary-glass:hover {
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.55), 0 1px 0 rgba(255, 255, 255, 0.4) inset;
+            transform: translateY(-1px);
+        }
+
+        .btn-hdr-glass {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e2e8f0;
+            transition: all 0.18s ease;
+        }
+        .btn-hdr-glass:hover {
+            background: rgba(255, 255, 255, 0.16);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+        }
+
+        /* ---------- SPLITTER ---------- */
+        .splitter {
+            flex: 0 0 12px;
+            cursor: col-resize;
+            position: relative;
+            z-index: 5;
+            border-radius: 8px;
+            transition: background 0.15s ease;
+            touch-action: none;
+        }
+        .splitter::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            border-radius: 2px;
+            background: rgba(148, 163, 184, 0.35);
+            transition: all 0.15s ease;
+        }
+        .splitter:hover {
+            background: rgba(99, 102, 241, 0.06);
+        }
+        .splitter:hover::before,
+        .splitter.dragging::before {
+            background: linear-gradient(180deg, #6366f1, #a855f7);
+            width: 3px;
+            top: 0;
+            bottom: 0;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.65);
+        }
+        .splitter.dragging {
+            background: rgba(99, 102, 241, 0.12);
+        }
+
+        /* ---------- Tree ---------- */
+        .tree-node { margin: 4px 0; position: relative; }
+        .tree-content {
+            display: flex; align-items: center; padding: 6px 10px; gap: 8px;
+            background: rgba(255, 255, 255, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            transition: all 0.18s ease;
+            cursor: grab;
+            box-shadow: 0 1px 3px rgba(31, 38, 135, 0.06);
+        }
+        .tree-content:hover {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 14px rgba(31, 38, 135, 0.14);
+            transform: translateY(-1px);
+        }
+        .tree-content:active { cursor: grabbing; }
+        .tree-content.drag-over { border-color: rgba(59, 130, 246, 0.7); background: rgba(219, 234, 254, 0.85); }
+        .tree-content.selected-node {
+            border-color: rgba(245, 158, 11, 0.8);
+            background: rgba(254, 243, 199, 0.85);
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25), 0 4px 12px rgba(245, 158, 11, 0.2);
+        }
+        .tree-content.is-done .node-title { text-decoration: line-through; color: #94a3b8; }
+
+        .tree-list { list-style: none; padding-left: 20px; margin: 0; border-left: 1px dashed rgba(148, 163, 184, 0.35); }
+        .tree-list.root { padding-left: 0; border-left: none; }
+
+        .drag-handle { color: #94a3b8; cursor: grab; font-size: 11px; }
+        .node-title { flex: 1; font-weight: 500; font-size: 13.5px; cursor: text; min-width: 0; overflow-wrap: anywhere; }
+        .node-duration {
+            background: rgba(226, 232, 240, 0.85);
+            color: #475569;
+            padding: 2px 9px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: text;
+            white-space: nowrap;
+            border: 1px solid rgba(203, 213, 225, 0.6);
+        }
+        .node-duration.node-total {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(59, 130, 246, 0.14));
+            color: #6366f1;
+            border: 1px solid rgba(139, 92, 246, 0.25);
+            cursor: default;
+            font-weight: 700;
+        }
+        .progress-badge {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15));
+            color: #047857;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .toggle-btn { background: none; border: none; cursor: pointer; color: #64748b; width: 16px; padding: 0; font-size: 11px; }
+        .toggle-btn:hover { color: #0f172a; }
+        .toggle-spacer { display: inline-block; width: 16px; }
+        .done-check { width: 15px; height: 15px; accent-color: #10b981; cursor: pointer; flex-shrink: 0; }
+        .color-pick { width: 18px; height: 18px; padding: 0; border: 2px solid rgba(255, 255, 255, 0.9); border-radius: 50%; background: none; cursor: pointer; flex-shrink: 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.15); }
+        .color-pick::-webkit-color-swatch-wrapper { padding: 0; }
+        .color-pick::-webkit-color-swatch { border: none; border-radius: 50%; }
+
+        .action-btn { opacity: 0; background: none; border: none; cursor: pointer; transition: opacity 0.15s; color: #94a3b8; padding: 0 4px; }
+        .tree-content:hover .action-btn { opacity: 1; }
+        .action-btn.add:hover { color: #10b981; }
+        .action-btn.del:hover { color: #ef4444; }
+
+        .edit-input { border: 1px solid #3b82f6; border-radius: 5px; padding: 2px 6px; font-size: inherit; outline: none; background: white; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+
+        /* ---------- Vis overrides ---------- */
+        .vis-item { background-color: #3b82f6; border-color: #2563eb; color: white; border-radius: 6px; font-size: 12px; font-weight: 500; }
+        .vis-item.vis-selected { background-color: #f59e0b !important; border-color: #d97706 !important; color: #fff !important; box-shadow: 0 0 12px rgba(245, 158, 11, 0.7); z-index: 10; }
+        .vis-item.item-done { background-color: #94a3b8 !important; border-color: #64748b !important; color: #f8fafc !important; text-decoration: line-through; opacity: 0.75; }
+        .vis-item.vis-background { z-index: 0; }
+        .vis-timeline { border: none; background: transparent; }
+        .vis-panel.vis-center, .vis-panel.vis-left, .vis-panel.vis-right, .vis-panel.vis-top, .vis-panel.vis-bottom { border-color: rgba(255,255,255,0.4); }
+        .vis-labelset .vis-label, .vis-time-axis .vis-text { color: #334155; }
+        .vis-labelset .vis-label { border-color: rgba(255,255,255,0.5); }
+        .vis-panel.vis-background { background: transparent; }
+
+        /* ---------- Layout ---------- */
+        .view-container { display: none; height: 100%; width: 100%; position: absolute; top: 0; left: 0; }
+        .view-container.active { display: block; }
+
+        /* ---------- Toasts ---------- */
+        #toast-root { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 100; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+        .toast {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(14px);
+            color: white;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: opacity 0.3s, transform 0.3s;
+            max-width: 90vw;
+        }
+        .toast.error   { background: rgba(185, 28, 28, 0.92); }
+        .toast.success { background: rgba(4, 120, 87, 0.92); }
+        .toast.hide { opacity: 0; transform: translateY(8px); }
+
+        /* ---------- Popout ---------- */
+        body.popout-mode .hide-in-popout { display: none !important; }
+        body.popout-mode #splitter { display: none !important; }
+        body.popout-mode #vis-panel { flex: 1 1 100% !important; border-radius: 0 !important; }
+        body.popout-mode { padding: 0 !important; gap: 0 !important; }
+        body.popout-mode #workspace { padding: 0; gap: 0; }
+
+        /* ---------- Mobile ---------- */
+        @media (max-width: 767px) {
+            .splitter { display: none; }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col p-3 gap-3" id="app-body">
+
+    <!-- ================= HEADER ================= -->
+    <header class="hide-in-popout glass-header rounded-2xl px-4 py-2 flex justify-between items-center shrink-0 flex-wrap gap-2 z-20">
+        <div class="flex items-center gap-3 flex-wrap">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center shadow-lg">
+                    <i class="fa-solid fa-server text-white text-sm"></i>
+                </div>
+                <h1 class="text-base font-bold tracking-tight">Omni-Planner <span class="text-emerald-300">OS</span></h1>
+            </div>
+
+            <div class="hidden md:flex ml-2 pl-3 border-l border-white/15 items-center gap-2">
+                <i class="fa-solid fa-network-wired text-slate-400 text-xs"></i>
+                <select id="layout-select" onchange="app.changeLayout(this.value)" class="btn-hdr-glass rounded-lg px-2 py-1 text-xs outline-none">
+                    <option class="text-slate-900" value="free">Free-Floating Mind Map</option>
+                    <option class="text-slate-900" value="repulsion">Anti-Gravity Cluster</option>
+                    <option class="text-slate-900" value="barnesHut">Galactic Center</option>
+                    <option class="text-slate-900" value="tree-ud">Tree: Top to Bottom</option>
+                    <option class="text-slate-900" value="tree-du">Tree: Bottom to Top</option>
+                    <option class="text-slate-900" value="tree-lr">Tree: Left to Right</option>
+                    <option class="text-slate-900" value="tree-rl">Tree: Right to Left</option>
+                    <option class="text-slate-900" value="hubsize">Tree: Hub-Size Center</option>
+                </select>
+            </div>
+
+            <div class="flex border border-white/15 rounded-lg overflow-hidden">
+                <button id="btn-undo" onclick="app.undo()" title="Undo (Ctrl+Z)" class="btn-hdr-glass px-2.5 py-1.5 text-xs border-r border-white/15"><i class="fa-solid fa-rotate-left"></i></button>
+                <button id="btn-redo" onclick="app.redo()" title="Redo (Ctrl+Shift+Z / Ctrl+Y)" class="btn-hdr-glass px-2.5 py-1.5 text-xs"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 flex-wrap justify-end">
+            <input type="file" id="json-upload" accept=".json,application/json" style="display: none;" onchange="app.handleFileSelect(event, 'json')">
+            <input type="file" id="ics-upload" accept=".ics,text/calendar" style="display: none;" onchange="app.handleFileSelect(event, 'ics')">
+
+            <button onclick="app.clearAll()" class="btn-hdr-glass rounded-lg px-2.5 py-1.5 text-xs" title="Clear all">
+                <i class="fa-solid fa-trash mr-1"></i><span class="hidden lg:inline">Clear</span>
+            </button>
+            <button onclick="app.openPrintModal()" class="btn-hdr-glass rounded-lg px-2.5 py-1.5 text-xs" title="Print / PDF">
+                <i class="fa-solid fa-print mr-1"></i><span class="hidden lg:inline">PDF</span>
+            </button>
+
+            <div class="flex border border-white/15 rounded-lg overflow-hidden">
+                <button onclick="document.getElementById('json-upload').click()" class="btn-hdr-glass px-2.5 py-1.5 text-xs border-r border-white/15" title="Import JSON">
+                    <i class="fa-solid fa-file-code mr-1"></i><span class="hidden md:inline">+JSON</span>
+                </button>
+                <button onclick="document.getElementById('ics-upload').click()" class="btn-hdr-glass px-2.5 py-1.5 text-xs" title="Import ICS">
+                    <i class="fa-solid fa-calendar-plus mr-1"></i><span class="hidden md:inline">+ICS</span>
+                </button>
+            </div>
+
+            <button onclick="app.exportJSON()" class="btn-hdr-glass rounded-lg px-2.5 py-1.5 text-xs" title="Save JSON">
+                <i class="fa-solid fa-file-export mr-1"></i><span class="hidden lg:inline">Save</span>
+            </button>
+
+            <div class="w-px h-6 bg-white/20 mx-1"></div>
+
+            <button onclick="app.exportICS()" class="btn-primary-glass rounded-lg px-3.5 py-1.5 text-xs font-semibold" title="Export .ics">
+                <i class="fa-solid fa-calendar-arrow-down mr-1"></i><span class="hidden sm:inline">Export .ics</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ================= WORKSPACE ================= -->
+    <div id="workspace" class="flex flex-1 overflow-hidden">
+
+        <!-- LEFT : TREE -->
+        <div id="tree-panel" class="hide-in-popout glass rounded-2xl flex flex-col overflow-hidden" style="flex: 0 0 33%; min-width: 220px;">
+            <div class="px-3 py-2.5 border-b border-white/40 shrink-0 space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="font-semibold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-list-tree text-indigo-500"></i>Global Tasks
+                    </span>
+                    <div class="flex items-center gap-2.5">
+                        <button onclick="app.setAllCollapsed(false)" title="Expand all" class="text-slate-500 hover:text-slate-800 text-xs transition"><i class="fa-solid fa-angles-down"></i></button>
+                        <button onclick="app.setAllCollapsed(true)" title="Collapse all" class="text-slate-500 hover:text-slate-800 text-xs transition"><i class="fa-solid fa-angles-up"></i></button>
+                        <button onclick="app.addNode(null)" class="btn-glass rounded-md px-2 py-1 text-xs font-semibold text-indigo-600">
+                            <i class="fa-solid fa-plus mr-1"></i>Add Root
+                        </button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    <input id="tree-search" type="search" placeholder="Filter tasks…" oninput="app.setFilter(this.value)" class="w-full pl-8 pr-3 py-1.5 text-sm glass-inset rounded-lg outline-none focus:border-indigo-400 placeholder-slate-400">
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-3" id="tree-root"></div>
+            <div class="border-t border-white/40 px-3 py-2.5 shrink-0 text-xs text-slate-600">
+                <div class="flex justify-between font-medium"><span id="stat-text"></span><span id="stat-pct" class="font-semibold text-emerald-600"></span></div>
+                <div class="h-1.5 bg-white/40 rounded mt-1.5 overflow-hidden border border-white/30">
+                    <div id="stat-bar" class="h-full bg-gradient-to-r from-emerald-400 to-teal-500 transition-all" style="width:0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SPLITTER -->
+        <div id="splitter" class="splitter" title="Drag to resize · double-click to reset"></div>
+
+        <!-- RIGHT : Vis.js -->
+        <div id="vis-panel" class="glass rounded-2xl flex flex-col relative overflow-hidden" style="flex: 1 1 0; min-width: 300px;">
+            <div class="hide-in-popout px-2 py-2 border-b border-white/40 flex justify-between items-center shrink-0 z-10">
+                <div class="flex gap-1.5">
+                    <button id="btn-mindmap" onclick="app.switchView('mindmap')" class="btn-primary-glass rounded-lg px-3.5 py-1.5 text-sm font-medium">
+                        <i class="fa-solid fa-diagram-project mr-1.5"></i>Mind Map
+                    </button>
+                    <button id="btn-timeline" onclick="app.switchView('timeline')" class="btn-glass rounded-lg px-3.5 py-1.5 text-sm font-medium">
+                        <i class="fa-solid fa-clock mr-1.5"></i>Timeline
+                    </button>
+                </div>
+                <button onclick="app.popoutCurrentView()" class="btn-glass rounded-lg px-2.5 py-1.5 text-xs font-semibold">
+                    <i class="fa-solid fa-up-right-from-square mr-1"></i><span class="hidden md:inline">Pop Out</span>
+                </button>
+            </div>
+
+            <div class="flex-1 relative">
+                <!-- Mind Map -->
+                <div id="view-mindmap" class="view-container active">
+                    <div class="absolute top-2.5 left-2.5 glass rounded-lg p-2 text-[11px] font-medium text-slate-700 shadow-sm z-10 pointer-events-none leading-relaxed">
+                        <p><i class="fa-solid fa-magnet mr-1 text-blue-500"></i> Drop on node → <strong>Nest</strong></p>
+                        <p><i class="fa-solid fa-thumbtack mr-1 text-red-500"></i> Drop in empty → <strong>Pin</strong></p>
+                        <p><i class="fa-solid fa-computer-mouse mr-1 text-slate-500"></i> Dbl-click pinned → <strong>Unpin</strong></p>
+<p><i class="fa-solid fa-plus mr-1 text-emerald-500"></i> Dbl-click empty → <strong>New node</strong></p>
+<p><i class="fa-solid fa-object-group mr-1 text-indigo-500"></i> Shift+drag → <strong>Box select</strong> · Ctrl/⌘+click → <strong>Add</strong></p>
+                    </div>
+                    <div class="absolute top-2.5 right-2.5 z-10 flex gap-1.5">
+                        <button onclick="app.unpinAll()" title="Unpin all" class="btn-glass rounded-lg px-2.5 py-1.5 text-xs font-semibold"><i class="fa-solid fa-thumbtack-slash mr-1"></i>Unpin</button>
+                        <button onclick="app.network.fit({animation:true})" title="Fit" class="btn-glass rounded-lg px-2.5 py-1.5 text-xs font-semibold"><i class="fa-solid fa-expand"></i></button>
+                    </div>
+                    <div id="mynetwork" class="w-full h-full rounded-b-2xl"></div>
+                </div>
+
+                <!-- Timeline -->
+                <div id="view-timeline" class="view-container">
+                    <div class="px-3 h-9 border-b border-white/40 text-slate-700 text-xs font-medium relative z-10 flex items-center justify-between glass-inset">
+                        <span><i class="fa-solid fa-arrows-left-right mr-1 text-blue-500"></i> Drag to move (snaps 5m) · drag edges to stretch</span>
+                        <span class="flex gap-3">
+                            <button onclick="app.fitTimeline()" class="font-semibold hover:text-indigo-800 transition"><i class="fa-solid fa-expand mr-1"></i>Fit</button>
+                            <button onclick="app.timelineToNow()" class="font-semibold hover:text-indigo-800 transition"><i class="fa-solid fa-location-crosshairs mr-1"></i>Now</button>
+                        </span>
+                    </div>
+                    <div id="mytimeline" class="w-full h-[calc(100%-36px)]"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= IMPORT MODAL ================= -->
+    <div id="import-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+        <div class="glass-strong rounded-2xl p-6 w-96 max-w-full">
+            <h2 class="text-xl font-bold text-slate-800 mb-2"><i class="fa-solid fa-cloud-arrow-down text-blue-600 mr-2"></i>Import Data</h2>
+            <p class="text-sm text-slate-600 mb-1" id="import-summary"></p>
+            <p class="text-xs text-amber-700 mb-4" id="import-info"></p>
+            <p class="text-sm text-slate-600 mb-4">How would you like to load this?</p>
+
+            <div class="flex flex-col gap-2.5">
+                <button onclick="app.executeImport('merge')" class="flex flex-col text-left p-3 rounded-xl border border-emerald-300/50 bg-emerald-50/70 hover:bg-emerald-100/80 transition-colors">
+                    <span class="font-bold text-emerald-700 text-sm"><i class="fa-solid fa-code-merge mr-2"></i>Merge with Current Data</span>
+                    <span class="text-xs text-emerald-600 mt-0.5">Adds the new tasks without deleting your work.</span>
+                </button>
+                <button onclick="app.executeImport('overwrite')" class="flex flex-col text-left p-3 rounded-xl border border-red-300/50 bg-red-50/70 hover:bg-red-100/80 transition-colors">
+                    <span class="font-bold text-red-700 text-sm"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Overwrite Existing Data</span>
+                    <span class="text-xs text-red-600 mt-0.5">Replaces your workspace (you can still Undo).</span>
+                </button>
+                <button onclick="app.closeImportModal()" class="mt-1 text-center text-sm font-medium text-slate-500 hover:text-slate-800 p-2 rounded-lg transition">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= PRINT MODAL ================= -->
+    <div id="print-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+        <div class="glass-strong rounded-2xl p-6 w-96 max-w-full">
+            <h2 class="text-xl font-bold text-slate-800 mb-4"><i class="fa-solid fa-print text-blue-600 mr-2"></i>Print / Save as PDF</h2>
+            <div class="space-y-2.5 mb-6">
+                <label class="flex items-center gap-3 p-2.5 border border-white/60 bg-white/40 rounded-lg hover:bg-white/70 cursor-pointer transition">
+                    <input type="checkbox" id="print-opt-tree" checked class="w-4 h-4 text-blue-600">
+                    <span class="font-medium text-slate-700 text-sm">Hierarchical Task Tree</span>
+                </label>
+                <label class="flex items-center gap-3 p-2.5 border border-white/60 bg-white/40 rounded-lg hover:bg-white/70 cursor-pointer transition">
+                    <input type="checkbox" id="print-opt-map" checked class="w-4 h-4 text-blue-600">
+                    <span class="font-medium text-slate-700 text-sm">Visual Mind Map</span>
+                </label>
+                <label class="flex items-center gap-3 p-2.5 border border-white/60 bg-white/40 rounded-lg hover:bg-white/70 cursor-pointer transition">
+                    <input type="checkbox" id="print-opt-time" checked class="w-4 h-4 text-blue-600">
+                    <span class="font-medium text-slate-700 text-sm">Chronological Agenda</span>
+                </label>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="app.closePrintModal()" class="btn-glass rounded-lg px-4 py-2 text-sm font-medium">Cancel</button>
+                <button onclick="app.executePrint()" class="btn-primary-glass rounded-lg px-4 py-2 text-sm font-semibold">Generate</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-root"></div>
+
+    <script>
+        const STORAGE_KEY = 'omni_planner_data';
+        const SYNC_KEY    = 'omni_planner_sync_event';
+        const BASE_KEY    = 'omni_planner_base_date';
+        const LAYOUT_KEY  = 'omni_planner_layout';
+        const SPLIT_KEY   = 'omni_planner_split';
+        const TREE_LAYOUTS = ['tree-ud', 'tree-du', 'tree-lr', 'tree-rl', 'hubsize'];
+        const PALETTE = ['#6366f1', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#f43f5e', '#06b6d4', '#f97316'];
+
+        const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+        const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+        const hex6 = (c, fb) => /^#[0-9a-f]{6}$/i.test(c || '') ? c : fb;
+        const hexToRgba = (hex, a) => {
+            const h = hex6(hex, '#6366f1').substr(1);
+            return `rgba(${parseInt(h.substr(0,2),16)},${parseInt(h.substr(2,2),16)},${parseInt(h.substr(4,2),16)},${a})`;
+        };
+        const textOn = (hex) => {
+            const h = hex6(hex, '#3b82f6');
+            const r = parseInt(h.substr(1, 2), 16), g = parseInt(h.substr(3, 2), 16), b = parseInt(h.substr(5, 2), 16);
+            return (0.299 * r + 0.587 * g + 0.114 * b) > 170 ? '#1e293b' : '#ffffff';
+        };
+        const fmtMin = (m) => { const h = Math.floor(m / 60), r = Math.round(m % 60); return h ? (r ? `${h}h ${r}m` : `${h}h`) : `${r}m`; };
+        const wait = (ms) => new Promise(r => setTimeout(r, ms));
+        const gcalSearch = (title) => `https://calendar.google.com/calendar/u/0/r/search?q=${encodeURIComponent(title || '')}`;
+
+        class AppState {
+            constructor() {
+                this.tasks = [];
+                this.draggedNodeId = null;
+                this.selectedId = null;
+                this.currentDropTarget = null;
+                this.layoutMode = lsGet(LAYOUT_KEY) || 'free';
+                this.filter = '';
+                this.undoStack = [];
+                this.redoStack = [];
+                this.pendingEditId = null;
+                this.pendingImport = null;
+                this.timelineFitted = false;
+                this.baseDate = null;
+                this._durationCache = new Map();
+                this._rafResize = null;
+
+                this.network = null;
+                this.timeline = null;
+                this.nodesDataset = new vis.DataSet();
+                this.edgesDataset = new vis.DataSet();
+                this.timelineDataset = new vis.DataSet();
+                this.groupsDataset = new vis.DataSet();
+
+                this.checkPopoutMode();
+                this.loadState();
+                this.initVis();
+
+                const sel = document.getElementById('layout-select');
+                if (![...sel.options].some(o => o.value === this.layoutMode)) this.layoutMode = 'free';
+                sel.value = this.layoutMode;
+                this.applyLayout(this.layoutMode);
+
+                this.setupTreeRoot();
+                this.setupSplitter();
+                this.renderAll();
+                this.fitTimeline();
+                this.setupStorageSync();
+                this.setupKeyboard();
+                this.updateUndoButtons();
+            }
+
+            /* ---------------- Modes / sync ---------------- */
+            checkPopoutMode() {
+                const v = new URLSearchParams(window.location.search).get('popout');
+                this.popoutView = (v === 'mindmap' || v === 'timeline') ? v : null;
+                if (this.popoutView) {
+                    document.getElementById('app-body').classList.add('popout-mode');
+                    document.title = "Omni-Planner Monitor: " + this.popoutView;
+                }
+            }
+
+            popoutCurrentView() {
+                const activeView = document.getElementById('view-mindmap').classList.contains('active') ? 'mindmap' : 'timeline';
+                window.open(window.location.pathname + '?popout=' + activeView, '_blank', 'width=1000,height=700,menubar=no,toolbar=no');
+            }
+
+            setupStorageSync() {
+                window.addEventListener('storage', (e) => {
+                    if ([STORAGE_KEY, SYNC_KEY, BASE_KEY].includes(e.key)) {
+                        this.loadState(); this.renderAll();
+                    } else if (e.key === LAYOUT_KEY && e.newValue && e.newValue !== this.layoutMode) {
+                        this.layoutMode = e.newValue;
+                        const sel = document.getElementById('layout-select');
+                        if (sel) sel.value = e.newValue;
+                        this.applyLayout(e.newValue);
+                        this.renderAll();
+                    } else if (e.key === SPLIT_KEY && e.newValue) {
+                        const pct = parseFloat(e.newValue);
+                        const treePanel = document.getElementById('tree-panel');
+                        if (treePanel && Number.isFinite(pct)) treePanel.style.flexBasis = pct + '%';
+                    }
+                });
+            }
+
+            setupKeyboard() {
+                document.addEventListener('keydown', (e) => {
+                    const tag = (e.target.tagName || '').toUpperCase();
+                    const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || e.target.isContentEditable;
+                    const mod = e.ctrlKey || e.metaKey;
+                    const key = (e.key || '').toLowerCase();
+
+                    if (key === 'escape') {
+                        if (!document.getElementById('import-modal').classList.contains('hidden')) { this.closeImportModal(); return; }
+                        if (!document.getElementById('print-modal').classList.contains('hidden')) { this.closePrintModal(); return; }
+                    }
+                    if (typing) return;
+                    const modalOpen = !document.getElementById('import-modal').classList.contains('hidden') || !document.getElementById('print-modal').classList.contains('hidden');
+                    if (modalOpen) return;
+
+                    if (mod && key === 'z') { e.preventDefault(); e.shiftKey ? this.redo() : this.undo(); }
+                    else if (mod && key === 'y') { e.preventDefault(); this.redo(); }
+                    else if ((key === 'delete' || key === 'backspace') && this.selectedId) { e.preventDefault(); this.deleteNode(this.selectedId); }
+                    else if (key === 'escape') { this.selectTask(null); }
+                });
+            }
+
+            /* ---------------- SPLITTER ---------------- */
+            setupSplitter() {
+                const splitter = document.getElementById('splitter');
+                const treePanel = document.getElementById('tree-panel');
+                const workspace = document.getElementById('workspace');
+                if (!splitter || !treePanel || !workspace) return;
+
+                const MIN_PX = 220;
+                const MAX_PAD_PX = 300;
+
+                // Restore saved width
+                const saved = parseFloat(lsGet(SPLIT_KEY));
+                if (Number.isFinite(saved) && saved >= 5 && saved <= 95) {
+                    treePanel.style.flexBasis = saved + '%';
+                }
+
+                let dragging = false;
+
+                const scheduleRedraw = () => {
+                    if (this._rafResize) return;
+                    this._rafResize = requestAnimationFrame(() => {
+                        this._rafResize = null;
+                        // Let vis libs recalc canvas from their containers
+                        window.dispatchEvent(new Event('resize'));
+                        if (this.network) this.network.redraw();
+                        if (this.timeline) this.timeline.redraw();
+                    });
+                };
+
+                const applyWidthPx = (px) => {
+                    const rect = workspace.getBoundingClientRect();
+                    const minPx = MIN_PX;
+                    const maxPx = Math.max(minPx + 50, rect.width - MAX_PAD_PX);
+                    const clamped = Math.max(minPx, Math.min(maxPx, px));
+                    const pct = (clamped / rect.width) * 100;
+                    treePanel.style.flexBasis = pct + '%';
+                    lsSet(SPLIT_KEY, pct.toFixed(2));
+                    scheduleRedraw();
+                };
+
+                const onStart = (e) => {
+                    if (window.innerWidth < 768) return;
+                    dragging = true;
+                    splitter.classList.add('dragging');
+                    document.body.style.userSelect = 'none';
+                    document.body.style.cursor = 'col-resize';
+                    e.preventDefault();
+                };
+                const onMove = (e) => {
+                    if (!dragging) return;
+                    const rect = workspace.getBoundingClientRect();
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    applyWidthPx(clientX - rect.left);
+                    e.preventDefault();
+                };
+                const onEnd = () => {
+                    if (!dragging) return;
+                    dragging = false;
+                    splitter.classList.remove('dragging');
+                    document.body.style.userSelect = '';
+                    document.body.style.cursor = '';
+                    scheduleRedraw();
+                };
+
+                splitter.addEventListener('mousedown', onStart);
+                splitter.addEventListener('touchstart', onStart, { passive: false });
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('mouseup', onEnd);
+                document.addEventListener('touchend', onEnd);
+                document.addEventListener('touchcancel', onEnd);
+
+                // Double-click resets to 33%
+                splitter.addEventListener('dblclick', () => {
+                    treePanel.style.flexBasis = '33%';
+                    lsSet(SPLIT_KEY, '33');
+                    scheduleRedraw();
+                });
+            }
+
+            showModal(id) { const m = document.getElementById(id); m.classList.remove('hidden'); m.classList.add('flex'); }
+            hideModal(id) { const m = document.getElementById(id); m.classList.add('hidden'); m.classList.remove('flex'); }
+
+            toast(msg, type = 'info') {
+                const d = document.createElement('div');
+                d.className = 'toast ' + type;
+                d.textContent = msg;
+                document.getElementById('toast-root').appendChild(d);
+                setTimeout(() => { d.classList.add('hide'); setTimeout(() => d.remove(), 300); }, 3400);
+            }
+
+            broadcastSync() { lsSet(SYNC_KEY, Date.now().toString()); }
+            generateId() { return 'task_' + Math.random().toString(36).slice(2, 11); }
+
+            /* ---------------- State ---------------- */
+            loadState() {
+                const b = lsGet(BASE_KEY);
+                let base = b ? new Date(b) : null;
+                if (!base || isNaN(base.getTime())) {
+                    base = new Date(); base.setHours(9, 0, 0, 0); lsSet(BASE_KEY, base.toISOString());
+                }
+                this.baseDate = base;
+
+                const stored = lsGet(STORAGE_KEY);
+                let parsed = null;
+                if (stored) { try { parsed = JSON.parse(stored); } catch (e) { parsed = null; } }
+
+                if (Array.isArray(parsed)) this.tasks = parsed;
+                else if (!stored) { this.tasks = []; this.saveState(); }
+                else { this.tasks = []; setTimeout(() => this.toast('Saved data was unreadable and could not be loaded.', 'error'), 300); }
+
+                const ids = new Set(this.tasks.map(t => t.id));
+                this.tasks.forEach(t => { if (t.parentId && !ids.has(t.parentId)) t.parentId = null; if (t.parentId === undefined) t.parentId = null; });
+            }
+
+            saveState() { lsSet(STORAGE_KEY, JSON.stringify(this.tasks)); this.broadcastSync(); }
+            setBaseDate(d) { this.baseDate = d; lsSet(BASE_KEY, d.toISOString()); }
+
+            /* ---------------- Undo / Redo ---------------- */
+            snapshot() {
+                this.undoStack.push(JSON.stringify(this.tasks));
+                if (this.undoStack.length > 60) this.undoStack.shift();
+                this.redoStack = [];
+                this.updateUndoButtons();
+            }
+            undo() { if (!this.undoStack.length) return; this.redoStack.push(JSON.stringify(this.tasks)); this.tasks = JSON.parse(this.undoStack.pop()); this.afterHistory('Undone'); }
+            redo() { if (!this.redoStack.length) return; this.undoStack.push(JSON.stringify(this.tasks)); this.tasks = JSON.parse(this.redoStack.pop()); this.afterHistory('Redone'); }
+            afterHistory(msg) { this.saveState(); this.renderAll(); this.updateUndoButtons(); this.toast(msg); }
+            updateUndoButtons() {
+                const u = document.getElementById('btn-undo'), r = document.getElementById('btn-redo');
+                if (u) u.disabled = !this.undoStack.length;
+                if (r) r.disabled = !this.redoStack.length;
+            }
+
+            clearAll() {
+                if (!this.tasks.length) return;
+                if (confirm("Clear all tasks? (You can still undo with Ctrl+Z.)")) {
+                    this.snapshot();
+                    this.tasks = []; this.selectedId = null;
+                    this.saveState(); this.renderAll();
+                    this.toast('Workspace cleared — Ctrl+Z to undo');
+                }
+            }
+
+            /* ---------------- Helpers ---------------- */
+            descendants(id) {
+                const out = [];
+                const walk = (pid) => this.tasks.filter(t => t.parentId === pid).forEach(c => { out.push(c); walk(c.id); });
+                walk(id); return out;
+            }
+            hasChildren(id) { return this.tasks.some(t => t.parentId === id); }
+            isHierarchical() { return TREE_LAYOUTS.includes(this.layoutMode); }
+
+            /* --- Sum of leaf descendant durations, cached per render --- */
+            effectiveDuration(id) {
+                if (this._durationCache.has(id)) return this._durationCache.get(id);
+                const kids = this.tasks.filter(t => t.parentId === id);
+                let result;
+                if (kids.length === 0) {
+                    const task = this.tasks.find(t => t.id === id);
+                    result = task ? (Number(task.duration) || 0) : 0;
+                } else {
+                    result = kids.reduce((sum, k) => sum + this.effectiveDuration(k.id), 0);
+                }
+                this._durationCache.set(id, result);
+                return result;
+            }
+
+            /* --- Project span (min-start .. max-end of leaf descendants) --- */
+            projectSpan(rootId) {
+                const leaves = this.descendants(rootId).filter(t => !this.hasChildren(t.id));
+                if (!leaves.length) return null;
+                const startMin = Math.min(...leaves.map(t => t.startTimeMin));
+                const endMin   = Math.max(...leaves.map(t => t.startTimeMin + t.duration));
+                return { startMin, endMin, leaves };
+            }
+
+            /* ---------------- Mutations ---------------- */
+            updateTask(id, updates) {
+                const task = this.tasks.find(t => t.id === id);
+                if (!task) return;
+                this.snapshot();
+                Object.assign(task, updates);
+                this.saveState(); this.renderAll();
+            }
+
+            setDone(id, value) {
+                const task = this.tasks.find(t => t.id === id);
+                if (!task) return;
+                this.snapshot();
+                task.done = value;
+                this.descendants(id).forEach(d => d.done = value);
+                let cur = task;
+                while (cur && cur.parentId) {
+                    const parent = this.tasks.find(t => t.id === cur.parentId);
+                    if (!parent) break;
+                    parent.done = this.tasks.filter(t => t.parentId === parent.id).every(t => t.done);
+                    cur = parent;
+                }
+                this.saveState(); this.renderAll();
+            }
+
+            toggleCollapse(id) {
+                const task = this.tasks.find(t => t.id === id);
+                if (!task) return;
+                task.collapsed = !task.collapsed;
+                this.saveState(); this.renderTree();
+                this.selectTask(this.selectedId, 'render');
+            }
+
+            setAllCollapsed(collapsed) {
+                this.tasks.forEach(t => { if (this.hasChildren(t.id)) t.collapsed = collapsed; });
+                this.saveState(); this.renderTree();
+                this.selectTask(this.selectedId, 'render');
+            }
+
+            addNode(parentId) {
+                let start = 0;
+                if (parentId) {
+                    const sibs = this.tasks.filter(t => t.parentId === parentId);
+                    start = sibs.length ? Math.max(...sibs.map(t => t.startTimeMin + t.duration))
+                                        : ((this.tasks.find(t => t.id === parentId)?.startTimeMin) || 0) + 30;
+                } else {
+                    const base = this.baseDate.getTime();
+                    start = Math.ceil(((Date.now() - base) / 60000) / 30) * 30;
+                }
+                this.snapshot();
+                const id = this.generateId();
+                const task = { id, title: "New Task", duration: 30, startTimeMin: start, parentId: parentId || null, done: false };
+                if (!parentId) task.color = PALETTE[this.tasks.filter(t => !t.parentId).length % PALETTE.length];
+                if (parentId) { const p = this.tasks.find(t => t.id === parentId); if (p) p.collapsed = false; }
+                this.tasks.push(task);
+                this.selectedId = id; this.pendingEditId = id;
+                this.filter = '';
+                const s = document.getElementById('tree-search'); if (s) s.value = '';
+                this.saveState(); this.renderAll();
+            }
+
+            deleteNode(id) {
+                const task = this.tasks.find(t => t.id === id);
+                if (!task) return;
+                const kids = this.descendants(id);
+                if (kids.length > 0 && !confirm(`Delete "${task.title}" and its ${kids.length} sub-task${kids.length > 1 ? 's' : ''}?`)) return;
+                this.snapshot();
+                const ids = new Set([id, ...kids.map(k => k.id)]);
+                this.tasks = this.tasks.filter(t => !ids.has(t.id));
+                if (this.selectedId && ids.has(this.selectedId)) this.selectedId = null;
+                this.saveState(); this.renderAll();
+                this.toast('Deleted — Ctrl+Z to undo');
+            }
+
+            moveNode(nodeId, newParentId) {
+                if (nodeId === newParentId) return;
+                const task = this.tasks.find(t => t.id === nodeId);
+                if (!task || (task.parentId ?? null) === (newParentId ?? null)) return;
+                let cur = newParentId ? this.tasks.find(t => t.id === newParentId) : null;
+                while (cur) {
+                    if (cur.id === nodeId) { this.toast("A task can't be nested inside its own sub-task.", 'error'); return; }
+                    cur = this.tasks.find(t => t.id === cur.parentId);
+                }
+                this.snapshot();
+                task.parentId = newParentId || null;
+                if (newParentId) { const p = this.tasks.find(t => t.id === newParentId); if (p) p.collapsed = false; }
+                this.saveState(); this.renderAll();
+            }
+
+            unpinAll() {
+                if (!this.tasks.some(t => t.pinned)) { this.toast('No pinned nodes.'); return; }
+                this.snapshot();
+                this.tasks.forEach(t => { t.pinned = false; t.x = undefined; t.y = undefined; });
+                this.saveState(); this.renderAll();
+            }
+
+            /* ---------------- Selection ---------------- */
+            selectTask(id, source = null) {
+    this._selectTaskCore(id, source);
+    this.updateHighlights();
+}
+
+_selectTaskCore(id, source = null) {
+                this.selectedId = id;
+
+                document.querySelectorAll('.tree-content').forEach(el => {
+                    el.classList.toggle('selected-node', el.dataset.id === id);
+                });
+
+                if (id && (source === 'network' || source === 'timeline')) {
+                    const el = document.querySelector(`.tree-content[data-id="${id}"]`);
+                    if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                }
+
+                const mindmapVisible  = document.getElementById('view-mindmap').classList.contains('active');
+                const timelineVisible = document.getElementById('view-timeline').classList.contains('active');
+
+                if (this.network && source !== 'network' && source !== 'dragStart') {
+                                      const curSel = this.network.getSelectedNodes();
+                    const keepMulti = source === 'render' && curSel.length > 1 && curSel.includes(id);
+                    if (keepMulti) {
+                        /* keep the multi-selection intact after a re-render */
+                    } else if (id && this.nodesDataset.get(id)) {
+                        this.network.selectNodes([id], false);
+                        if ((source === 'tree' || source === 'timeline') && mindmapVisible) {
+                            this.network.focus(id, {
+                                scale: this.network.getScale(),
+                                animation: { duration: 1600, delay: 250, easingFunction: 'easeInOutQuart' }
+                            });
+                        }
+                    } else {
+                        this.network.unselectAll();
+                    }
+                }
+
+                if (this.timeline && source !== 'timeline' && source !== 'dragStart') {
+                    const shouldFocus = (source === 'tree' || source === 'network') && timelineVisible;
+
+                    if (id && this.timelineDataset.get(id)) {
+                        this.timeline.setSelection(id, {
+                            focus: shouldFocus,
+                            animation: { duration: 1600, delay: 250, easingFunction: 'easeInOutQuart' }
+                        });
+                    } else if (id && this.timelineDataset.get('bg_' + id)) {
+                        this.timeline.setSelection([]);
+                        if (shouldFocus) {
+                            this.timeline.focus('bg_' + id, {
+                                animation: { duration: 1600, delay: 250, easingFunction: 'easeInOutQuart' }
+                            });
+                        }
+                    } else {
+                        this.timeline.setSelection([]);
+                    }
+                }
+            }
+
+            /* ---------------- Layout ---------------- */
+            changeLayout(layoutType) {
+                this.snapshot();
+                this.tasks.forEach(t => { t.pinned = false; t.x = undefined; t.y = undefined; });
+                lsSet(LAYOUT_KEY, layoutType);
+                this.applyLayout(layoutType);
+                this.saveState(); this.renderAll();
+            }
+
+            applyLayout(layoutType) {
+                this.layoutMode = layoutType;
+                const hier = (dir, sort, sep) => ({ layout: { hierarchical: { enabled: true, direction: dir, sortMethod: sort, levelSeparation: sep } }, physics: { enabled: false } });
+                let opts = { layout: { hierarchical: false }, physics: { enabled: true } };
+                switch (layoutType) {
+                    case 'free':      opts.physics = { enabled: true, solver: 'forceAtlas2Based', forceAtlas2Based: { gravitationalConstant: -120, centralGravity: 0.01, springLength: 150, springConstant: 0.08 } }; break;
+                    case 'repulsion': opts.physics = { enabled: true, solver: 'repulsion', repulsion: { nodeDistance: 180, springLength: 200 } }; break;
+                    case 'barnesHut': opts.physics = { enabled: true, solver: 'barnesHut', barnesHut: { gravitationalConstant: -2000, centralGravity: 0.3 } }; break;
+                    case 'tree-ud':   opts = hier('UD', 'directed', 150); break;
+                    case 'tree-du':   opts = hier('DU', 'directed', 150); break;
+                    case 'tree-lr':   opts = hier('LR', 'directed', 200); break;
+                    case 'tree-rl':   opts = hier('RL', 'directed', 200); break;
+                    case 'hubsize':   opts = hier('UD', 'hubsize', 150); break;
+                }
+                if (this.network) this.network.setOptions(opts);
+            }
+
+            /* ---------------- Rendering ---------------- */
+            renderAll() {
+                this._durationCache = new Map();
+                if (this.selectedId && !this.tasks.some(t => t.id === this.selectedId)) this.selectedId = null;
+                this.renderTree();
+                this.syncVisData();
+                this.renderStats();
+                if (this.popoutView) {
+                    document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+                    document.getElementById('view-' + this.popoutView).classList.add('active');
+                    setTimeout(() => { if (this.timeline) this.timeline.redraw(); if (this.network) this.network.redraw(); }, 50);
+                }
+                if (this.selectedId) this.selectTask(this.selectedId, 'render');
+            }
+
+            renderStats() {
+                const parents = new Set(this.tasks.map(t => t.parentId).filter(Boolean));
+                const leaves = this.tasks.filter(t => !parents.has(t.id));
+                const done = leaves.filter(t => t.done).length;
+                const mins = leaves.reduce((s, t) => s + (Number(t.duration) || 0), 0);
+                const pct = leaves.length ? Math.round(done / leaves.length * 100) : 0;
+                const txt = document.getElementById('stat-text');
+                if (!txt) return;
+                txt.textContent = `${leaves.length} task${leaves.length === 1 ? '' : 's'} · ${done} done · ${fmtMin(mins)} planned`;
+                document.getElementById('stat-pct').textContent = leaves.length ? pct + '%' : '';
+                document.getElementById('stat-bar').style.width = pct + '%';
+            }
+
+            setFilter(value) { this.filter = value || ''; this.renderTree(); this.selectTask(this.selectedId, 'render'); }
+            subtreeMatches(task, q) {
+                if ((task.title || '').toLowerCase().includes(q)) return true;
+                return this.tasks.some(t => t.parentId === task.id && this.subtreeMatches(t, q));
+            }
+
+            renderTree() {
+                const root = document.getElementById('tree-root');
+                const html = this.buildTreeHTML(null, true);
+                if (html) root.innerHTML = html;
+                else root.innerHTML = `<div class="text-center text-slate-500 text-sm mt-10">
+                    <i class="fa-regular fa-folder-open text-3xl mb-3 block opacity-60"></i>
+                    ${this.filter ? 'No tasks match your filter.' : 'No tasks yet. Click <strong>Add Root</strong> or import a file.'}</div>`;
+                this.attachTreeEvents();
+                if (this.pendingEditId) {
+                    const el = root.querySelector(`.node-title[data-id="${this.pendingEditId}"]`);
+                    this.pendingEditId = null;
+                    if (el) { el.scrollIntoView({ block: 'nearest' }); this.startEdit(el); }
+                }
+            }
+
+            progress(id) {
+                const d = this.descendants(id);
+                const parents = new Set(d.map(t => t.parentId));
+                const leaves = d.filter(t => !parents.has(t.id));
+                return { done: leaves.filter(t => t.done).length, total: leaves.length };
+            }
+
+            buildTreeHTML(parentId, isRoot = false) {
+                const q = this.filter.trim().toLowerCase();
+                let children = this.tasks.filter(t => (t.parentId ?? null) === parentId).sort((a, b) => a.startTimeMin - b.startTimeMin);
+                if (q) children = children.filter(t => this.subtreeMatches(t, q));
+                if (children.length === 0) return '';
+
+                let html = `<ul class="tree-list ${isRoot ? 'root' : ''}">`;
+                children.forEach(task => {
+                    const hasKids = this.hasChildren(task.id);
+                    const collapsed = !!task.collapsed && !q;
+                    const prog = hasKids ? this.progress(task.id) : null;
+                    const isRootTask = !task.parentId;
+                    const durHtml = hasKids
+                        ? `<span class="node-duration node-total" title="Sum of sub-task durations">Σ ${fmtMin(this.effectiveDuration(task.id))}</span>`
+                        : `<span class="node-duration editable" data-field="duration" data-id="${esc(task.id)}">${esc(task.duration)}m</span>`;
+                    html += `
+                        <li class="tree-node" data-id="${esc(task.id)}">
+                            <div class="tree-content ${task.done ? 'is-done' : ''}" draggable="true" data-id="${esc(task.id)}">
+                                <i class="fa-solid fa-grip-vertical drag-handle"></i>
+                                ${hasKids
+                                    ? `<button class="toggle-btn" data-id="${esc(task.id)}" title="${collapsed ? 'Expand' : 'Collapse'}"><i class="fa-solid fa-chevron-${collapsed ? 'right' : 'down'}"></i></button>`
+                                    : `<span class="toggle-spacer"></span>`}
+                                <input type="checkbox" class="done-check" data-id="${esc(task.id)}" ${task.done ? 'checked' : ''} title="Mark complete">
+                                ${isRootTask ? `<input type="color" class="color-pick" data-id="${esc(task.id)}" value="${hex6(task.color, '#6366f1')}" title="Category color">` : ''}
+                                <span class="node-title editable" data-field="title" data-id="${esc(task.id)}">${esc(task.title)}</span>
+                                ${prog && prog.total ? `<span class="progress-badge" title="Completed sub-tasks">${prog.done}/${prog.total}</span>` : ''}
+                                ${durHtml}
+                                <div class="ml-auto flex">
+                                    <button class="action-btn add" data-id="${esc(task.id)}" title="Add sub-task"><i class="fa-solid fa-plus"></i></button>
+                                    <button class="action-btn del" data-id="${esc(task.id)}" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                                </div>
+                            </div>
+                            ${collapsed ? '' : this.buildTreeHTML(task.id)}
+                        </li>`;
+                });
+                return html + '</ul>';
+            }
+
+            startEdit(el) {
+                if (el.querySelector('input')) return;
+                const field = el.dataset.field, id = el.dataset.id;
+                const task = this.tasks.find(t => t.id === id);
+                if (!task) return;
+
+                const input = document.createElement('input');
+                input.type = field === 'duration' ? 'number' : 'text';
+                if (field === 'duration') { input.min = 1; input.step = 5; }
+                input.value = field === 'duration' ? task.duration : task.title;
+                input.className = `edit-input ${field === 'duration' ? 'w-16 text-center' : 'w-full'}`;
+                el.textContent = '';
+                el.appendChild(input);
+                input.focus(); input.select();
+
+                let done = false;
+                const finish = (commit) => {
+                    if (done) return;
+                    done = true;
+                    if (commit) {
+                        let val = input.value;
+                        if (field === 'duration') { val = parseInt(val, 10); if (!(val >= 1)) val = task.duration; }
+                        else { val = val.trim() || task.title; }
+                        if (val !== task[field]) { this.updateTask(id, { [field]: val }); return; }
+                    }
+                    this.renderTree();
+                    this.selectTask(this.selectedId, 'render');
+                };
+                input.addEventListener('blur', () => finish(true));
+                input.addEventListener('click', (e) => e.stopPropagation());
+                input.addEventListener('keydown', (ev) => {
+                    ev.stopPropagation();
+                    if (ev.key === 'Enter') { ev.preventDefault(); input.blur(); }
+                    else if (ev.key === 'Escape') finish(false);
+                });
+            }
+
+            setupTreeRoot() {
+                const root = document.getElementById('tree-root');
+                root.addEventListener('dragover', (e) => e.preventDefault());
+                root.addEventListener('drop', (e) => this.handleRootDrop(e));
+            }
+
+            handleRootDrop(e) {
+                e.preventDefault();
+                if (e.target.id === 'tree-root' || e.target.classList.contains('tree-list')) {
+                    if (this.draggedNodeId) this.moveNode(this.draggedNodeId, null);
+                }
+            }
+
+            attachTreeEvents() {
+                const container = document.getElementById('tree-root');
+                container.querySelectorAll('.tree-content').forEach(row => {
+                    row.addEventListener('click', () => this.selectTask(row.dataset.id, 'tree'));
+                });
+                container.querySelectorAll('.add').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); this.addNode(btn.dataset.id); }));
+                container.querySelectorAll('.del').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); this.deleteNode(btn.dataset.id); }));
+                container.querySelectorAll('.toggle-btn').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); this.toggleCollapse(btn.dataset.id); }));
+                container.querySelectorAll('.done-check').forEach(cb => {
+                    cb.addEventListener('click', (e) => e.stopPropagation());
+                    cb.addEventListener('change', () => this.setDone(cb.dataset.id, cb.checked));
+                });
+                container.querySelectorAll('.color-pick').forEach(cp => {
+                    cp.addEventListener('click', (e) => e.stopPropagation());
+                    cp.addEventListener('change', () => this.updateTask(cp.dataset.id, { color: cp.value }));
+                });
+                container.querySelectorAll('.editable').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.selectTask(el.dataset.id, 'tree');
+                        this.startEdit(el);
+                    });
+                });
+                container.querySelectorAll('.tree-content').forEach(content => {
+                    content.addEventListener('dragstart', (e) => {
+                        this.draggedNodeId = content.dataset.id;
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', content.dataset.id);
+                        setTimeout(() => content.style.opacity = '0.5', 0);
+                    });
+                    content.addEventListener('dragend', () => {
+                        content.style.opacity = '1';
+                        container.querySelectorAll('.drag-over').forEach(c => c.classList.remove('drag-over'));
+                        this.draggedNodeId = null;
+                    });
+                    content.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        if (this.draggedNodeId !== content.dataset.id) content.classList.add('drag-over');
+                    });
+                    content.addEventListener('dragleave', () => content.classList.remove('drag-over'));
+                    content.addEventListener('drop', (e) => {
+                        e.preventDefault(); e.stopPropagation();
+                        content.classList.remove('drag-over');
+                        const targetId = content.dataset.id;
+                        if (this.draggedNodeId && this.draggedNodeId !== targetId) this.moveNode(this.draggedNodeId, targetId);
+                    });
+                });
+            }
+
+            /* ---------------- Vis.js ---------------- */
+            initVis() {
+                const netContainer = document.getElementById('mynetwork');
+                const netOptions = {
+                    physics: { solver: 'forceAtlas2Based', forceAtlas2Based: { gravitationalConstant: -120, centralGravity: 0.01, springLength: 150, springConstant: 0.08 } },
+                    edges: { smooth: { type: 'continuous' }, arrows: 'to', color: { color: 'rgba(100, 116, 139, 0.45)' } },
+                    interaction: { hover: true, multiselect: true },
+                    nodes: { font: { face: 'Inter, sans-serif' } },
+                    backgroundColor: 'rgba(255, 255, 255, 0.35)'
+                };
+                this.network = new vis.Network(netContainer, { nodes: this.nodesDataset, edges: this.edgesDataset }, netOptions);
+
+                this.setupMarquee();
+
+this.network.on("selectNode", (params) => {
+    if (params.nodes.length) this.selectTask(params.nodes[params.nodes.length - 1], 'network');
+});
+this.network.on("deselectNode", (params) => {
+    const rem = params.nodes || [];
+    this.selectTask(rem.length ? rem[rem.length - 1] : null, 'network');
+});
+
+this.network.on("doubleClick", (params) => {
+    if (params.nodes.length > 0) {
+        const task = this.tasks.find(t => t.id === params.nodes[0]);
+        if (task && task.pinned) {
+            this.snapshot();
+            task.pinned = false; task.x = undefined; task.y = undefined;
+            this.saveState(); this.renderAll();
+        }
+    } else if (params.edges.length === 0) {
+        this.addNodeAt(params.pointer.canvas.x, params.pointer.canvas.y);
+    }
+});
+
+this.network.on("dragStart", (params) => {
+    if (params.nodes.length > 0) {
+        const dragged = new Set(params.nodes.map(String));
+        this.network.getSelectedNodes().forEach(id => dragged.add(String(id)));
+        this.selectTask(params.nodes[0], 'dragStart');
+        for (let nodeId in this.network.body.nodes) {
+            const fixed = this.network.body.nodes[nodeId].options.fixed;
+            const isDragged = dragged.has(String(nodeId));
+            fixed.x = !isDragged;
+            fixed.y = !isDragged;
+        }
+    }
+});
+
+this.network.on("dragging", (params) => {
+    if (params.nodes.length !== 1) { this.currentDropTarget = null; return; }
+    const draggedId = params.nodes[0];
+    const task = this.tasks.find(t => t.id === draggedId);
+    if (!task) { this.currentDropTarget = null; return; }
+
+    // Never offer: itself, its current parent, or any of its own descendants
+    const blocked = new Set([draggedId, task.parentId || 'master', ...this.descendants(draggedId).map(d => d.id)]);
+    const p = params.pointer.canvas;
+    const pad = 6;
+    let target = null;
+    for (const id in this.network.body.nodes) {
+        if (blocked.has(id)) continue;
+        let bb;
+        try { bb = this.network.getBoundingBox(id); } catch (e) { continue; }
+        if (!bb) continue;
+        if (p.x >= bb.left - pad && p.x <= bb.right + pad && p.y >= bb.top - pad && p.y <= bb.bottom + pad) { target = id; break; }
+    }
+    this.currentDropTarget = target;
+});
+
+this.network.on("afterDrawing", (ctx) => {
+    const glow = (id, color, width, blur) => {
+        let bb;
+        try { bb = this.network.getBoundingBox(id); } catch (e) { return; }
+        if (!bb) return;
+        const pad = 6;
+        ctx.save();
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(bb.left - pad, bb.top - pad, (bb.right - bb.left) + pad * 2, (bb.bottom - bb.top) + pad * 2, 10);
+        else ctx.rect(bb.left - pad, bb.top - pad, (bb.right - bb.left) + pad * 2, (bb.bottom - bb.top) + pad * 2);
+        ctx.lineWidth = width;
+        ctx.strokeStyle = color;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = blur;
+        ctx.stroke();
+        ctx.restore();
+    };
+    // Glow around all descendants of the selected node(s)
+    (this.highlightIds || []).forEach(id => glow(id, '#22d3ee', 3, 18));
+    // Green glow around the nest drop target
+    if (this.currentDropTarget) glow(this.currentDropTarget, '#10b981', 3, 15);
+});
+
+this.network.on("dragEnd", (params) => {
+    // Release everything that isn't pinned
+    for (let nodeId in this.network.body.nodes) {
+        const task = this.tasks.find(t => t.id === nodeId);
+        if (!task || !task.pinned) {
+            this.network.body.nodes[nodeId].options.fixed.x = false;
+            this.network.body.nodes[nodeId].options.fixed.y = false;
+        }
+    }
+    if (!params.nodes.length) { this.currentDropTarget = null; return; }   // it was a pan, not a node drag
+
+    // Nest (single node dropped onto another node)
+    if (this.currentDropTarget && params.nodes.length === 1) {
+        const targetId = this.currentDropTarget;
+        this.currentDropTarget = null;
+        this.network.redraw();
+        this.moveNode(params.nodes[0], targetId === 'master' ? null : targetId);
+        return;
+    }
+    this.currentDropTarget = null;
+
+    // Otherwise pin every dragged node exactly where it was dropped (works in all layouts)
+    const dragged = params.nodes.slice();
+    this.network.getSelectedNodes().forEach(id => { if (!dragged.includes(id)) dragged.push(id); });
+    const ids = dragged.filter(id => id !== 'master' && this.tasks.some(t => t.id === id));
+    if (!ids.length) return;
+    const positions = this.network.getPositions(ids);
+    this.snapshot();
+    ids.forEach(id => {
+        const t = this.tasks.find(x => x.id === id);
+        if (t && positions[id]) { t.x = positions[id].x; t.y = positions[id].y; t.pinned = true; }
+    });
+    this.saveState(); this.renderAll();
+});
+
+                /* Timeline */
+                const timeContainer = document.getElementById('mytimeline');
+                const timeOptions = {
+                    editable: { updateTime: true, updateGroup: false, remove: false },
+                    start: this.baseDate,
+                    end: new Date(this.baseDate.getTime() + 8 * 3600000),
+                    margin: { item: 10 },
+                    orientation: 'top',
+                    groupOrder: 'order',
+                    showCurrentTime: true,
+                    zoomMin: 5 * 60 * 1000,
+                    snap: (date) => Math.round(date.valueOf() / 300000) * 300000,
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    onMove: (item, callback) => {
+                        if (String(item.id).startsWith('bg_')) { callback(item); return; }
+                        const task = this.tasks.find(t => t.id === item.id);
+                        if (task) {
+                            const startMs = item.start.getTime();
+                            const endMs = item.end ? item.end.getTime() : startMs + task.duration * 60000;
+                            this.snapshot();
+                            task.startTimeMin = Math.round((startMs - this.baseDate.getTime()) / 60000);
+                            task.duration = Math.max(5, Math.round((endMs - startMs) / 60000));
+                            this.saveState();
+                            setTimeout(() => this.renderAll(), 10);
+                        }
+                        callback(item);
+                    }
+                };
+                this.timeline = new vis.Timeline(timeContainer, this.timelineDataset, this.groupsDataset, timeOptions);
+
+                this.timeline.on("select", (props) => {
+                    const valid = props.items.filter(id => !String(id).startsWith('bg_'));
+                    if (valid.length > 0) this.selectTask(valid[0], 'timeline');
+                    else this.selectTask(null, 'timeline');
+                });
+            }
+/* ---- Re-apply user-dragged positions on top of hierarchical layouts ---- */
+applyPinnedPositions() {
+    if (!this.network || !this.isHierarchical()) return;
+    let moved = false;
+    this.tasks.forEach(t => {
+        if (t.pinned && Number.isFinite(t.x) && Number.isFinite(t.y) && this.nodesDataset.get(t.id)) {
+            try { this.network.moveNode(t.id, t.x, t.y); moved = true; } catch (e) {}
+        }
+    });
+    if (moved) this.network.redraw();
+}
+
+/* ---- Glow on all descendants of the selected node(s) ---- */
+updateHighlights() {
+    if (!this.network) return;
+    let ids = this.network.getSelectedNodes().filter(n => n !== 'master');
+    if (!ids.length && this.selectedId) ids = [this.selectedId];
+    const glow = new Set();
+    ids.forEach(id => this.descendants(id).forEach(d => glow.add(d.id)));
+    ids.forEach(id => glow.delete(id));
+    this.highlightIds = [...glow];
+    this.network.redraw();
+}
+
+/* ---- Double-click empty canvas → new root node at that spot ---- */
+addNodeAt(x, y) {
+    const title = prompt('Name for the new node:', 'New Task');
+    if (title === null) return;
+    const base = this.baseDate.getTime();
+    const start = Math.ceil(((Date.now() - base) / 60000) / 30) * 30;
+    this.snapshot();
+    const id = this.generateId();
+    this.tasks.push({
+        id,
+        title: title.trim() || 'New Task',
+        duration: 30,
+        startTimeMin: start,
+        parentId: null,
+        done: false,
+        color: PALETTE[this.tasks.filter(t => !t.parentId).length % PALETTE.length],
+        pinned: true, x, y
+    });
+    this.selectedId = id;
+    this.filter = '';
+    const s = document.getElementById('tree-search'); if (s) s.value = '';
+    this.saveState(); this.renderAll();
+    this.toast('Node added. Drag it onto another node to nest it.');
+}
+
+/* ---- Shift+drag on empty space → box-select nodes ---- */
+setupMarquee() {
+    const host = document.getElementById('view-mindmap');
+    const net = document.getElementById('mynetwork');
+    const box = document.createElement('div');
+    box.style.cssText = 'position:absolute;display:none;pointer-events:none;z-index:15;border:1.5px dashed #6366f1;background:rgba(99,102,241,0.12);border-radius:4px;';
+    host.appendChild(box);
+    let start = null;
+    const rel = (e) => { const r = net.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+
+    const onDown = (e) => {
+    if (!e.shiftKey || (e.button !== undefined && e.button !== 0)) return;
+    e.stopPropagation(); e.preventDefault();
+    const p = rel(e);
+
+    /* Shift+click ON a node → select it and everything beneath it */
+    const hit = this.network.getNodeAt(p);
+    if (hit !== undefined && hit !== null) {
+        let ids;
+        if (hit === 'master') ids = this.tasks.map(t => t.id);          // Master Plan → everything
+        else ids = [hit, ...this.descendants(hit).map(d => d.id)];     // node + all sub-nodes
+        this.network.selectNodes(ids);
+        this.selectTask(hit === 'master' ? null : hit, 'network');
+        return;
+    }
+
+    /* Shift+drag on EMPTY space → box select (unchanged) */
+    if (!start) start = p;
+};
+    net.addEventListener('pointerdown', onDown, true);
+    net.addEventListener('mousedown', onDown, true);
+
+    window.addEventListener('pointermove', (e) => {
+        if (!start) return;
+        const p = rel(e);
+        box.style.display = 'block';
+        box.style.left = Math.min(p.x, start.x) + 'px';
+        box.style.top = Math.min(p.y, start.y) + 'px';
+        box.style.width = Math.abs(p.x - start.x) + 'px';
+        box.style.height = Math.abs(p.y - start.y) + 'px';
+    });
+    window.addEventListener('pointercancel', () => { start = null; box.style.display = 'none'; });
+    window.addEventListener('pointerup', (e) => {
+        if (!start) return;
+        const p = rel(e), s = start;
+        start = null; box.style.display = 'none';
+        if (Math.abs(p.x - s.x) < 4 && Math.abs(p.y - s.y) < 4) return;
+        const x1 = Math.min(p.x, s.x), x2 = Math.max(p.x, s.x), y1 = Math.min(p.y, s.y), y2 = Math.max(p.y, s.y);
+        const pos = this.network.getPositions();
+        const ids = Object.keys(pos).filter(id => {
+            if (id === 'master') return false;
+            const d = this.network.canvasToDOM(pos[id]);
+            return d.x >= x1 && d.x <= x2 && d.y >= y1 && d.y <= y2;
+        });
+        this.network.selectNodes(ids);
+        this.selectTask(ids.length ? ids[0] : null, 'network');
+        if (ids.length > 1) this.toast(`${ids.length} nodes selected. Drag any one to move them all.`);
+    });
+}
+           
+ fitTimeline() {
+                if (!this.timeline) return;
+                const items = this.timelineDataset.get();
+                if (items.length) this.timeline.fit({ animation: false });
+                else this.timeline.setWindow(this.baseDate, new Date(this.baseDate.getTime() + 8 * 3600000), { animation: false });
+            }
+
+            timelineToNow() {
+                const now = Date.now();
+                this.timeline.setWindow(new Date(now - 2 * 3600000), new Date(now + 6 * 3600000));
+            }
+
+            syncVisData() {
+                const nodes = [{
+                    id: 'master', label: 'Master Plan', shape: 'circle',
+                    color: { background: '#0f172a', border: '#6366f1', highlight: { background: '#1e1b4b', border: '#818cf8' } },
+                    font: { color: 'white', size: 16, face: 'Inter, sans-serif', bold: { color: '#fff' } },
+                    shadow: { enabled: true, color: 'rgba(99, 102, 241, 0.45)', size: 20, x: 0, y: 0 }
+                }];
+                const edges = [];
+                const groups = [];
+                const items = [];
+                const base = this.baseDate.getTime();
+                const byId = new Map(this.tasks.map(t => [t.id, t]));
+                const hier = this.isHierarchical();
+
+                const rootOf = (t) => {
+                    let cur = t, guard = 0;
+                    while (cur.parentId && byId.has(cur.parentId) && guard++ < 1000) cur = byId.get(cur.parentId);
+                    return cur;
+                };
+
+                const roots = this.tasks.filter(t => !t.parentId).sort((a, b) => a.startTimeMin - b.startTimeMin);
+
+                roots.forEach((r, i) => {
+                    const hasKids = this.hasChildren(r.id);
+                    const total = hasKids ? this.effectiveDuration(r.id) : Number(r.duration) || 0;
+                    const content = hasKids
+                        ? `<div style="line-height:1.35;padding:2px 4px"><div style="font-weight:700;font-size:12px;color:#1e293b">${esc(r.title)}</div><div style="font-size:10px;color:#8b5cf6;font-weight:600;margin-top:1px">Σ ${fmtMin(total)}</div></div>`
+                        : `<div style="line-height:1.35;padding:2px 4px"><div style="font-weight:700;font-size:12px;color:#1e293b">${esc(r.title)}</div></div>`;
+                    groups.push({ id: r.id, content, order: i });
+                });
+
+                this.tasks.forEach(task => {
+                    const isRoot = !task.parentId;
+                    const hasKids = this.hasChildren(task.id);
+                    const root = rootOf(task);
+                    const accent = hex6(root.color, isRoot ? '#6366f1' : '#94a3b8');
+                    const done = !!task.done;
+
+                    const durLabel = hasKids ? `Σ ${fmtMin(this.effectiveDuration(task.id))}` : `${task.duration}m`;
+                    const nodeConf = {
+                        id: task.id,
+                        label: `${done ? '✓ ' : ''}${task.title}\n(${durLabel})`,
+                        shape: 'box',
+                        borderWidth: (isRoot && hasKids) ? 4 : 2,
+                        color: {
+                            border: done ? '#94a3b8' : accent,
+                            background: isRoot ? (done ? '#94a3b8' : accent) : (done ? '#f1f5f9' : 'rgba(255,255,255,0.95)'),
+                            highlight: { background: isRoot ? accent : 'rgba(255,251,235,0.98)', border: '#f59e0b' }
+                        },
+                        font: { color: isRoot ? (done ? '#ffffff' : textOn(accent)) : (done ? '#94a3b8' : '#1e293b'), face: 'Inter, sans-serif' },
+                        fixed: { x: false, y: false },
+                        shadow: (isRoot && hasKids)
+                            ? { enabled: true, color: hexToRgba(accent, 0.35), size: 15, x: 0, y: 4 }
+                            : false
+                    };
+
+                    if (task.pinned && !hier && Number.isFinite(task.x) && Number.isFinite(task.y)) {
+                        nodeConf.x = task.x; nodeConf.y = task.y;
+                        nodeConf.fixed = { x: true, y: true };
+                        nodeConf.shadow = { enabled: true, color: 'rgba(0,0,0,0.25)', size: 12, x: 4, y: 4 };
+                    }
+                    nodes.push(nodeConf);
+
+                    edges.push({ id: 'e_' + task.id, from: task.parentId || 'master', to: task.id, color: { color: hexToRgba(accent, 0.5) } });
+
+                    if (!hasKids) {
+                        const start = new Date(base + task.startTimeMin * 60000);
+                        const end = new Date(start.getTime() + task.duration * 60000);
+                        items.push({
+                            id: task.id,
+                            group: root.id,
+                            content: esc(task.title),
+                            start, end,
+                            title: esc(`${task.title} (${task.duration}m)`) + (task.notes ? '<br>' + esc(task.notes) : ''),
+                            className: done ? 'item-done' : '',
+                            style: isRoot ? `background-color:${accent};border-color:${accent};color:${textOn(accent)};` : ''
+                        });
+                    }
+                });
+
+                roots.forEach(root => {
+                    if (!this.hasChildren(root.id)) return;
+                    const span = this.projectSpan(root.id);
+                    if (!span) return;
+                    const color = hex6(root.color, '#6366f1');
+                    items.push({
+                        id: 'bg_' + root.id,
+                        group: root.id,
+                        start: new Date(base + span.startMin * 60000),
+                        end: new Date(base + span.endMin * 60000),
+                        type: 'background',
+                        style: `background-color: ${hexToRgba(color, 0.14)}; box-shadow: inset 3px 0 0 ${color}; border-radius: 6px;`
+                    });
+                });
+
+                const sync = (ds, arr, full) => {
+                    if (full) { ds.clear(); ds.add(arr); return; }
+                    const keep = new Set(arr.map(x => x.id));
+                    const stale = ds.getIds().filter(id => !keep.has(id));
+                    if (stale.length) ds.remove(stale);
+                    ds.update(arr);
+                };
+                sync(this.nodesDataset, nodes, hier);
+                sync(this.edgesDataset, edges, hier);
+                sync(this.groupsDataset, groups, false);
+                sync(this.timelineDataset, items, false);
+this.applyPinnedPositions();
+setTimeout(() => this.applyPinnedPositions(), 60);
+            }
+
+            switchView(view) {
+                document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+                document.getElementById('view-' + view).classList.add('active');
+
+                const btnM = document.getElementById('btn-mindmap'), btnT = document.getElementById('btn-timeline');
+                const active   = 'btn-primary-glass rounded-lg px-3.5 py-1.5 text-sm font-medium';
+                const inactive = 'btn-glass rounded-lg px-3.5 py-1.5 text-sm font-medium';
+
+                if (view === 'mindmap') {
+                    btnM.className = active; btnT.className = inactive;
+                    if (this.network) { this.network.redraw(); this.network.fit(); }
+                } else {
+                    btnT.className = active; btnM.className = inactive;
+                    if (this.timeline) {
+                        this.timeline.redraw();
+                        if (!this.timelineFitted) { this.timelineFitted = true; this.fitTimeline(); }
+                    }
+                }
+            }
+
+            /* ---------------- ICS Parsing ---------------- */
+            icsUnescape(s) { return String(s).replace(/\\n/gi, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\\\/g, '\\'); }
+
+            parseICSDate(val) {
+                const m = String(val).trim().match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?)?(Z)?$/);
+                if (!m) return null;
+                const [, Y, Mo, D, h, mi, s, z] = m;
+                if (h === undefined) return { date: new Date(+Y, +Mo - 1, +D, 9, 0, 0), allDay: true };
+                const date = z ? new Date(Date.UTC(+Y, +Mo - 1, +D, +h, +mi, +(s || 0)))
+                               : new Date(+Y, +Mo - 1, +D, +h, +mi, +(s || 0));
+                return { date, allDay: false };
+            }
+
+            parseICS(icsData) {
+                const lines = String(icsData).replace(/\r?\n[ \t]/g, '').split(/\r?\n/);
+                const events = [];
+                const base = this.baseDate.getTime();
+                let cur = null, inAlarm = false, recurring = 0;
+
+                for (const line of lines) {
+                    const up = line.trim().toUpperCase();
+                    if (up === 'BEGIN:VEVENT') { cur = {}; inAlarm = false; continue; }
+                    if (up === 'END:VEVENT') {
+                        if (cur && cur.start) {
+                            let duration = 30;
+                            if (cur.start.allDay) duration = 60;
+                            else if (cur.end) {
+                                const d = Math.round((cur.end.date - cur.start.date) / 60000);
+                                if (d >= 5) duration = d;
+                            }
+                            if (cur.recurring) recurring++;
+                            events.push({
+                                title: cur.title || 'Untitled event',
+                                duration,
+                                startTimeMin: Math.round((cur.start.date.getTime() - base) / 60000),
+                                parentId: null,
+                                notes: cur.notes || ''
+                            });
+                        }
+                        cur = null; continue;
+                    }
+                    if (!cur) continue;
+                    if (up === 'BEGIN:VALARM') { inAlarm = true; continue; }
+                    if (up === 'END:VALARM')   { inAlarm = false; continue; }
+                    if (inAlarm) continue;
+                    const idx = line.indexOf(':');
+                    if (idx < 0) continue;
+                    const name = line.slice(0, idx).split(';')[0].toUpperCase();
+                    const val  = line.slice(idx + 1);
+                    if (name === 'SUMMARY') cur.title = this.icsUnescape(val).trim();
+                    else if (name === 'DESCRIPTION') cur.notes = this.icsUnescape(val).trim();
+                    else if (name === 'DTSTART') cur.start = this.parseICSDate(val);
+                    else if (name === 'DTEND')   cur.end   = this.parseICSDate(val);
+                    else if (name === 'RRULE')   cur.recurring = true;
+                }
+                return { events, recurring };
+            }
+
+            /* ---------------- Import ---------------- */
+            parseImport(text, type) {
+                if (type === 'json') {
+                    const data = JSON.parse(text);
+                    if (Array.isArray(data)) return { tasks: data, baseDate: null, info: '' };
+                    if (data && Array.isArray(data.tasks)) {
+                        let b = null;
+                        if (data.baseDate) { const d = new Date(data.baseDate); if (!isNaN(d.getTime())) b = d; }
+                        return { tasks: data.tasks, baseDate: b, info: '' };
+                    }
+                    throw new Error('Unrecognized JSON structure');
+                }
+                const { events, recurring } = this.parseICS(text);
+                return {
+                    tasks: events, baseDate: null,
+                    info: recurring ? `${recurring} recurring event${recurring > 1 ? 's were' : ' was'} imported once (repeats are not expanded).` : ''
+                };
+            }
+
+            sanitizeTasks(arr) {
+                const idMap = {};
+                const out = [];
+                arr.forEach(raw => {
+                    if (!raw || typeof raw !== 'object') return;
+                    const id = this.generateId();
+                    if (raw.id != null) idMap[String(raw.id)] = id;
+                    const dur = Math.round(Number(raw.duration));
+                    const start = Math.round(Number(raw.startTimeMin));
+                    const t = {
+                        id,
+                        title: String(raw.title ?? 'Untitled').slice(0, 300) || 'Untitled',
+                        duration: dur >= 1 ? dur : 30,
+                        startTimeMin: Number.isFinite(start) ? start : 0,
+                        parentId: null,
+                        done: !!raw.done,
+                        _oldParent: raw.parentId != null ? String(raw.parentId) : null
+                    };
+                    if (typeof raw.color === 'string' && /^#[0-9a-f]{3,8}$/i.test(raw.color)) t.color = raw.color;
+                    if (raw.collapsed) t.collapsed = true;
+                    if (typeof raw.notes === 'string' && raw.notes) t.notes = raw.notes.slice(0, 2000);
+                    if (raw.pinned && Number.isFinite(raw.x) && Number.isFinite(raw.y)) { t.pinned = true; t.x = raw.x; t.y = raw.y; }
+                    out.push(t);
+                });
+                out.forEach(t => { t.parentId = (t._oldParent && idMap[t._oldParent]) ? idMap[t._oldParent] : null; delete t._oldParent; });
+                const byId = new Map(out.map(t => [t.id, t]));
+                out.forEach(t => {
+                    const seen = new Set([t.id]);
+                    let cur = t;
+                    while (cur.parentId) {
+                        if (seen.has(cur.parentId)) { t.parentId = null; break; }
+                        seen.add(cur.parentId);
+                        cur = byId.get(cur.parentId);
+                        if (!cur) break;
+                    }
+                });
+                return out;
+            }
+
+            handleFileSelect(event, type) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const parsed = this.parseImport(e.target.result, type);
+                        const tasks = this.sanitizeTasks(parsed.tasks);
+                        if (!tasks.length) { this.toast('No tasks or events were found in that file.', 'error'); this.resetFileInputs(); return; }
+                        this.pendingImport = { tasks, baseDate: parsed.baseDate, type, info: parsed.info };
+                        document.getElementById('import-summary').innerHTML = `Found <strong>${tasks.length}</strong> ${type === 'ics' ? 'calendar event' : 'task'}${tasks.length > 1 ? 's' : ''} in <em>${esc(file.name)}</em>.`;
+                        document.getElementById('import-info').textContent = parsed.info;
+                        this.showModal('import-modal');
+                    } catch (err) {
+                        this.toast('Could not read that file — check that it is a valid ' + (type === 'ics' ? '.ics' : '.json') + ' file.', 'error');
+                        this.resetFileInputs();
+                    }
+                };
+                reader.onerror = () => { this.toast('Could not read that file.', 'error'); this.resetFileInputs(); };
+                reader.readAsText(file);
+            }
+
+            resetFileInputs() {
+                document.getElementById('json-upload').value = '';
+                document.getElementById('ics-upload').value = '';
+            }
+
+            closeImportModal() { this.pendingImport = null; this.hideModal('import-modal'); this.resetFileInputs(); }
+
+            executeImport(mode) {
+                const p = this.pendingImport;
+                if (!p) return;
+                this.snapshot();
+                const incoming = p.tasks;
+                if (p.baseDate) {
+                    if (mode === 'overwrite') this.setBaseDate(p.baseDate);
+                    else {
+                        const shift = Math.round((p.baseDate.getTime() - this.baseDate.getTime()) / 60000);
+                        incoming.forEach(t => t.startTimeMin += shift);
+                    }
+                }
+                this.tasks = mode === 'overwrite' ? incoming : this.tasks.concat(incoming);
+                this.saveState(); this.renderAll();
+                this.timelineFitted = true; this.fitTimeline();
+                if (document.getElementById('view-mindmap').classList.contains('active')) this.network.fit();
+                this.toast(`Imported ${incoming.length} item${incoming.length > 1 ? 's' : ''} — Ctrl+Z to undo`, 'success');
+                this.closeImportModal();
+            }
+
+            /* ---------------- Export ---------------- */
+            download(blob, filename) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url; link.download = filename;
+                document.body.appendChild(link); link.click(); link.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 2000);
+            }
+
+            exportJSON() {
+                const payload = { app: 'omni-planner', version: 2, baseDate: this.baseDate.toISOString(), tasks: this.tasks };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+                const stamp = new Date().toISOString().slice(0, 10);
+                this.download(blob, `omni_planner_backup_${stamp}.json`);
+                this.toast('Backup saved', 'success');
+            }
+
+            /* ============================================================
+               ICS EXPORT — Project events now include a task-list with
+               Google Calendar search links so anyone viewing the project
+               in their calendar can jump straight to each sub-task.
+               ============================================================ */
+            exportICS() {
+                const leaves = this.tasks.filter(t => !this.hasChildren(t.id));
+                if (!leaves.length) { this.toast('Nothing to export yet.', 'error'); return; }
+
+                const pad = (n) => n < 10 ? '0' + n : '' + n;
+                const fmtDate = (d) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+                const escText = (s) => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+                const fold = (l) => { let out = ''; while (l.length > 74) { out += l.slice(0, 74) + '\r\n '; l = l.slice(74); } return out + l; };
+                const base = this.baseDate.getTime();
+                const byId = new Map(this.tasks.map(t => [t.id, t]));
+                const stamp = fmtDate(new Date());
+                const rootOf = (t) => { let c = t, g = 0; while (c.parentId && byId.has(c.parentId) && g++ < 1000) c = byId.get(c.parentId); return c; };
+
+                const lines = [
+                    "BEGIN:VCALENDAR",
+                    "VERSION:2.0",
+                    "PRODID:-//Omni Planner OS//EN",
+                    "X-WR-CALNAME:Omni Planner Projects",
+                    "CALSCALE:GREGORIAN",
+                    "METHOD:PUBLISH"
+                ];
+
+                /* --- 1) Roots with children → project events --- */
+                const projectRoots = this.tasks.filter(t => !t.parentId && this.hasChildren(t.id));
+                projectRoots.forEach(root => {
+                    const span = this.projectSpan(root.id);
+                    if (!span) return;
+                    const color = hex6(root.color, '#6366f1');
+                    const projStart = new Date(base + span.startMin * 60000);
+                    const projEnd   = new Date(base + span.endMin * 60000);
+                    const durationDays = (projEnd - projStart) / 86400000;
+                    const spanText = durationDays >= 1
+                        ? `${Math.ceil(durationDays)}-day project`
+                        : `${fmtMin(span.endMin - span.startMin)} project`;
+
+                    /* Build rich description: task list + GCal search links */
+                    const descLines = [];
+                    descLines.push(`Project: ${root.title}`);
+                    descLines.push(`Contains ${span.leaves.length} task${span.leaves.length === 1 ? '' : 's'} · ${spanText}.`);
+                    descLines.push('');
+                    descLines.push('Sub-tasks:');
+
+                    const sortedLeaves = span.leaves.slice().sort((a, b) => a.startTimeMin - b.startTimeMin);
+                    sortedLeaves.forEach(leaf => {
+                        const start = new Date(base + leaf.startTimeMin * 60000);
+                        const startStr = `${pad(start.getHours())}:${pad(start.getMinutes())}`;
+                        const check = leaf.done ? '✓ ' : '• ';
+                        descLines.push(`${check}${leaf.title} (${leaf.duration}m @ ${startStr})`);
+                        descLines.push(`   ${gcalSearch(leaf.title)}`);
+                        if (leaf.notes) {
+                            leaf.notes.split(/\r?\n/).forEach(nl => {
+                                if (nl.trim()) descLines.push(`   ${nl}`);
+                            });
+                        }
+                    });
+                    descLines.push('');
+                    descLines.push('Search the full project in Google Calendar:');
+                    descLines.push(`   ${gcalSearch(root.title)}`);
+
+                    lines.push("BEGIN:VEVENT");
+                    lines.push(`UID:project-${root.id}@omniplanner.local`);
+                    lines.push(`DTSTAMP:${stamp}`);
+                    lines.push(`DTSTART:${fmtDate(projStart)}`);
+                    lines.push(`DTEND:${fmtDate(projEnd)}`);
+                    lines.push(`SUMMARY:📁 ${escText(root.title)}`);
+                    lines.push(`DESCRIPTION:${escText(descLines.join('\n'))}`);
+                    lines.push("CATEGORIES:Project");
+                    lines.push(`COLOR:${color}`);
+                    lines.push(`X-APPLE-CALENDAR-COLOR:${color}`);
+                    lines.push("TRANSP:TRANSPARENT");
+                    lines.push("STATUS:CONFIRMED");
+                    lines.push("END:VEVENT");
+                });
+
+                /* --- 2) All leaves → individual timed events --- */
+                leaves.forEach(task => {
+                    const start = new Date(base + task.startTimeMin * 60000);
+                    const end   = new Date(start.getTime() + task.duration * 60000);
+                    const root  = rootOf(task);
+                    const rootColor = hex6(root.color, '#6366f1');
+
+                    const descLines = [];
+                    if (task.notes) descLines.push(task.notes);
+
+                    if (root.id !== task.id) {
+                        // Breadcrumb path
+                        const path = [];
+                        let cur = task;
+                        while (cur && cur.parentId) {
+                            const p = byId.get(cur.parentId);
+                            if (!p) break;
+                            path.unshift(p.title);
+                            cur = p;
+                        }
+                        if (path.length) descLines.push(`Part of project: ${path.join(' › ')}`);
+                    }
+
+                    lines.push("BEGIN:VEVENT");
+                    lines.push(`UID:${task.id}@omniplanner.local`);
+                    lines.push(`DTSTAMP:${stamp}`);
+                    lines.push(`DTSTART:${fmtDate(start)}`);
+                    lines.push(`DTEND:${fmtDate(end)}`);
+                    lines.push(`SUMMARY:${escText((task.done ? '✓ ' : '') + task.title)}`);
+                    if (descLines.length) lines.push(`DESCRIPTION:${escText(descLines.join('\n\n'))}`);
+                    if (root.id !== task.id) lines.push(`CATEGORIES:${escText(root.title)}`);
+                    else lines.push("CATEGORIES:Task");
+                    lines.push(`COLOR:${rootColor}`);
+                    lines.push(`X-APPLE-CALENDAR-COLOR:${rootColor}`);
+                    lines.push("STATUS:CONFIRMED");
+                    lines.push("END:VEVENT");
+                });
+
+                lines.push("END:VCALENDAR");
+
+                const blob = new Blob([lines.map(fold).join('\r\n') + '\r\n'], { type: 'text/calendar;charset=utf-8' });
+                this.download(blob, 'omni_tasks.ics');
+
+                const projCount = projectRoots.length;
+                this.toast(`Exported ${leaves.length} event${leaves.length > 1 ? 's' : ''} + ${projCount} project${projCount !== 1 ? 's' : ''}`, 'success');
+            }
+
+            /* ---------------- Print ---------------- */
+            openPrintModal()  { this.showModal('print-modal'); }
+            closePrintModal() { this.hideModal('print-modal'); }
+
+            async executePrint() {
+                const pTree = document.getElementById('print-opt-tree').checked;
+                const pMap  = document.getElementById('print-opt-map').checked;
+                const pTime = document.getElementById('print-opt-time').checked;
+                if (!pTree && !pMap && !pTime) { this.toast("Please select at least one module to print.", 'error'); return; }
+                this.closePrintModal();
+
+                let dataUrl = null;
+                if (pMap) {
+                    const wasMap = document.getElementById('view-mindmap').classList.contains('active');
+                    if (!wasMap) { this.switchView('mindmap'); await wait(250); }
+                    this.network.fit({ animation: false });
+                    this.network.redraw();
+                    await wait(200);
+                    const canvas = document.querySelector('#mynetwork canvas');
+                    if (canvas) dataUrl = canvas.toDataURL("image/png");
+                    if (!wasMap) this.switchView('timeline');
+                }
+
+                let printHtml = `
+                <html><head><title>Omni-Planner PDF Report</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 30px; color: #1e293b; }
+                    h1 { font-size: 26px; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 8px; }
+                    .sub { color: #64748b; font-size: 12px; margin-bottom: 30px; }
+                    h2 { font-size: 20px; color: #6366f1; margin-bottom: 16px; margin-top: 0; }
+                    .section { margin-bottom: 40px; }
+                    .page-break { page-break-before: always; }
+                    img { max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+                    ul.tree { list-style-type: none; padding-left: 24px; border-left: 2px solid #e2e8f0; margin-left: 10px; }
+                    ul.tree li { margin: 10px 0; position: relative; }
+                    ul.tree li::before { content: ''; position: absolute; left: -24px; top: 10px; width: 20px; border-top: 2px solid #e2e8f0; }
+                    .time-badge { font-size: 11px; font-weight: bold; color: #475569; background: #f1f5f9; padding: 2px 8px; border-radius: 10px; border: 1px solid #cbd5e1; margin-left: 8px; }
+                    .time-badge.total { background: #ede9fe; color: #6d28d9; border-color: #c4b5fd; }
+                    .done { text-decoration: line-through; color: #94a3b8; }
+                    .agenda-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    .agenda-table th, .agenda-table td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+                    .agenda-table th { background: #f8fafc; color: #64748b; font-size: 12px; text-transform: uppercase; }
+                    .agenda-table tr { page-break-inside: avoid; }
+                    @media print { .no-print { display: none; } }
+                </style></head><body>
+                <div class="no-print" style="margin-bottom: 20px; background: #fffbeb; border-left: 4px solid #f59e0b; padding: 10px; font-size: 13px;">
+                    <strong>Generating Report:</strong> Waiting for images to decode before opening print dialog…
+                </div>
+                <h1>Omni-Planner Executive Report</h1>
+                <div class="sub">Generated ${esc(new Date().toLocaleString())}</div>`;
+
+                const titleHtml = (t) => `<span class="${t.done ? 'done' : ''}">${esc(t.title)}</span>`;
+                const durBadge = (t) => this.hasChildren(t.id)
+                    ? `<span class="time-badge total">Σ ${fmtMin(this.effectiveDuration(t.id))}</span>`
+                    : `<span class="time-badge">${esc(t.duration)} mins</span>`;
+
+                if (pTree) {
+                    printHtml += `<div class="section"><h2>Hierarchical Task Tree</h2>`;
+                    const build = (parentId) => {
+                        const children = this.tasks.filter(t => (t.parentId ?? null) === parentId).sort((a, b) => a.startTimeMin - b.startTimeMin);
+                        if (!children.length) return '';
+                        let ul = '<ul class="tree">';
+                        children.forEach(c => { ul += `<li><strong>${titleHtml(c)}</strong> ${durBadge(c)}${build(c.id)}</li>`; });
+                        return ul + '</ul>';
+                    };
+                    this.tasks.filter(t => !t.parentId).sort((a, b) => a.startTimeMin - b.startTimeMin).forEach(root => {
+                        printHtml += `<div style="margin-bottom: 20px;"><strong style="font-size: 16px;">${titleHtml(root)}</strong> ${durBadge(root)}${build(root.id)}</div>`;
+                    });
+                    printHtml += `</div>`;
+                }
+
+                if (pMap) {
+                    printHtml += `<div class="section ${pTree ? 'page-break' : ''}"><h2>Visual Mind Map</h2>${dataUrl ? `<img id="mind-map-img" src="${dataUrl}" />` : '<p>Mind map unavailable.</p>'}</div>`;
+                }
+
+                if (pTime) {
+                    printHtml += `<div class="section ${(pTree || pMap) ? 'page-break' : ''}"><h2>Chronological Agenda</h2>
+                        <table class="agenda-table">
+                            <thead><tr><th>Date</th><th style="width: 130px;">Time</th><th>Task Name</th><th>Category</th><th>Status</th></tr></thead>
+                            <tbody>`;
+                    const parents = new Set(this.tasks.map(t => t.parentId).filter(Boolean));
+                    const byId = new Map(this.tasks.map(t => [t.id, t]));
+                    const rootOf = (t) => { let c = t, g = 0; while (c.parentId && byId.has(c.parentId) && g++ < 1000) c = byId.get(c.parentId); return c; };
+                    const base = this.baseDate.getTime();
+                    const leafList = this.tasks.filter(t => !parents.has(t.id)).sort((a, b) => a.startTimeMin - b.startTimeMin);
+                    leafList.forEach(t => {
+                        const s = new Date(base + t.startTimeMin * 60000);
+                        const e = new Date(s.getTime() + t.duration * 60000);
+                        const tf = { hour: '2-digit', minute: '2-digit' };
+                        const root = rootOf(t);
+                        printHtml += `<tr>
+                            <td>${esc(s.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' }))}</td>
+                            <td><strong>${esc(s.toLocaleTimeString([], tf))} – ${esc(e.toLocaleTimeString([], tf))}</strong></td>
+                            <td>${titleHtml(t)}</td>
+                            <td><span class="time-badge">${esc(root.id === t.id ? 'Event' : root.title)}</span></td>
+                            <td>${t.done ? '✓ Done' : ''}</td></tr>`;
+                    });
+                    printHtml += `</tbody></table></div>`;
+                }
+
+                printHtml += `</body></html>`;
+
+                const win = window.open('', '_blank');
+                if (!win) { this.toast('Pop-up blocked — allow pop-ups for this page to print.', 'error'); return; }
+                win.document.write(printHtml);
+                win.document.close();
+
+                const go = () => {
+                    const n = win.document.querySelector('.no-print');
+                    if (n) n.style.display = 'none';
+                    win.focus(); win.print();
+                };
+                const img = win.document.getElementById('mind-map-img');
+                if (img && !img.complete) { img.onload = go; img.onerror = go; }
+                else setTimeout(go, 300);
+            }
+        }
+
+        const app = new AppState();
+    </script>
+</body>
+</html>

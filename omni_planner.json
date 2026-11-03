@@ -1,0 +1,1553 @@
+{
+  "app": "omni-planner",
+  "version": 3,
+  "baseDate": "2026-11-01T14:00:00.000Z",
+  "tasks": [
+    {
+      "id": "task_bo9nhgox6",
+      "title": "1. Physical Foundation & Health",
+      "duration": 180,
+      "startTimeMin": -60,
+      "parentId": null,
+      "done": false,
+      "color": "#10b981",
+      "notes": "Bill Phillips Body For Life rule: Career hinges upon physical well-being. Priority #1.",
+      "pinned": true,
+      "x": 4984,
+      "y": -1542
+    },
+    {
+      "id": "task_21mvri6aj",
+      "title": "Drop 20 lbs: Carnivore protocol & intermittent fasting",
+      "duration": 30,
+      "startTimeMin": -60,
+      "parentId": "task_bo9nhgox6",
+      "done": false,
+      "notes": "Stick to high-protein, zero-carb regimen: chicken breasts, eggs, egg whites, canned tuna, and cottage cheese. 16-18 hour fasting.",
+      "pinned": true,
+      "x": 3639,
+      "y": -1405
+    },
+    {
+      "id": "task_moz1rpq63",
+      "title": "5-day weightlifting routine & leg squats",
+      "duration": 60,
+      "startTimeMin": -10,
+      "parentId": "task_21mvri6aj",
+      "done": false,
+      "notes": "Maintain heavy weights and reps for chest, shoulders, back, and bodyweight squats."
+    },
+    {
+      "id": "task_3jz2g9tr5",
+      "title": "5km Power Walk & Daily Push-ups",
+      "duration": 45,
+      "startTimeMin": 30,
+      "parentId": "task_bo9nhgox6",
+      "done": false,
+      "notes": "Maintain 5km power walk (~47 mins at 6.4 km/h) and high-volume pushups (200-500 daily reps) to offset sedentary desk time.",
+      "pinned": true,
+      "x": 4121,
+      "y": -1726
+    },
+    {
+      "id": "task_acxbajshe",
+      "title": "Supplement & Recovery routine",
+      "duration": 20,
+      "startTimeMin": 75,
+      "parentId": "task_bo9nhgox6",
+      "done": false,
+      "notes": "Creatine monohydrate in coffee/water; magnesium bisglycinate/glycinate before bed.",
+      "pinned": true,
+      "x": 4190,
+      "y": -1313
+    },
+    {
+      "id": "task_70976of4g",
+      "title": "Pause daily alcohol consumption",
+      "duration": 5,
+      "startTimeMin": 95,
+      "parentId": "task_bo9nhgox6",
+      "done": false,
+      "notes": "Take a complete break, then transition strictly to occasional use.",
+      "pinned": true,
+      "x": 4889,
+      "y": -1251
+    },
+    {
+      "id": "task_suvinp8j0",
+      "title": "2. Mental Diet & Hobbies",
+      "duration": 120,
+      "startTimeMin": 120,
+      "parentId": null,
+      "done": false,
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "task_y8vm96re3",
+      "title": "Daily Personal Development Audio & Reading",
+      "duration": 56,
+      "startTimeMin": 5880,
+      "parentId": "task_suvinp8j0",
+      "done": false,
+      "shape": "circle",
+      "notes": "Study Psycho-Cybernetics, Think and Grow Rich, Meditations, and Tony Robbins."
+    },
+    {
+      "id": "task_hj0ngx5x1",
+      "title": "Classic Comic & Fiction Reading",
+      "duration": 30,
+      "startTimeMin": 165,
+      "parentId": "task_suvinp8j0",
+      "done": false,
+      "notes": "Carl Barks Uncle Scrooge, Don Rosa Donald Duck comics, and old-fashioned fiction."
+    },
+    {
+      "id": "task_wbdo5trqv",
+      "title": "Woodworking: Craft custom cornhole game boards",
+      "duration": 60,
+      "startTimeMin": 195,
+      "parentId": "task_suvinp8j0",
+      "done": false,
+      "notes": "Build custom wooden cornhole boards and source stars stencil for American flag sign project."
+    },
+    {
+      "id": "task_s63lewv4j",
+      "title": "Music & Astronomy: Hook up record player & telescope",
+      "duration": 45,
+      "startTimeMin": 215,
+      "parentId": "task_suvinp8j0",
+      "done": false,
+      "notes": "Connect record player to main stereo; prep Celestron NexStar 4 GT telescope for stargazing."
+    },
+    {
+      "id": "task_v72yjopwx",
+      "title": "3. Real Estate & Income Generation (Casora! Realty)",
+      "duration": 300,
+      "startTimeMin": 1380,
+      "parentId": null,
+      "done": false,
+      "color": "#0f50b8",
+      "sizeScale": 2.17,
+      "notes": "Hierarchical rules-based approach: Prioritize money-making over chores. Utilize custom AI tools.",
+      "pinned": true,
+      "x": -2961,
+      "y": -884
+    },
+    {
+      "id": "task_ymj32mea3",
+      "title": "Review financial goals in custom HTML web app",
+      "duration": 30,
+      "startTimeMin": 1380,
+      "parentId": "task_v72yjopwx",
+      "done": false,
+      "shape": "circle",
+      "sizeScale": 1.26
+    },
+    {
+      "id": "task_fzhfn1f5a",
+      "title": "Finalize AI publicity photo & marketing collateral",
+      "duration": 30,
+      "startTimeMin": 1410,
+      "parentId": "task_v72yjopwx",
+      "done": false,
+      "shape": "circle",
+      "pinned": true,
+      "x": -4034,
+      "y": 937
+    },
+    {
+      "id": "task_fo6ne1rlf",
+      "title": "Design and print new real estate business cards",
+      "duration": 30,
+      "startTimeMin": 1655,
+      "parentId": "task_v72yjopwx",
+      "done": false,
+      "shape": "circle",
+      "x": -3420,
+      "y": -451,
+      "pinned": true
+    },
+    {
+      "id": "task_okxeda3mq",
+      "title": "Create professional door-knocking canvassing lanyard",
+      "duration": 30,
+      "startTimeMin": 1760,
+      "parentId": "task_fo6ne1rlf",
+      "done": false,
+      "shape": "circle",
+      "sizeScale": 0.93,
+      "pinned": true,
+      "x": -3176,
+      "y": 1251,
+      "dependsOn": [
+        "task_fo6ne1rlf",
+        "task_bvlr7hkvu"
+      ],
+      "inbox": true
+    },
+    {
+      "id": "task_l51qu6pjc",
+      "title": "Update & print interactive listing presentation deck",
+      "duration": 30,
+      "startTimeMin": 1430,
+      "parentId": "task_fzhfn1f5a",
+      "done": false,
+      "shape": "circle",
+      "inbox": true
+    },
+    {
+      "id": "task_4n0gafcki",
+      "title": "Prep tailored menswear & print materials for Open Houses",
+      "duration": 30,
+      "startTimeMin": 1550,
+      "parentId": "task_ymj32mea3",
+      "done": false,
+      "shape": "circle",
+      "sizeScale": 2.17,
+      "notes": "Navy three-piece suit, vest, wingtip dress shoes, mirrored aviators.",
+      "pinned": true,
+      "x": -1660,
+      "y": -539,
+      "inbox": true
+    },
+    {
+      "id": "task_bvlr7hkvu",
+      "title": "Sync with Fernando on Form 221 documentation kit",
+      "duration": 30,
+      "startTimeMin": 1700,
+      "parentId": "task_fo6ne1rlf",
+      "done": true,
+      "shape": "circle",
+      "sizeScale": 1.47,
+      "notes": "Lock down buyer and listing execution protocols for Casora! Realty.",
+      "pinned": true,
+      "x": -4028,
+      "y": -311,
+      "inbox": true
+    },
+    {
+      "id": "task_dyjmvewg0",
+      "title": "4. Finance, Dental & Grand Strategy",
+      "duration": 240,
+      "startTimeMin": 2820,
+      "parentId": null,
+      "done": false,
+      "color": "#f59e0b"
+    },
+    {
+      "id": "task_52svdhdz4",
+      "title": "RRSP to TFSA transfer coordination",
+      "duration": 30,
+      "startTimeMin": 2820,
+      "parentId": "task_dyjmvewg0",
+      "done": false,
+      "notes": "Complete transfer with Conrad Soucie. Match prior year amount."
+    },
+    {
+      "id": "task_6tvcqz27u",
+      "title": "Dentist: Plan root canal cap & cracked molar fix",
+      "duration": 45,
+      "startTimeMin": 2850,
+      "parentId": "task_dyjmvewg0",
+      "done": false,
+      "notes": "Maximize 2026 insurance benefits before year-end; roll balance to 2027 if needed."
+    },
+    {
+      "id": "task_37l7xmqfg",
+      "title": "Compile Downsizing Criteria Master List",
+      "duration": 45,
+      "startTimeMin": 2930,
+      "parentId": "task_dyjmvewg0",
+      "done": false
+    },
+    {
+      "id": "task_3hfthcx44",
+      "title": "Schedule local downsizing property viewings",
+      "duration": 60,
+      "startTimeMin": 2935,
+      "parentId": "task_dyjmvewg0",
+      "done": false,
+      "notes": "Evaluate property options and target values in the local market."
+    },
+    {
+      "id": "task_dzeqo06bj",
+      "title": "Long-term travel research: Hawaii, Europe & Thailand",
+      "duration": 30,
+      "startTimeMin": 3060,
+      "parentId": "task_dyjmvewg0",
+      "done": false
+    },
+    {
+      "id": "task_xckh8xhcu",
+      "title": "5. Relationships & Social",
+      "duration": 210,
+      "startTimeMin": 4260,
+      "parentId": null,
+      "done": false,
+      "color": "#a55f5f",
+      "shape": "circle",
+      "notes": "Schedule intentional time with family and close friends."
+    },
+    {
+      "id": "task_kdkcsmsax",
+      "title": "Plan Niagara Falls romantic getaway with Tammy",
+      "duration": 56,
+      "startTimeMin": 10020,
+      "parentId": "task_xckh8xhcu",
+      "done": false,
+      "shape": "circle",
+      "notes": "Book hotel stay and couples massage.",
+      "pinned": true,
+      "x": -60,
+      "y": 97
+    },
+    {
+      "id": "task_2fzwoyjsh",
+      "title": "Organize get-together with Sue and Benny",
+      "duration": 56,
+      "startTimeMin": 10065,
+      "parentId": "task_xckh8xhcu",
+      "done": false,
+      "shape": "circle",
+      "notes": "Catch up and celebrate milestone birthday.",
+      "pinned": true,
+      "x": -265,
+      "y": -122
+    },
+    {
+      "id": "task_w45zrmzvh",
+      "title": "Schedule 1-on-1s with Jade, Brooke, and Kevin",
+      "duration": 56,
+      "startTimeMin": 10080,
+      "parentId": "task_2fzwoyjsh",
+      "done": false,
+      "shape": "circle"
+    },
+    {
+      "id": "task_9v295gf7e",
+      "title": "Plan visits with Mom & Dad",
+      "duration": 56,
+      "startTimeMin": 10110,
+      "parentId": "task_xckh8xhcu",
+      "done": false,
+      "shape": "circle"
+    },
+    {
+      "id": "task_kd5sca1t7",
+      "title": "Schedule get-togethers with Mike, Sonya, Dan, and Carl",
+      "duration": 56,
+      "startTimeMin": 10140,
+      "parentId": "task_xckh8xhcu",
+      "done": false,
+      "shape": "circle",
+      "notes": "Keep close friends prioritized in the monthly calendar."
+    },
+    {
+      "id": "task_jzeduloz6",
+      "title": "6. Florida 2027 & Travel Prep (NCL & Camping)",
+      "duration": 270,
+      "startTimeMin": 5700,
+      "parentId": null,
+      "done": false,
+      "color": "#a55f5f",
+      "shape": "circle",
+      "notes": "Manage NCL cruise bookings, NCLH shareholder benefits, and Florida State Park reservations.",
+      "pinned": true,
+      "x": 2774,
+      "y": 1597
+    },
+    {
+      "id": "task_uo10ovm52",
+      "title": "2008 Fleetwood pop-up trailer test tow & bearing check",
+      "duration": 30,
+      "startTimeMin": 1595,
+      "parentId": "task_jzeduloz6",
+      "done": false,
+      "shape": "circle",
+      "notes": "Inspect 7-pin harness, transmission fluid cooler, and weight distribution system with 2014 Honda Odyssey."
+    },
+    {
+      "id": "task_xz1wnz7ka",
+      "title": "Set up Wandering Labs alerts for Florida State Park campsites",
+      "duration": 30,
+      "startTimeMin": 11580,
+      "parentId": "task_jzeduloz6",
+      "done": false,
+      "notes": "Monitor availability across John Pennekamp, Bahia Honda, Sebastian Inlet, and Myakka."
+    },
+    {
+      "id": "task_l0v1rciyx",
+      "title": "Research Florida daily itineraries, e-bike trails & Disney crowds",
+      "duration": 56,
+      "startTimeMin": 11610,
+      "parentId": "task_jzeduloz6",
+      "done": false,
+      "shape": "circle",
+      "notes": "Plan West Orange Trail e-biking days and park visits."
+    },
+    {
+      "id": "task_8nu7vr1m0",
+      "title": "Coordinate Space View Park contact for Florida space coast visit",
+      "duration": 56,
+      "startTimeMin": 87975,
+      "parentId": "task_jzeduloz6",
+      "done": false,
+      "shape": "circle",
+      "notes": "Discuss launch viewing spots, telescope gear, and travel plans in Titusville."
+    },
+    {
+      "id": "task_0976zv2ah",
+      "title": "Create comprehensive camping and cruise packing lists",
+      "duration": 56,
+      "startTimeMin": 11685,
+      "parentId": "task_jzeduloz6",
+      "done": false,
+      "shape": "circle",
+      "notes": "Plan luggage procurement at Florida flea market prior to cruise embarkation."
+    },
+    {
+      "id": "task_hobn7vobw",
+      "title": "7. Urgent Home & Vehicle Maintenance",
+      "duration": 285,
+      "startTimeMin": 7140,
+      "parentId": null,
+      "done": false,
+      "color": "#f43f5e"
+    },
+    {
+      "id": "task_pm58jwpo6",
+      "title": "Honda Odyssey rear suspension check & quote",
+      "duration": 60,
+      "startTimeMin": 7140,
+      "parentId": "task_hobn7vobw",
+      "done": false,
+      "notes": "Check cloppy/sloppy rear end with Discount Muffler / Ray."
+    },
+    {
+      "id": "task_sdovbnlex",
+      "title": "Swap snow tires: 2015 Honda Accord Touring",
+      "duration": 45,
+      "startTimeMin": 7200,
+      "parentId": "task_hobn7vobw",
+      "done": false
+    },
+    {
+      "id": "task_7ku05myns",
+      "title": "Swap winter tires: Brooke's vehicle",
+      "duration": 45,
+      "startTimeMin": 7245,
+      "parentId": "task_hobn7vobw",
+      "done": false
+    },
+    {
+      "id": "task_u51xxto2u",
+      "title": "Change furnace air filter",
+      "duration": 15,
+      "startTimeMin": 7290,
+      "parentId": "task_hobn7vobw",
+      "done": false
+    },
+    {
+      "id": "task_vdox8erw9",
+      "title": "Diagnostic and repair on washing machine",
+      "duration": 60,
+      "startTimeMin": 7305,
+      "parentId": "task_hobn7vobw",
+      "done": false
+    },
+    {
+      "id": "task_c3s23pr0l",
+      "title": "Troubleshoot refrigerator ice maker and water supply",
+      "duration": 30,
+      "startTimeMin": 7365,
+      "parentId": "task_hobn7vobw",
+      "done": false
+    },
+    {
+      "id": "task_mllbte6ym",
+      "title": "8. Seasonal Yard & House Improvements",
+      "duration": 360,
+      "startTimeMin": 8580,
+      "parentId": null,
+      "done": false,
+      "color": "#a55f5f",
+      "shape": "circle"
+    },
+    {
+      "id": "task_z62z6z4yc",
+      "title": "Clean out eaves troughs and check drainage",
+      "duration": 56,
+      "startTimeMin": 14400,
+      "parentId": "task_mllbte6ym",
+      "done": false,
+      "shape": "circle"
+    },
+    {
+      "id": "task_59sji97yx",
+      "title": "Complete yard cleanup and store outdoor seasonal decor",
+      "duration": 56,
+      "startTimeMin": 14460,
+      "parentId": "task_mllbte6ym",
+      "done": false,
+      "shape": "circle"
+    },
+    {
+      "id": "task_snicoijx2",
+      "title": "Wrap up and repair patio furniture for winter",
+      "duration": 25,
+      "startTimeMin": 14520,
+      "parentId": "task_mllbte6ym",
+      "done": false
+    },
+    {
+      "id": "task_429q8m8nj",
+      "title": "Upstairs Bathrooms: Solder shutoffs & install faucets",
+      "duration": 90,
+      "startTimeMin": 23220,
+      "parentId": "task_mllbte6ym",
+      "done": false
+    },
+    {
+      "id": "task_ujs6loidz",
+      "title": "Source bathroom sinks & Formica countertops",
+      "duration": 56,
+      "startTimeMin": 14670,
+      "parentId": "task_mllbte6ym",
+      "done": false,
+      "shape": "circle"
+    },
+    {
+      "id": "task_w9afpsfj0",
+      "title": "9. Deep House & Digital Purge",
+      "duration": 480,
+      "startTimeMin": 10020,
+      "parentId": null,
+      "done": false,
+      "color": "#a55f5f",
+      "shape": "circle",
+      "projectMode": "custom",
+      "projectStartDate": "2026-11-08",
+      "projectEndDate": "2026-11-30"
+    },
+    {
+      "id": "task_9jcv6cvip",
+      "title": "Organize garage tools using postal buckets",
+      "duration": 60,
+      "startTimeMin": 15780,
+      "parentId": "task_w9afpsfj0",
+      "done": false,
+      "notes": "Sort hand tools, hardware, and automotive gear efficiently."
+    },
+    {
+      "id": "task_qoanlyhxa",
+      "title": "Setup master house inventory catalog system",
+      "duration": 56,
+      "startTimeMin": 15840,
+      "parentId": "task_w9afpsfj0",
+      "done": false,
+      "shape": "circle",
+      "notes": "Catalog household items into organized digital trackers with clear location hierarchies."
+    },
+    {
+      "id": "task_2ggysdycq",
+      "title": "Create secondary archival office space in basement",
+      "duration": 60,
+      "startTimeMin": 15941,
+      "parentId": "task_w9afpsfj0",
+      "done": false
+    },
+    {
+      "id": "task_hji3zwsh4",
+      "title": "Fully purge & organize Basement and Hisense freezer area",
+      "duration": 120,
+      "startTimeMin": 16001,
+      "parentId": "task_w9afpsfj0",
+      "done": false
+    },
+    {
+      "id": "task_0oacj4fzx",
+      "title": "Fully purge & organize Garage and driveway storage",
+      "duration": 120,
+      "startTimeMin": 16121,
+      "parentId": "task_w9afpsfj0",
+      "done": false
+    },
+    {
+      "id": "task_z958vjskt",
+      "title": "Purge every closet and drawer in the house",
+      "duration": 120,
+      "startTimeMin": 16241,
+      "parentId": "task_w9afpsfj0",
+      "done": false
+    },
+    {
+      "id": "task_uy2yyhf89",
+      "title": "Declutter wardrobe (dressers, drawers, and hanging storage)",
+      "duration": 60,
+      "startTimeMin": 16361,
+      "parentId": "task_w9afpsfj0",
+      "done": false
+    },
+    {
+      "id": "task_h9t7dd6q4",
+      "title": "Digital Purge: Clean up Google Drive and hard drives",
+      "duration": 56,
+      "startTimeMin": 16421,
+      "parentId": "task_w9afpsfj0",
+      "done": false,
+      "shape": "circle",
+      "notes": "Remove duplicate files and organize personal/professional archives."
+    },
+    {
+      "id": "task_897exd56a",
+      "title": "Voyage & Expedition Master Itinerary",
+      "duration": 30,
+      "startTimeMin": -60,
+      "parentId": null,
+      "done": false,
+      "color": "#06b6d4",
+      "notes": "Export to .ics for offline mobile calendar access.",
+      "projectMode": "custom",
+      "projectStartDate": "2026-11-01",
+      "projectEndDate": "2026-11-05",
+      "pinned": true,
+      "x": -2156,
+      "y": 1418
+    },
+    {
+      "id": "task_y4k54dpua",
+      "title": "Passports, Boarding Passes & Electronics Packed",
+      "duration": 45,
+      "startTimeMin": -60,
+      "parentId": "task_897exd56a",
+      "done": false,
+      "shape": "diamond",
+      "notes": "Verify passports, chargers, medications, luggage tags."
+    },
+    {
+      "id": "task_71qpjk4qv",
+      "title": "Hold Mail, Set Thermostats & Lock Perimeter",
+      "duration": 30,
+      "startTimeMin": 0,
+      "parentId": "task_897exd56a",
+      "done": false,
+      "dependsOn": [
+        "task_y4k54dpua"
+      ]
+    },
+    {
+      "id": "task_qqs67w1yg",
+      "title": "Depart for Terminal / Embarkation Check-In",
+      "duration": 90,
+      "startTimeMin": 60,
+      "parentId": "task_897exd56a",
+      "done": false,
+      "shape": "star",
+      "notes": "Terminal Gate B · Arrive 2 hours prior.",
+      "dependsOn": [
+        "task_71qpjk4qv"
+      ]
+    },
+    {
+      "id": "task_vd35iay48",
+      "title": "Day 2 Guided Coastal Excursion & Dinner",
+      "duration": 180,
+      "startTimeMin": 1500,
+      "parentId": "task_897exd56a",
+      "done": false,
+      "notes": "Meet at Pier 3 fifteen minutes early."
+    },
+    {
+      "id": "task_o8q4fx42n",
+      "title": "Home maintenance",
+      "duration": 30,
+      "startTimeMin": 780,
+      "parentId": null,
+      "done": false,
+      "color": "#ec4899"
+    },
+    {
+      "id": "task_9gzgt0b6y",
+      "title": "Test smoke and CO alarms",
+      "duration": 30,
+      "startTimeMin": 810,
+      "parentId": "task_o8q4fx42n",
+      "done": false,
+      "recur": {
+        "freq": "monthly",
+        "interval": 1,
+        "seriesStartMin": 810
+      }
+    },
+    {
+      "id": "task_spb2ibfnh",
+      "title": "Replace furnace filter",
+      "duration": 30,
+      "startTimeMin": 840,
+      "parentId": "task_o8q4fx42n",
+      "done": false,
+      "recur": {
+        "freq": "monthly",
+        "interval": 1,
+        "seriesStartMin": 840
+      }
+    },
+    {
+      "id": "task_jrj1tg68m",
+      "title": "Clean gutters",
+      "duration": 30,
+      "startTimeMin": 870,
+      "parentId": "task_o8q4fx42n",
+      "done": false,
+      "recur": {
+        "freq": "yearly",
+        "interval": 1,
+        "seriesStartMin": 870
+      }
+    },
+    {
+      "id": "task_acl0sfoxa",
+      "title": "Service furnace before winter",
+      "duration": 30,
+      "startTimeMin": 900,
+      "parentId": "task_o8q4fx42n",
+      "done": false,
+      "recur": {
+        "freq": "yearly",
+        "interval": 1,
+        "seriesStartMin": 900
+      }
+    },
+    {
+      "id": "task_kyso89p5k",
+      "title": "Service air conditioner in spring",
+      "duration": 30,
+      "startTimeMin": 930,
+      "parentId": "task_o8q4fx42n",
+      "done": false,
+      "recur": {
+        "freq": "yearly",
+        "interval": 1,
+        "seriesStartMin": 930
+      }
+    },
+    {
+      "id": "task_e96693z31",
+      "title": "Flush water heater",
+      "duration": 30,
+      "startTimeMin": 960,
+      "parentId": "task_o8q4fx42n",
+      "done": false,
+      "recur": {
+        "freq": "yearly",
+        "interval": 1,
+        "seriesStartMin": 960
+      }
+    },
+    {
+      "id": "task_fan4y1zjn",
+      "title": "Inspect roof and caulking",
+      "duration": 30,
+      "startTimeMin": 990,
+      "parentId": "task_o8q4fx42n",
+      "done": false,
+      "recur": {
+        "freq": "yearly",
+        "interval": 1,
+        "seriesStartMin": 990
+      }
+    },
+    {
+      "id": "task_h19gclb5c",
+      "title": "Check sump pump",
+      "duration": 30,
+      "startTimeMin": 1020,
+      "parentId": "task_o8q4fx42n",
+      "done": false,
+      "recur": {
+        "freq": "yearly",
+        "interval": 1,
+        "seriesStartMin": 1020
+      }
+    },
+    {
+      "id": "task_tw0wmnjhv",
+      "title": "Deep clean dryer vent",
+      "duration": 30,
+      "startTimeMin": 1050,
+      "parentId": "task_o8q4fx42n",
+      "done": false,
+      "recur": {
+        "freq": "yearly",
+        "interval": 1,
+        "seriesStartMin": 1050
+      }
+    },
+    {
+      "id": "task_8nbokm4e3",
+      "title": "Website launch",
+      "duration": 30,
+      "startTimeMin": 780,
+      "parentId": null,
+      "done": false,
+      "color": "#10b981"
+    },
+    {
+      "id": "task_9jmrqatm1",
+      "title": "Design hero section",
+      "duration": 30,
+      "startTimeMin": 810,
+      "parentId": "task_8nbokm4e3",
+      "done": false
+    },
+    {
+      "id": "task_irk0b53jx",
+      "title": "Draft homepage copy",
+      "duration": 30,
+      "startTimeMin": 840,
+      "parentId": "task_8nbokm4e3",
+      "done": false
+    },
+    {
+      "id": "task_f78l1zsd0",
+      "title": "Build contact form",
+      "duration": 30,
+      "startTimeMin": 870,
+      "parentId": "task_8nbokm4e3",
+      "done": false
+    },
+    {
+      "id": "task_s3i0ss9l9",
+      "title": "Weekly team check-in",
+      "duration": 30,
+      "startTimeMin": 780,
+      "parentId": null,
+      "done": false,
+      "color": "#f59e0b",
+      "recur": {
+        "freq": "weekly",
+        "interval": 1,
+        "seriesStartMin": 780
+      }
+    },
+    {
+      "id": "task_ng47frmpc",
+      "title": "Kitchen renovation",
+      "duration": 45,
+      "startTimeMin": 1440,
+      "parentId": null,
+      "done": false,
+      "color": "#6366f1"
+    },
+    {
+      "id": "task_52ns2xkd7",
+      "title": "222Get three contractor quotes",
+      "duration": 45,
+      "startTimeMin": 1500,
+      "parentId": "task_ng47frmpc",
+      "done": false
+    },
+    {
+      "id": "task_fgh3jf5z3",
+      "title": "222Choose countertops",
+      "duration": 45,
+      "startTimeMin": 1560,
+      "parentId": "task_ng47frmpc",
+      "done": false,
+      "dependsOn": [
+        "task_52ns2xkd7"
+      ]
+    },
+    {
+      "id": "task_r8lwrx3fx",
+      "title": "222Visit stone yard",
+      "duration": 45,
+      "startTimeMin": 1620,
+      "parentId": "task_fgh3jf5z3",
+      "done": false
+    },
+    {
+      "id": "task_pfc51272y",
+      "title": "222Compare quartz vs granite",
+      "duration": 45,
+      "startTimeMin": 1680,
+      "parentId": "task_fgh3jf5z3",
+      "done": false,
+      "dependsOn": [
+        "task_r8lwrx3fx"
+      ]
+    },
+    {
+      "id": "task_n7wrauy05",
+      "title": "222Book electrician",
+      "duration": 45,
+      "startTimeMin": 1740,
+      "parentId": "task_ng47frmpc",
+      "done": false,
+      "dependsOn": [
+        "task_fgh3jf5z3"
+      ]
+    },
+    {
+      "id": "task_7aavxrv5e",
+      "title": "Water indoor plants",
+      "duration": 45,
+      "startTimeMin": 1800,
+      "parentId": null,
+      "done": false,
+      "color": "#6366f1",
+      "recur": {
+        "freq": "weekly",
+        "interval": 1,
+        "seriesStartMin": 1800
+      }
+    },
+    {
+      "id": "task_p6ftviv33",
+      "title": "Listing — [Property Address]",
+      "duration": 45,
+      "startTimeMin": 1440,
+      "parentId": null,
+      "done": false,
+      "color": "#4f46e5",
+      "projectMode": "custom",
+      "projectStartDate": "2026-11-02",
+      "projectEndDate": "2026-11-16",
+      "pinned": true,
+      "x": -2676,
+      "y": -2493
+    },
+    {
+      "id": "task_44sasu738",
+      "title": "Preparation",
+      "duration": 45,
+      "startTimeMin": 1500,
+      "parentId": "task_p6ftviv33",
+      "done": false
+    },
+    {
+      "id": "task_466i675z6",
+      "title": "Sign listing agreement",
+      "duration": 45,
+      "startTimeMin": 1560,
+      "parentId": "task_44sasu738",
+      "done": false
+    },
+    {
+      "id": "task_ng90u59lu",
+      "title": "Photography and floor plan",
+      "duration": 45,
+      "startTimeMin": 1620,
+      "parentId": "task_44sasu738",
+      "done": false,
+      "dependsOn": [
+        "task_466i675z6"
+      ]
+    },
+    {
+      "id": "task_s05sypsuu",
+      "title": "Stage and clean",
+      "duration": 45,
+      "startTimeMin": 1680,
+      "parentId": "task_44sasu738",
+      "done": false,
+      "dependsOn": [
+        "task_ng90u59lu"
+      ]
+    },
+    {
+      "id": "task_rnnk3vspf",
+      "title": "Prepare feature sheet",
+      "duration": 45,
+      "startTimeMin": 1740,
+      "parentId": "task_44sasu738",
+      "done": false,
+      "dependsOn": [
+        "task_s05sypsuu"
+      ]
+    },
+    {
+      "id": "task_gk8zn5yh7",
+      "title": "Marketing",
+      "duration": 45,
+      "startTimeMin": 1800,
+      "parentId": "task_p6ftviv33",
+      "done": false,
+      "dependsOn": [
+        "task_44sasu738"
+      ]
+    },
+    {
+      "id": "task_5u7q4y4hq",
+      "title": "Go live on MLS",
+      "duration": 45,
+      "startTimeMin": 1860,
+      "parentId": "task_gk8zn5yh7",
+      "done": false
+    },
+    {
+      "id": "task_0ocl0klts",
+      "title": "Open house",
+      "duration": 45,
+      "startTimeMin": 1920,
+      "parentId": "task_gk8zn5yh7",
+      "done": false,
+      "dependsOn": [
+        "task_5u7q4y4hq"
+      ]
+    },
+    {
+      "id": "task_nwkqlm808",
+      "title": "Send to buyer-agent network",
+      "duration": 45,
+      "startTimeMin": 1980,
+      "parentId": "task_gk8zn5yh7",
+      "done": false,
+      "dependsOn": [
+        "task_0ocl0klts"
+      ]
+    },
+    {
+      "id": "task_utcrqyab7",
+      "title": "Offer and conditions",
+      "duration": 45,
+      "startTimeMin": 2040,
+      "parentId": "task_p6ftviv33",
+      "done": false,
+      "dependsOn": [
+        "task_gk8zn5yh7"
+      ]
+    },
+    {
+      "id": "task_9qh0yjdnk",
+      "title": "Review offers",
+      "duration": 45,
+      "startTimeMin": 2100,
+      "parentId": "task_utcrqyab7",
+      "done": false
+    },
+    {
+      "id": "task_1sgc22egd",
+      "title": "Negotiate and accept",
+      "duration": 45,
+      "startTimeMin": 2160,
+      "parentId": "task_utcrqyab7",
+      "done": false,
+      "dependsOn": [
+        "task_9qh0yjdnk"
+      ]
+    },
+    {
+      "id": "task_6i9v7cj3l",
+      "title": "Condition deadline",
+      "duration": 45,
+      "startTimeMin": 2220,
+      "parentId": "task_utcrqyab7",
+      "done": false,
+      "dependsOn": [
+        "task_1sgc22egd"
+      ]
+    },
+    {
+      "id": "task_eyllhzyrh",
+      "title": "Deposit due",
+      "duration": 45,
+      "startTimeMin": 2280,
+      "parentId": "task_utcrqyab7",
+      "done": false,
+      "dependsOn": [
+        "task_6i9v7cj3l"
+      ]
+    },
+    {
+      "id": "task_vkvpc8hb3",
+      "title": "Closing",
+      "duration": 45,
+      "startTimeMin": 2340,
+      "parentId": "task_p6ftviv33",
+      "done": false,
+      "dependsOn": [
+        "task_utcrqyab7"
+      ]
+    },
+    {
+      "id": "task_ea6hxiwep",
+      "title": "Final walkthrough",
+      "duration": 45,
+      "startTimeMin": 2400,
+      "parentId": "task_vkvpc8hb3",
+      "done": false
+    },
+    {
+      "id": "task_xl5z7z044",
+      "title": "Closing day",
+      "duration": 45,
+      "startTimeMin": 2460,
+      "parentId": "task_vkvpc8hb3",
+      "done": false,
+      "dependsOn": [
+        "task_ea6hxiwep"
+      ]
+    },
+    {
+      "id": "task_o2rpf4jr3",
+      "title": "Post-close client follow-up",
+      "duration": 45,
+      "startTimeMin": 2520,
+      "parentId": "task_vkvpc8hb3",
+      "done": false,
+      "recur": {
+        "freq": "yearly",
+        "interval": 1,
+        "seriesStartMin": 2520
+      }
+    },
+    {
+      "id": "task_hx2h3fnh0",
+      "title": "A. Advanced AI Tool & Workflow Automations",
+      "duration": 240,
+      "startTimeMin": 5256000,
+      "parentId": null,
+      "done": false,
+      "color": "#6366f1",
+      "notes": "Custom software development, web applications, and LLM automation pipelines.",
+      "projectMode": "custom",
+      "projectEndDate": "2100-01-01"
+    },
+    {
+      "id": "task_n1xpycm0a",
+      "title": "Develop automated lead-scoring webhook for Casora! Realty",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_hx2h3fnh0",
+      "done": false,
+      "notes": "Integrate incoming real estate inquiries with custom web app triggers."
+    },
+    {
+      "id": "task_ykm9i2gfw",
+      "title": "Refine single-file web app component architecture",
+      "duration": 45,
+      "startTimeMin": 5256000,
+      "parentId": "task_hx2h3fnh0",
+      "done": false,
+      "notes": "Ensure all HTML, CSS, and JS remain clean and modular within single file constraints."
+    },
+    {
+      "id": "task_9cgbcli3u",
+      "title": "B. Community, Mentorship & Outreach",
+      "duration": 180,
+      "startTimeMin": 5256000,
+      "parentId": null,
+      "done": false,
+      "color": "#10b981",
+      "notes": "Structured spiritual and volunteer schedule commitments.",
+      "projectMode": "custom",
+      "projectEndDate": "2100-01-01"
+    },
+    {
+      "id": "task_l6dscttvq",
+      "title": "Prepare auxiliary pioneer service ministry schedules",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_9cgbcli3u",
+      "done": false,
+      "notes": "Block out monthly hours and organize territory ministry maps."
+    },
+    {
+      "id": "task_j48srv7yu",
+      "title": "Coordinate local congregation encouragement visits",
+      "duration": 45,
+      "startTimeMin": 5256000,
+      "parentId": "task_9cgbcli3u",
+      "done": false,
+      "notes": "Reach out to brothers and sisters needing pastoral support."
+    },
+    {
+      "id": "task_7he9biyxo",
+      "title": "C. Advanced Media Archival & Digitization",
+      "duration": 200,
+      "startTimeMin": 5256000,
+      "parentId": null,
+      "done": false,
+      "color": "#f59e0b",
+      "notes": "Preserving vintage media, cassette tapes, photos, and physical documents.",
+      "projectMode": "custom",
+      "projectEndDate": "2100-01-01"
+    },
+    {
+      "id": "task_ey24jiz9c",
+      "title": "Digitize vintage family cassette recordings to FLAC",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_7he9biyxo",
+      "done": false,
+      "notes": "Run audio cleanup and metadata tagging for archival storage."
+    },
+    {
+      "id": "task_cq4cdemje",
+      "title": "Scan and tag historical family photo albums",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_7he9biyxo",
+      "done": false,
+      "notes": "High-resolution flatbed scanning with cloud backup organization."
+    },
+    {
+      "id": "task_n2ikp8jr2",
+      "title": "D. Culinary Experimentation & Meal Prep",
+      "duration": 150,
+      "startTimeMin": 5256000,
+      "parentId": null,
+      "done": false,
+      "color": "#4366f4",
+      "notes": "High-protein carnivore cooking methods and batch food preparation.",
+      "projectMode": "custom",
+      "projectEndDate": "2100-01-01",
+      "pinned": true,
+      "x": -5301,
+      "y": -1883
+    },
+    {
+      "id": "task_ny3gdxz1w",
+      "title": "Batch smoke lean meats for weekly protein prep",
+      "duration": 90,
+      "startTimeMin": 5256000,
+      "parentId": "task_n2ikp8jr2",
+      "done": false,
+      "notes": "Prepare turkey breast, chicken, and lean cuts for clean low-calorie eating.",
+      "pinned": true,
+      "x": -712,
+      "y": 210
+    },
+    {
+      "id": "task_c2zl0s1ff",
+      "title": "Stockpile electrolyte solutions & collagen stocks",
+      "duration": 30,
+      "startTimeMin": 5256000,
+      "parentId": "task_n2ikp8jr2",
+      "done": false,
+      "notes": "Maintain adequate sodium, potassium, and magnesium intake during fasting.",
+      "pinned": true,
+      "x": -351,
+      "y": 158
+    },
+    {
+      "id": "task_cxbugm4d5",
+      "title": "A. The Immersion Monster (Real Estate Mastery)",
+      "duration": 180,
+      "startTimeMin": 5256000,
+      "parentId": null,
+      "done": false,
+      "color": "#8b5cf6",
+      "notes": "Process over Prize. The goal is the daily human interaction; the commission is just the receipt.",
+      "projectMode": "custom",
+      "projectEndDate": "2100-01-01",
+      "pinned": true,
+      "x": 120,
+      "y": -2972
+    },
+    {
+      "id": "task_xlkyhuv9r",
+      "title": "Adopt the 'Tourist Master' Perspective",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_cxbugm4d5",
+      "done": false,
+      "notes": "Play with 'house money'. You already survived leaving the religion; a client saying 'no' is nothing. Observe the rat race without joining it."
+    },
+    {
+      "id": "task_6txznslif",
+      "title": "Channel 'Sordahon Energy' in Negotiations",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_cxbugm4d5",
+      "done": false,
+      "notes": "Bring the 'Voice of God' confidence to the table. Read micro-expressions like an actor and solve complex human problems with quiet authority."
+    },
+    {
+      "id": "task_7ndwweiv5",
+      "title": "Expand Custom AI & HTML Tech Stack",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_cxbugm4d5",
+      "done": false,
+      "notes": "Continue developing proprietary single-file apps: CEO Scorecard, CMA creators, and Offer Generators."
+    },
+    {
+      "id": "task_ni05f1whd",
+      "title": "B. The Freedom Rig & North American Expedition",
+      "duration": 180,
+      "startTimeMin": 5256000,
+      "parentId": null,
+      "done": false,
+      "color": "#10b981",
+      "notes": "The ultimate reward for the Second Ascent. Converting expertise and hard work into untethered freedom.",
+      "projectMode": "custom",
+      "projectEndDate": "2100-01-01",
+      "pinned": true,
+      "x": 2461,
+      "y": -2579
+    },
+    {
+      "id": "task_8mqkyvmv3",
+      "title": "Purchase the Ford F-250 & Luxury 5th-Wheel",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_ni05f1whd",
+      "done": false,
+      "notes": "Pay entirely in cash. A rolling testament to a career reborn."
+    },
+    {
+      "id": "task_myu5zj078",
+      "title": "The Florida Winter Migration (3-4 Months)",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_ni05f1whd",
+      "done": false,
+      "notes": "Return to the roots: extended stays at Big Pine Key and Bahia Honda State Park."
+    },
+    {
+      "id": "task_lh0emd18y",
+      "title": "Explore the US Southwest",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_ni05f1whd",
+      "done": false,
+      "notes": "Road trips to the Grand Canyon, Alamo, and Tombstone—listening to Marty Robbins, just like the old Ford Galaxy 500 days."
+    },
+    {
+      "id": "task_bu4kc6d6e",
+      "title": "The Sequoia National Park Milestone",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_ni05f1whd",
+      "done": false,
+      "notes": "Stand among the giant trees, receive a lucrative referral on the phone, and decline it simply because you finally have the freedom to say no."
+    },
+    {
+      "id": "task_2iusx9xak",
+      "title": "C. The Next Home Base (Downsizing & Optimization)",
+      "duration": 180,
+      "startTimeMin": 5256000,
+      "parentId": null,
+      "done": false,
+      "color": "#0ea5e9",
+      "notes": "Transitioning from the 2,000 sq ft Waterdown backsplit to a streamlined, adventure-ready headquarters.",
+      "projectMode": "custom",
+      "projectEndDate": "2100-01-01"
+    },
+    {
+      "id": "task_ghwuuoznp",
+      "title": "Cash in Waterdown Equity",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_2iusx9xak",
+      "done": false,
+      "notes": "Harvest the financial reward of the home you fiercely defended and customized back in 1993."
+    },
+    {
+      "id": "task_np4yavkpa",
+      "title": "Secure a Semi-Rural Property with 5th-Wheel Storage",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_2iusx9xak",
+      "done": false,
+      "notes": "Find a modern bungalow with enough space for the rig, but still close to the community and lifelong friends (Mike, Sonya, Dan, Carl)."
+    },
+    {
+      "id": "task_0oa2i3klu",
+      "title": "Establish the Morning Deck Routine",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_2iusx9xak",
+      "done": false,
+      "notes": "Create a peaceful outdoor space for coffee, reading Psycho-Cybernetics, and watching the stars."
+    },
+    {
+      "id": "task_3cwh585fw",
+      "title": "D. The Biological Upgrade (Fit at 60 & Beyond)",
+      "duration": 180,
+      "startTimeMin": 5256000,
+      "parentId": null,
+      "done": false,
+      "color": "#ef4444",
+      "notes": "The body is the vehicle for ambition; keeping the maintenance schedule impeccable.",
+      "projectMode": "custom",
+      "projectEndDate": "2100-01-01",
+      "pinned": true,
+      "x": 3613,
+      "y": 24
+    },
+    {
+      "id": "task_0hfeigso9",
+      "title": "Sustain Carnivore & Zero-Sugar Protocol",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_3cwh585fw",
+      "done": false,
+      "notes": "Food serves the Monster, not the child. Eat to fuel the machine."
+    },
+    {
+      "id": "task_tuem6l1e6",
+      "title": "Treat Sleep as the 'Anabolic Chamber'",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_3cwh585fw",
+      "done": false,
+      "notes": "Sleep is not a penalty. Submit your goals to your 'Automatic Success Mechanism' at 9 PM and let the subconscious do the work."
+    },
+    {
+      "id": "task_zxgqxpc0d",
+      "title": "Absolute Alcohol Eradication",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_3cwh585fw",
+      "done": false,
+      "notes": "Protect the mind and body. Celebrate victories with sparkling water instead."
+    },
+    {
+      "id": "task_pglsi9sy6",
+      "title": "Heavy Weightlifting: Honor the 'Stack' Legacy",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_3cwh585fw",
+      "done": false,
+      "notes": "Keep the chassis strong. Channel the discipline it took to bench 255lbs back in Grade 9."
+    },
+    {
+      "id": "task_fjedgr49y",
+      "title": "E. The Beginner's Mind (Lifelong Creativity)",
+      "duration": 180,
+      "startTimeMin": 5256000,
+      "parentId": null,
+      "done": false,
+      "color": "#f59e0b",
+      "notes": "The mind is a voracious predator for new skills. Seek out what you are bad at to keep the brain elastic.",
+      "projectMode": "custom",
+      "projectEndDate": "2100-01-01",
+      "pinned": true,
+      "x": 2952,
+      "y": 953
+    },
+    {
+      "id": "task_6k5ltktss",
+      "title": "Deep-Sky Astronomy Viewing",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_fjedgr49y",
+      "done": false,
+      "notes": "Use the 8-inch Dobsonian reflector telescope to find Thor's helmet and maintain the 'Cosmic Perspective'."
+    },
+    {
+      "id": "task_4rjit38ll",
+      "title": "Classic Rock Drumming Sessions",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_fjedgr49y",
+      "done": false,
+      "notes": "Play the blue Pearl kit with Zildjian cymbals. Channel Neil Peart (Rush) and Triumph to energize the soul."
+    },
+    {
+      "id": "task_32f4rcc2p",
+      "title": "Program Custom Single-File AI Games",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_fjedgr49y",
+      "done": false,
+      "notes": "Build fun logic puzzles and games (like the Rush 2112 Asteroids build) purely for the joy of complex problem-solving."
+    },
+    {
+      "id": "task_spxpoqueb",
+      "title": "Time-Lapse & Drone Videography",
+      "duration": 60,
+      "startTimeMin": 5256000,
+      "parentId": "task_fjedgr49y",
+      "done": false,
+      "notes": "Use the Insta360 X3 and drone to document sunrises, ocean coasts, and the Milky Way—just like the old days in the Keys."
+    },
+    {
+      "id": "task_gyhbvqfhs",
+      "title": "New Task",
+      "duration": 30,
+      "startTimeMin": 1590,
+      "parentId": null,
+      "done": false,
+      "color": "#ec4899",
+      "inbox": true
+    },
+    {
+      "id": "task_xs9x6btke",
+      "title": "Test unscheduled long term goal no target date",
+      "duration": 30,
+      "startTimeMin": 5256000,
+      "parentId": null,
+      "done": false,
+      "color": "#10b981",
+      "projectMode": "custom",
+      "projectEndDate": "2100-01-01",
+      "pinned": true,
+      "x": 3927,
+      "y": 690
+    },
+    {
+      "id": "task_ll6yr5sh5",
+      "title": "New Task",
+      "duration": 30,
+      "startTimeMin": 5256000,
+      "parentId": "task_xs9x6btke",
+      "done": false
+    },
+    {
+      "id": "task_ccs6qxfiw",
+      "title": "New Task",
+      "duration": 30,
+      "startTimeMin": 1800,
+      "parentId": null,
+      "done": false,
+      "color": "#f59e0b",
+      "inbox": true,
+      "pinned": true,
+      "x": 1982.3543977358236,
+      "y": -784.4439686603724
+    },
+    {
+      "id": "task_vzq75n36u",
+      "title": "New Task",
+      "duration": 30,
+      "startTimeMin": 1800,
+      "parentId": null,
+      "done": false,
+      "color": "#8b5cf6",
+      "inbox": true,
+      "pinned": true,
+      "x": 1956,
+      "y": -615
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj_y26rl01",
+      "name": "Project 1",
+      "color": "#6366f1",
+      "nodeIds": [
+        "task_v72yjopwx",
+        "task_ymj32mea3",
+        "task_4n0gafcki",
+        "task_fzhfn1f5a",
+        "task_l51qu6pjc",
+        "task_fo6ne1rlf",
+        "task_okxeda3mq",
+        "task_bvlr7hkvu"
+      ],
+      "createdAt": 1793724647028
+    }
+  ],
+  "activeProject": "proj_y26rl01",
+  "preferences": {
+    "layoutMode": "repulsion",
+    "spreadFactor": 0.5,
+    "hideCompleted": false,
+    "showGhosts": false,
+    "mapFilterSync": false
+  }
+}
